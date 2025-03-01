@@ -86,6 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            fullName: userData.fullName,
+            phone: userData.phone,
+            role: userData.role,
+          },
+        },
       });
 
       if (error) {
@@ -97,32 +104,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      if (data.user) {
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            full_name: userData.fullName || '',
-            phone: userData.phone || '',
-            role: userData.role || UserRole.CLIENT,
-          });
-
-        if (profileError) {
-          toast({
-            title: "Profile creation failed",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          return { error: profileError };
-        }
-
-        toast({
-          title: "Account created successfully!",
-          description: "Please check your email for verification instructions.",
-        });
-      }
+      toast({
+        title: "Account created successfully!",
+        description: "Please check your email for verification instructions.",
+      });
 
       return { error: null };
     } catch (err: any) {
