@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, Shield } from 'lucide-react';
 
 const AdminForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -31,51 +31,67 @@ const AdminForgotPassword = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-card-title">Reset Admin Password</h1>
+      <div className="auth-card bg-background/95 backdrop-blur-lg">
+        <div className="flex flex-col items-center mb-6">
+          <div className="rounded-full bg-primary/10 p-3 mb-2">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-2xl font-semibold">Reset Admin Password</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isSubmitted ? 
+              "Check your email for recovery instructions" : 
+              "We'll send you instructions to reset your admin password"}
+          </p>
+        </div>
         
         {isSubmitted ? (
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              If an admin account exists with the email you provided, we've sent password reset instructions.
-            </p>
+          <div className="text-center space-y-6">
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm">
+                If an admin account exists with the email you provided, we've sent password reset instructions.
+              </p>
+            </div>
             
-            <p className="text-sm">
-              <Link to="/admin-login" className="auth-link font-medium">
-                Return to admin login
+            <Button 
+              variant="outline" 
+              className="w-full h-11 rounded-lg font-medium flex items-center justify-center"
+              asChild
+            >
+              <Link to="/admin-login">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Admin Login
               </Link>
-            </p>
+            </Button>
           </div>
         ) : (
           <>
-            <p className="mb-6 text-sm text-muted-foreground text-center">
-              Enter your admin email address below and we'll send you instructions to reset your password.
-            </p>
-            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="auth-label">Admin Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your admin email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="auth-input"
-                  required
-                  disabled={isSubmitting}
-                />
+                <Label htmlFor="email" className="text-sm font-medium">Admin Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
               
               <Button 
                 type="submit" 
-                className="auth-button" 
+                className="w-full h-11 mt-2 rounded-lg font-medium" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
+                    Sending Instructions...
                   </>
                 ) : (
                   'Send Reset Instructions'
@@ -83,11 +99,12 @@ const AdminForgotPassword = () => {
               </Button>
             </form>
             
-            <p className="mt-6 text-center text-sm">
-              <Link to="/admin-login" className="auth-link">
+            <div className="mt-6 text-center">
+              <Link to="/admin-login" className="inline-flex items-center text-sm text-primary hover:underline">
+                <ArrowLeft className="mr-1 h-4 w-4" />
                 Back to admin login
               </Link>
-            </p>
+            </div>
           </>
         )}
       </div>

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import { UserRole } from '@/types';
+import { Loader2, Mail, Lock, Shield } from 'lucide-react';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -21,7 +20,7 @@ const AdminLogin = () => {
     
     if (!email || !password) {
       toast({
-        title: "Invalid input",
+        title: "Missing fields",
         description: "Please provide both email and password.",
         variant: "destructive",
       });
@@ -36,8 +35,6 @@ const AdminLogin = () => {
       if (error) {
         throw error;
       }
-      
-      // Verify if the user is an admin in AuthContext
     } catch (error: any) {
       console.error('Login error:', error);
     } finally {
@@ -47,46 +44,58 @@ const AdminLogin = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-card-title">Admin Sign In</h1>
+      <div className="auth-card bg-background/95 backdrop-blur-lg">
+        <div className="flex flex-col items-center mb-6">
+          <div className="rounded-full bg-primary/10 p-3 mb-2">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-2xl font-semibold">Admin Sign In</h1>
+          <p className="text-sm text-muted-foreground mt-1">Access the admin dashboard</p>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="auth-label">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your admin email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="auth-input"
-              required
-              disabled={isSubmitting}
-            />
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="auth-label">Password</Label>
-              <Link to="/admin-forgot-password" className="auth-link text-xs">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Link to="/admin-forgot-password" className="text-xs text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <Button 
             type="submit" 
-            className="auth-button" 
+            className="w-full h-11 mt-2 rounded-lg font-medium" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -100,10 +109,19 @@ const AdminLogin = () => {
           </Button>
         </form>
         
-        <div className="mt-6 text-center">
-          <Link to="/login" className="auth-link text-sm">
-            Return to User Login
-          </Link>
+        <div className="mt-6 text-center space-y-4">
+          <p className="text-sm">
+            Need an admin account?{" "}
+            <Link to="/register" className="font-medium text-primary hover:underline transition-colors">
+              Register here
+            </Link>
+          </p>
+          
+          <p className="text-xs text-muted-foreground">
+            <Link to="/login" className="hover:text-primary transition-colors">
+              Return to User Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>

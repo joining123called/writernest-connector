@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminLogin from "./pages/AdminLogin";
-import AdminRegister from "./pages/AdminRegister";
 import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
@@ -32,7 +31,6 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin-register" element={<AdminRegister />} />
             <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
             <Route path="/writer-dashboard" element={<WriterDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />

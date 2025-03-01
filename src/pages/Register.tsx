@@ -9,6 +9,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { FormData, UserRole } from '@/types';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 const Register = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -16,7 +18,6 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: '',
     role: UserRole.CLIENT,
   });
   
@@ -30,16 +31,15 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePhoneChange = (value: string | undefined) => {
+    setFormData((prev) => ({ ...prev, phone: value || '' }));
+  };
+
   const handleRoleChange = (value: string) => {
     setFormData((prev) => ({ 
       ...prev, 
       role: value as UserRole
     }));
-  };
-
-  const validatePhone = (phone: string) => {
-    const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
-    return phoneRegex.test(phone);
   };
 
   const validatePassword = (password: string) => {
@@ -48,15 +48,6 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please ensure both passwords are the same.",
-        variant: "destructive",
-      });
-      return;
-    }
     
     if (!validatePassword(formData.password)) {
       toast({
@@ -67,9 +58,9 @@ const Register = () => {
       return;
     }
     
-    if (!validatePhone(formData.phone)) {
+    if (!formData.phone) {
       toast({
-        title: "Invalid phone number",
+        title: "Phone number required",
         description: "Please enter a valid phone number.",
         variant: "destructive",
       });
@@ -105,104 +96,96 @@ const Register = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-card-title">Create Account</h1>
+      <div className="auth-card bg-background/95 backdrop-blur-lg">
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="text-2xl font-semibold">Create Your Account</h1>
+          <p className="text-sm text-muted-foreground mt-1">Enter your details to get started</p>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName" className="auth-label">Full Name</Label>
+            <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
             <Input
               id="fullName"
               name="fullName"
-              placeholder="Enter your full name"
+              placeholder="John Doe"
               value={formData.fullName}
               onChange={handleChange}
-              className="auth-input"
+              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
               required
               disabled={isSubmitting}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email" className="auth-label">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
-              className="auth-input"
+              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
               required
               disabled={isSubmitting}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone" className="auth-label">Phone Number</Label>
-            <Input
-              id="phone"
-              name="phone"
-              placeholder="Enter your phone number"
+            <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+            <PhoneInput
+              international
+              defaultCountry="US"
               value={formData.phone}
-              onChange={handleChange}
-              className="auth-input"
+              onChange={handlePhoneChange}
+              className="h-11 rounded-lg border border-input/50 bg-background px-3 shadow-sm"
               required
               disabled={isSubmitting}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password" className="auth-label">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             <Input
               id="password"
               name="password"
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a secure password"
               value={formData.password}
               onChange={handleChange}
-              className="auth-input"
+              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
               required
               disabled={isSubmitting}
             />
+            <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="auth-label">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="auth-input"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="auth-label">I am a</Label>
+            <Label className="text-sm font-medium">I am registering as</Label>
             <RadioGroup 
               value={formData.role} 
               onValueChange={handleRoleChange}
-              className="flex gap-4"
+              className="flex gap-6"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={UserRole.CLIENT} id="client" />
-                <Label htmlFor="client">Client</Label>
+                <Label htmlFor="client" className="text-sm">Client</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={UserRole.WRITER} id="writer" />
-                <Label htmlFor="writer">Writer</Label>
+                <Label htmlFor="writer" className="text-sm">Writer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value={UserRole.ADMIN} id="admin" />
+                <Label htmlFor="admin" className="text-sm">Admin</Label>
               </div>
             </RadioGroup>
           </div>
           
           <Button 
             type="submit" 
-            className="auth-button" 
+            className="w-full h-11 mt-2 rounded-lg font-medium" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -216,12 +199,20 @@ const Register = () => {
           </Button>
         </form>
         
-        <p className="mt-6 text-center text-sm">
-          Already have an account?{" "}
-          <Link to="/login" className="auth-link font-medium">
-            Sign in
-          </Link>
-        </p>
+        <div className="mt-6 text-center space-y-4">
+          <p className="text-sm">
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-primary hover:underline transition-colors">
+              Sign in
+            </Link>
+          </p>
+          
+          <div className="text-xs text-muted-foreground">
+            By creating an account, you agree to our{" "}
+            <a href="#" className="underline hover:text-foreground">Terms of Service</a>{" "}and{" "}
+            <a href="#" className="underline hover:text-foreground">Privacy Policy</a>
+          </div>
+        </div>
       </div>
     </div>
   );

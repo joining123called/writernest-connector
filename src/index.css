@@ -100,16 +100,18 @@
 
 .auth-container {
   @apply min-h-screen w-full flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 lg:p-10 animate-fade-in;
-  background: radial-gradient(ellipse at top, hsl(var(--background)), transparent),
-              radial-gradient(ellipse at bottom, hsl(var(--muted) / 0.5), transparent);
+  background: radial-gradient(circle at top, hsl(var(--background)), transparent),
+              radial-gradient(circle at bottom, hsl(var(--muted) / 0.3), transparent);
 }
 
 .auth-card {
-  @apply bg-card rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-lg relative overflow-hidden;
+  @apply rounded-xl p-6 sm:p-8 w-full max-w-md shadow-lg relative overflow-hidden border border-border/30;
   backdrop-filter: blur(10px);
-  border: 1px solid hsl(var(--border) / 0.5);
-  box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
-  animation: 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0s 1 normal forwards running slide-in;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.025),
+    0 0 0 1px rgba(0, 0, 0, 0.025);
+  animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s 1 normal forwards running slide-in;
 }
 
 .auth-card::before {
@@ -118,45 +120,55 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  height: 3px;
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.5));
   z-index: 1;
 }
 
-.auth-card-title {
-  @apply text-2xl font-semibold mb-6 text-center;
+/* Custom styles for PhoneInput */
+:global(.PhoneInput) {
+  display: flex;
+  align-items: center;
 }
 
-.auth-input {
-  @apply w-full px-4 py-3 rounded-lg bg-muted/50 border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition duration-200;
+:global(.PhoneInputCountry) {
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
 }
 
-.auth-label {
-  @apply block text-sm font-medium mb-2;
+:global(.PhoneInputInput) {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  padding: 0 0.75rem;
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--input) / 0.5);
 }
 
-.auth-button {
-  @apply w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium transition duration-200 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98];
+:global(.PhoneInputInput:focus) {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.3);
+  border-color: hsl(var(--ring));
 }
 
-.auth-link {
-  @apply text-sm text-primary/80 hover:text-primary transition duration-200;
+@keyframes slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.auth-divider {
-  @apply flex items-center my-6;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  @apply flex-1 h-px bg-border;
-}
-
-.auth-divider-text {
-  @apply px-3 text-xs text-muted-foreground;
-}
-
-.dashboard-container {
-  @apply min-h-screen p-6 animate-slide-in;
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
