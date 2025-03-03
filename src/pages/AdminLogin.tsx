@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, Shield } from 'lucide-react';
+import { UserRole } from '@/types';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signOut, user } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,6 +35,15 @@ const AdminLogin = () => {
       
       if (error) {
         throw error;
+      } else if (user && user.role !== UserRole.ADMIN) {
+        // If a non-admin logs in through the admin login form
+        toast({
+          title: "Access denied",
+          description: "This login is only for administrators. Please use the regular login page.",
+          variant: "destructive",
+        });
+        // Sign out the non-admin user immediately
+        await signOut();
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -112,14 +122,14 @@ const AdminLogin = () => {
         <div className="mt-6 text-center space-y-4">
           <p className="text-sm">
             Need an admin account?{" "}
-            <Link to="/register" className="font-medium text-primary hover:underline transition-colors">
-              Register here
+            <Link to="/admin-register" className="font-medium text-primary hover:underline transition-colors">
+              Register as Admin
             </Link>
           </p>
           
           <p className="text-xs text-muted-foreground">
             <Link to="/login" className="hover:text-primary transition-colors">
-              Return to User Login
+              Client/Writer Login
             </Link>
           </p>
         </div>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock } from 'lucide-react';
+import { UserRole } from '@/types';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signOut, user } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,8 +31,18 @@ const Login = () => {
     
     try {
       const { error } = await signIn(email, password);
+      
       if (error) {
         throw error;
+      } else if (user && user.role === UserRole.ADMIN) {
+        // If somehow an admin logs in through the client login form
+        toast({
+          title: "Access denied",
+          description: "Please use the admin login page to sign in as an administrator.",
+          variant: "destructive",
+        });
+        // Sign out the admin user immediately
+        await signOut();
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -46,7 +56,7 @@ const Login = () => {
       <div className="auth-card bg-background/95 backdrop-blur-lg">
         <div className="flex flex-col items-center mb-6">
           <h1 className="text-2xl font-semibold">Welcome Back</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to your account</p>
+          <p className="text-sm text-muted-foreground mt-1">Sign in to your client or writer account</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">

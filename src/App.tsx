@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminRegister from "./pages/AdminRegister";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminLogin from "./pages/AdminLogin";
 import AdminForgotPassword from "./pages/AdminForgotPassword";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/admin-register" element={<AdminRegister />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />

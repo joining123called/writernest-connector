@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Phone } from 'lucide-react';
 import { FormData, UserRole } from '@/types';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -36,10 +36,13 @@ const Register = () => {
   };
 
   const handleRoleChange = (value: string) => {
-    setFormData((prev) => ({ 
-      ...prev, 
-      role: value as UserRole
-    }));
+    // Only allow CLIENT or WRITER roles (not ADMIN)
+    if (value === UserRole.CLIENT || value === UserRole.WRITER) {
+      setFormData((prev) => ({ 
+        ...prev, 
+        role: value as UserRole
+      }));
+    }
   };
 
   const validatePassword = (password: string) => {
@@ -85,6 +88,10 @@ const Register = () => {
       }
       
       // Registration successful, navigate to login
+      toast({
+        title: "Account created",
+        description: "Your account has been created. Please sign in.",
+      });
       navigate('/login');
       
     } catch (error: any) {
@@ -99,65 +106,77 @@ const Register = () => {
       <div className="auth-card bg-background/95 backdrop-blur-lg">
         <div className="flex flex-col items-center mb-6">
           <h1 className="text-2xl font-semibold">Create Your Account</h1>
-          <p className="text-sm text-muted-foreground mt-1">Enter your details to get started</p>
+          <p className="text-sm text-muted-foreground mt-1">Sign up as a client or writer</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              placeholder="John Doe"
-              value={formData.fullName}
-              onChange={handleChange}
-              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="fullName"
+                name="fullName"
+                placeholder="John Doe"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-            <PhoneInput
-              international
-              defaultCountry="US"
-              value={formData.phone}
-              onChange={handlePhoneChange}
-              className="h-11 rounded-lg border border-input/50 bg-background px-3 shadow-sm"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative pl-10">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+              <PhoneInput
+                international
+                defaultCountry="US"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                className="h-11 rounded-lg border border-input/50 bg-background shadow-sm w-full"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Create a secure password"
-              value={formData.password}
-              onChange={handleChange}
-              className="h-11 rounded-lg border-input/50 bg-background shadow-sm"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Create a secure password"
+                value={formData.password}
+                onChange={handleChange}
+                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
             <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
           
@@ -175,10 +194,6 @@ const Register = () => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={UserRole.WRITER} id="writer" />
                 <Label htmlFor="writer" className="text-sm">Writer</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value={UserRole.ADMIN} id="admin" />
-                <Label htmlFor="admin" className="text-sm">Admin</Label>
               </div>
             </RadioGroup>
           </div>
@@ -207,7 +222,13 @@ const Register = () => {
             </Link>
           </p>
           
-          <div className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
+            <Link to="/admin-register" className="hover:text-primary transition-colors">
+              Register as Admin
+            </Link>
+          </p>
+          
+          <div className="text-xs text-muted-foreground pt-2">
             By creating an account, you agree to our{" "}
             <a href="#" className="underline hover:text-foreground">Terms of Service</a>{" "}and{" "}
             <a href="#" className="underline hover:text-foreground">Privacy Policy</a>

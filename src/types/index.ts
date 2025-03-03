@@ -20,6 +20,7 @@ export interface FormData {
   fullName: string;
   phone: string;
   role: UserRole;
+  confirmPassword?: string;
 }
 
 export interface AuthContextType {
