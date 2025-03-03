@@ -46,6 +46,7 @@ export const useAuthProvider = () => {
           phone: profile.phone,
           role: profile.role as UserRole,
           createdAt: profile.created_at,
+          referenceNumber: profile.reference_number || '',
         };
 
         setState({
@@ -155,7 +156,7 @@ export const useAuthProvider = () => {
           phone: profile.phone,
           role: profile.role as UserRole,
           createdAt: profile.created_at,
-          referenceNumber: profile.reference_number,
+          referenceNumber: profile.reference_number || '',
         };
 
         setState({
