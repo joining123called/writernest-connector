@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth'; // Updated import
+import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,13 +36,11 @@ const Login = () => {
       if (error) {
         throw error;
       } else if (user && user.role === UserRole.ADMIN) {
-        // If somehow an admin logs in through the client login form
         toast({
           title: "Access denied",
           description: "Please use the admin login page to sign in as an administrator.",
           variant: "destructive",
         });
-        // Sign out the admin user immediately
         await signOut();
       }
     } catch (error: any) {
