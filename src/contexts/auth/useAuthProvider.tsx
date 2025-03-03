@@ -39,6 +39,10 @@ export const useAuthProvider = () => {
           return;
         }
 
+        // Define the user object with the profile data
+        // Cast as 'any' first to access reference_number to prevent TypeScript error
+        const profileData = profile as any;
+        
         const user: User = {
           id: profile.id,
           email: profile.email,
@@ -46,7 +50,7 @@ export const useAuthProvider = () => {
           phone: profile.phone,
           role: profile.role as UserRole,
           createdAt: profile.created_at,
-          referenceNumber: profile.reference_number || '',
+          referenceNumber: profileData.reference_number || '',
         };
 
         setState({
@@ -149,6 +153,9 @@ export const useAuthProvider = () => {
           return { error: profileError };
         }
 
+        // Cast profile as 'any' to access reference_number
+        const profileData = profile as any;
+        
         const user: User = {
           id: profile.id,
           email: profile.email,
@@ -156,7 +163,7 @@ export const useAuthProvider = () => {
           phone: profile.phone,
           role: profile.role as UserRole,
           createdAt: profile.created_at,
-          referenceNumber: profile.reference_number || '',
+          referenceNumber: profileData.reference_number || '',
         };
 
         setState({
