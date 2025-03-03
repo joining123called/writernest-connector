@@ -12,7 +12,6 @@ export interface User {
   phone: string;
   role: UserRole;
   createdAt: string;
-  referenceNumber: string;
 }
 
 export interface FormData {

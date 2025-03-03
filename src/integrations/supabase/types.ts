@@ -16,7 +16,6 @@ export type Database = {
           full_name: string
           id: string
           phone: string
-          reference_number: string | null
           role: string
         }
         Insert: {
@@ -25,7 +24,6 @@ export type Database = {
           full_name: string
           id: string
           phone: string
-          reference_number?: string | null
           role: string
         }
         Update: {
@@ -34,7 +32,6 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string
-          reference_number?: string | null
           role?: string
         }
         Relationships: []
@@ -44,12 +41,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_unique_reference_number: {
-        Args: {
-          role_prefix: string
-        }
-        Returns: string
-      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
