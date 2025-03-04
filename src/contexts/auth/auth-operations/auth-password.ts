@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { ToastProps } from '@/hooks/use-toast';
+import type { ToastProps } from '@/components/ui/toast';
 
 export const resetPassword = async (
   email: string,
