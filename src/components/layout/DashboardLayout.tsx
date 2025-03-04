@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { DashboardSidebar } from './DashboardSidebar';
 import { cn } from '@/lib/utils';
-import { Bell, Search, User, Menu, X } from 'lucide-react';
+import { Bell, Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const toggleMobileSidebar = () => {
     setMobileOpen(!mobileOpen);
+  };
+  
+  const getInitials = (name: string) => {
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
 
   if (!user) {
@@ -91,10 +101,22 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <div className="text-sm font-medium">{user.fullName}</div>
                 <div className="text-xs text-muted-foreground capitalize">{user.role}</div>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full border border-border/40 bg-background/50 hover:bg-background/80">
-                <User className="h-5 w-5" />
-                <span className="sr-only">Profile</span>
-              </Button>
+              <div className="relative">
+                <Avatar className="h-9 w-9 border border-border/40 bg-background/50">
+                  {user.avatarUrl ? (
+                    <AvatarImage 
+                      src={user.avatarUrl} 
+                      alt={user.fullName} 
+                    />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(user.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500">
+                  <span className="sr-only">Online</span>
+                </span>
+              </div>
             </div>
           </div>
         </header>
