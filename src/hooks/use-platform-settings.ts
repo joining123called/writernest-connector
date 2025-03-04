@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth';
+import { Json } from '@/types/supabase';
 
 export interface PlatformSetting {
   key: string;
@@ -48,8 +48,18 @@ export const usePlatformSettings = () => {
 
       // Convert the array of settings to an object
       const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
-        // Convert JSON value to the appropriate type
-        acc[setting.key as keyof PlatformSettings] = setting.value;
+        // Convert JSON value to the appropriate type based on the expected property type
+        const key = setting.key as keyof PlatformSettings;
+        const expectedType = typeof defaultSettings[key];
+        
+        if (expectedType === 'string' || expectedType === 'object') {
+          // String or null values
+          acc[key] = setting.value as any;
+        } else {
+          // For other types, use as is
+          acc[key] = setting.value;
+        }
+        
         return acc;
       }, {});
 
