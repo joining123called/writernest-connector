@@ -1,17 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Globe, 
-  Palette, 
-  Settings, 
-  Users, 
-  Bell, 
-  Shield, 
-  CreditCard,
-  FileText,
-  Star
-} from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsNavItem {
@@ -29,14 +19,7 @@ interface SettingsSidebarProps {
 export const SettingsSidebar = ({ activeTab, setActiveTab }: SettingsSidebarProps) => {
   const navItems: SettingsNavItem[] = [
     { id: 'general', label: 'General', icon: Settings, isImplemented: true },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'localization', label: 'Localization', icon: Globe },
-    { id: 'users', label: 'User Management', icon: Users },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'billing', label: 'Billing & Payments', icon: CreditCard },
-    { id: 'content', label: 'Content Management', icon: FileText },
-    { id: 'reviews', label: 'Reviews & Ratings', icon: Star },
+    // We're removing the other nav items as requested
   ];
 
   return (
