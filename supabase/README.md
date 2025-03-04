@@ -5,13 +5,14 @@ This directory contains configuration files and database migrations for our Supa
 
 ## Environment Configuration
 
-The application uses environment variables for configuration. Copy the `.env.example` file to `.env` in the root directory and update the values:
+The application uses environment variables for configuration. The main `.env` file contains the necessary Supabase credentials:
 
-```bash
-cp .env.example .env
+```
+VITE_SUPABASE_URL=https://ylnywzlvcreanyhancke.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsbnl3emx2Y3JlYW55aGFuY2tlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA4MDcxNDQsImV4cCI6MjA1NjM4MzE0NH0.O2UZRbvVTpDQJz9cAZKm86Wj1UmGCHblvDe1QABsuls
 ```
 
-Update the `.env` file with your Supabase credentials.
+For local development or production deployments, you may need to set up additional environment variables.
 
 ## Database Migrations
 
