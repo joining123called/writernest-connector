@@ -12,6 +12,7 @@ export interface User {
   phone: string;
   role: UserRole;
   createdAt: string;
+  referenceNumber?: string;  // Optional because it might not be present for all users
 }
 
 export interface FormData {

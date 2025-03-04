@@ -22,6 +22,8 @@ export const fetchUserProfile = async (userId: string) => {
     phone: profile.phone,
     role: profile.role as UserRole,
     createdAt: profile.created_at,
+    // Include reference_number if it exists in the profile
+    ...(profile.reference_number && { referenceNumber: profile.reference_number })
   };
 
   return { profile: user, error: null };

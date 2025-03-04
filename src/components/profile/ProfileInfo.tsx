@@ -127,6 +127,7 @@ export const ProfileInfo = () => {
             <span>Joined on {format(new Date(profile.created_at), 'PPP')}</span>
           </div>
           
+          {/* Only show reference number if it exists */}
           {profile.reference_number && (
             <div className="flex items-center space-x-3">
               <span className="text-sm text-muted-foreground">Reference: {profile.reference_number}</span>
