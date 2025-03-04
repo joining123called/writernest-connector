@@ -9,7 +9,7 @@ import { Bell, Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatarDropdown } from './UserAvatarDropdown';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,15 +27,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const toggleMobileSidebar = () => {
     setMobileOpen(!mobileOpen);
-  };
-  
-  const getInitials = (name: string) => {
-    if (!name) return '';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
   };
 
   if (!user) {
@@ -96,28 +87,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
               <span className="sr-only">Notifications</span>
             </Button>
-            <div className="flex items-center gap-2">
-              <div className="hidden md:block">
-                <div className="text-sm font-medium">{user.fullName}</div>
-                <div className="text-xs text-muted-foreground capitalize">{user.role}</div>
-              </div>
-              <div className="relative">
-                <Avatar className="h-9 w-9 border border-border/40 bg-background/50">
-                  {user.avatarUrl ? (
-                    <AvatarImage 
-                      src={user.avatarUrl} 
-                      alt={user.fullName} 
-                    />
-                  ) : null}
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {getInitials(user.fullName)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500">
-                  <span className="sr-only">Online</span>
-                </span>
-              </div>
-            </div>
+            <UserAvatarDropdown />
           </div>
         </header>
         
