@@ -16,6 +16,7 @@ export interface PlatformSettings {
   timezone: string;
   logoUrl: string | null;
   faviconUrl: string | null;
+  metaDescription: string;
 }
 
 // Default settings
@@ -24,7 +25,8 @@ const defaultSettings: PlatformSettings = {
   defaultLanguage: "en",
   timezone: "UTC",
   logoUrl: null,
-  faviconUrl: null
+  faviconUrl: null,
+  metaDescription: "Lovable Generated Project"
 };
 
 export const usePlatformSettings = () => {
@@ -54,7 +56,14 @@ export const usePlatformSettings = () => {
         
         if (expectedType === 'string' || expectedType === 'object') {
           // String or null values
-          acc[key] = setting.value as any;
+          if (setting.value === null) {
+            acc[key] = null as any;
+          } else if (typeof setting.value === 'string') {
+            acc[key] = setting.value as any;
+          } else {
+            // Convert other types to string if string expected
+            acc[key] = String(setting.value);
+          }
         } else {
           // For other types, use as is
           acc[key] = setting.value;
@@ -177,10 +186,19 @@ export const usePlatformSettings = () => {
     }
   };
 
-  // Once settings are loaded, set initialLoad to false
+  // Once settings are loaded, set initialLoad to false and update document
   useEffect(() => {
     if (!isLoadingSettings && settings) {
       setInitialLoad(false);
+      
+      // Update document title and meta tags
+      document.title = settings.platformName;
+      
+      // Update meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', settings.metaDescription);
+      }
     }
   }, [isLoadingSettings, settings]);
 

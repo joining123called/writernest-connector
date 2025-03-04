@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 interface SidebarHeaderProps {
   collapsed: boolean;
@@ -9,11 +10,26 @@ interface SidebarHeaderProps {
 }
 
 export const SidebarHeader = ({ collapsed, toggleSidebar }: SidebarHeaderProps) => {
+  const { settings, isLoadingSettings } = usePlatformSettings();
+  const [platformName, setPlatformName] = useState('AcademicOrder');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoadingSettings && settings) {
+      setPlatformName(settings.platformName);
+      setLogoUrl(settings.logoUrl);
+    }
+  }, [isLoadingSettings, settings]);
+
   return (
     <div className="flex h-16 items-center justify-between border-b border-sidebar-border/30 px-4">
       <div className="flex items-center">
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-md">
-          <FileText className="h-5 w-5" />
+        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-md overflow-hidden">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
+          ) : (
+            <FileText className="h-5 w-5" />
+          )}
         </span>
         {!collapsed && (
           <motion.span
@@ -23,7 +39,7 @@ export const SidebarHeader = ({ collapsed, toggleSidebar }: SidebarHeaderProps) 
             transition={{ duration: 0.2 }}
             className="ml-3 font-semibold text-lg tracking-tight text-sidebar-foreground"
           >
-            AcademicOrder
+            {platformName}
           </motion.span>
         )}
       </div>

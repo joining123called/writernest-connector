@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,14 +14,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import timezones from '@/lib/timezones';
 import languages from '@/lib/languages';
 import { usePlatformSettings } from '@/hooks/use-platform-settings';
+import { Textarea } from "@/components/ui/textarea";
 
-// Define the schema for general settings
 const generalSettingsSchema = z.object({
   platformName: z.string().min(2, {
     message: "Platform name must be at least 2 characters."
   }),
   defaultLanguage: z.string(),
   timezone: z.string(),
+  metaDescription: z.string().max(160, {
+    message: "Meta description should be 160 characters or less for optimal SEO."
+  }),
 });
 
 type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
@@ -44,26 +46,25 @@ export const GeneralSettings = () => {
   const [isFaviconUploading, setIsFaviconUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with settings from Supabase
   const form = useForm<GeneralSettingsValues>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
       platformName: "Essay Writing Service",
       defaultLanguage: "en",
       timezone: "UTC",
+      metaDescription: "Lovable Generated Project",
     },
   });
 
-  // Load settings into the form when they're fetched
   useEffect(() => {
     if (!isLoadingSettings && settings) {
       form.reset({
         platformName: settings.platformName,
         defaultLanguage: settings.defaultLanguage,
         timezone: settings.timezone,
+        metaDescription: settings.metaDescription || "Lovable Generated Project",
       });
       
-      // Set logo and favicon previews
       setLogoPreview(settings.logoUrl);
       setFaviconPreview(settings.faviconUrl);
     }
@@ -84,8 +85,12 @@ export const GeneralSettings = () => {
       const success = await updateSettings(data);
       
       if (success) {
-        // Update document title as an example of real-time changes
         document.title = data.platformName;
+        
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', data.metaDescription);
+        }
         
         toast({
           title: "Settings updated",
@@ -112,7 +117,6 @@ export const GeneralSettings = () => {
     setIsLogoUploading(true);
     
     try {
-      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
@@ -120,11 +124,9 @@ export const GeneralSettings = () => {
       };
       reader.readAsDataURL(file);
       
-      // Upload to Supabase
       const publicUrl = await uploadFile(file, 'logo');
       
       if (publicUrl) {
-        // Update favicon in browser (demo effect)
         toast({
           title: "Logo uploaded",
           description: "Your platform logo has been updated successfully.",
@@ -144,7 +146,6 @@ export const GeneralSettings = () => {
     setIsFaviconUploading(true);
     
     try {
-      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
@@ -152,11 +153,9 @@ export const GeneralSettings = () => {
       };
       reader.readAsDataURL(file);
       
-      // Upload to Supabase
       const publicUrl = await uploadFile(file, 'favicon');
       
       if (publicUrl) {
-        // Actually update favicon in browser (demo effect)
         const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
         if (link && publicUrl) link.href = publicUrl;
         
@@ -213,7 +212,6 @@ export const GeneralSettings = () => {
       await updateSettings({ faviconUrl: null });
       setFaviconPreview(null);
       
-      // Reset favicon to default
       const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       if (link) link.href = '/favicon.ico';
       
@@ -262,6 +260,27 @@ export const GeneralSettings = () => {
                     </FormControl>
                     <FormDescription>
                       This is the name that will appear throughout the platform.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="metaDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Meta Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter meta description for SEO" 
+                        className="resize-none" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      This description will appear in search engine results. Keep it under 160 characters for best results.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
