@@ -22,10 +22,10 @@ export const fetchUserProfile = async (userId: string) => {
     phone: profile.phone,
     role: profile.role as UserRole,
     createdAt: profile.created_at,
-    // Include reference_number if it exists in the profile
-    ...(profile.reference_number && { referenceNumber: profile.reference_number }),
-    // Include avatar_url if it exists
-    ...(profile.avatar_url && { avatarUrl: profile.avatar_url })
+    // Always include reference_number if it exists
+    referenceNumber: profile.reference_number || undefined,
+    // Always include avatar_url if it exists
+    avatarUrl: profile.avatar_url || undefined
   };
 
   return { profile: user, error: null };
