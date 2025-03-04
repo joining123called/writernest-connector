@@ -11,8 +11,7 @@ export interface User {
   phone: string;
   role: UserRole;
   createdAt: string;
-  avatarUrl?: string;
-  bio?: string;
+  avatarUrl?: string; // Added optional avatarUrl property
 }
 
 export interface FormData {

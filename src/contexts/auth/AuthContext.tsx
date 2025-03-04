@@ -14,11 +14,13 @@ export const initialState: AuthState = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAuthProvider();
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
+  children 
+}) => {
+  const authValue = useAuthProvider();
   
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={authValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,12 +9,8 @@ const Index = () => {
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Add console logging to debug
-    console.log("Index component mounting", { user, isLoading });
-    
     if (!isLoading) {
       if (user) {
-        console.log("User authenticated, redirecting based on role", user.role);
         // Redirect based on user role
         if (user.role === 'admin') {
           navigate('/admin-dashboard');
@@ -24,7 +20,6 @@ const Index = () => {
           navigate('/client-dashboard');
         }
       } else {
-        console.log("No user, redirecting to login");
         navigate('/login');
       }
     }

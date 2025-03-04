@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,7 @@ import { Bell, Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Input } from '@/components/ui/input';
-import { UserProfilePopup } from '@/components/user/UserProfilePopup';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     navigate('/login');
     return null;
   }
+
+  // Get initials from user's full name
+  const initials = user.fullName
+    ?.split(' ')
+    .map(name => name.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/98 to-background/95">
@@ -86,9 +95,21 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
               <span className="sr-only">Notifications</span>
             </Button>
-            
-            {/* User Profile Popup */}
-            <UserProfilePopup user={user} onSignOut={signOut} />
+            <div className="flex items-center gap-2">
+              <div className="hidden md:block">
+                <div className="text-sm font-medium">{user.fullName}</div>
+                <div className="text-xs text-muted-foreground capitalize">{user.role}</div>
+              </div>
+              <div className="relative">
+                <Avatar className="h-9 w-9 border border-border/40 bg-background/50">
+                  {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.fullName || ''} />}
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-0 end-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500">
+                  <span className="sr-only">Online</span>
+                </span>
+              </div>
+            </div>
           </div>
         </header>
         
