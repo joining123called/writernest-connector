@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useMatch } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
@@ -93,19 +93,25 @@ export const DashboardSidebar = ({
       menuItems = clientMenuItems;
   }
 
+  // Check if the path is active or partially active (for nested routes)
+  const isActivePath = (path: string) => {
+    return location.pathname === path || 
+           (path !== `/${userRole.toLowerCase()}-dashboard` && location.pathname.startsWith(path));
+  };
+
   return (
     <motion.aside
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r bg-card/50 backdrop-blur-lg transition-all duration-300 ease-in-out",
+        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-border/40 bg-card/40 backdrop-blur-xl transition-all duration-300 ease-in-out",
         collapsed ? "w-[80px]" : "w-[260px]"
       )}
       initial={false}
       animate={{ width: collapsed ? 80 : 260 }}
     >
       {/* Sidebar header with logo */}
-      <div className="flex h-16 items-center border-b px-4">
+      <div className="flex h-16 items-center border-b border-border/40 px-4">
         <div className="flex items-center">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-md">
             <FileText className="h-5 w-5" />
           </span>
           {!collapsed && (
@@ -113,7 +119,7 @@ export const DashboardSidebar = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="ml-3 font-semibold text-lg"
+              className="ml-3 font-semibold text-lg tracking-tight"
             >
               AcademicOrder
             </motion.span>
@@ -121,34 +127,48 @@ export const DashboardSidebar = ({
         </div>
         <button
           onClick={toggleSidebar}
-          className="ml-auto rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
         >
           {collapsed ? (
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           ) : (
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           )}
         </button>
       </div>
 
       {/* Menu items */}
-      <nav className="flex-1 overflow-auto py-4">
+      <nav className="flex-1 overflow-auto py-4 scrollbar-none">
         <ul className="space-y-1 px-2">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = isActivePath(item.path);
             return (
               <li key={item.path}>
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group relative",
                     isActive 
-                      ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-medium" 
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      ? "bg-accent text-accent-foreground font-medium" 
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
-                  {!collapsed && <span>{item.label}</span>}
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-active-item"
+                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-2 border-primary"
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center justify-center">
+                    <item.icon 
+                      className={cn(
+                        "h-5 w-5 transition-colors", 
+                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-accent-foreground"
+                      )} 
+                    />
+                  </span>
+                  {!collapsed && <span className="relative z-10">{item.label}</span>}
                 </Link>
               </li>
             );
@@ -157,10 +177,10 @@ export const DashboardSidebar = ({
       </nav>
 
       {/* Logout button */}
-      <div className="mt-auto border-t p-4">
+      <div className="mt-auto border-t border-border/40 p-3">
         <button
           onClick={onSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
           {!collapsed && <span>Logout</span>}
