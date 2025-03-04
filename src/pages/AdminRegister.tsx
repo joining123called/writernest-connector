@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, Phone, Shield } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Shield } from 'lucide-react';
 import { FormData, UserRole } from '@/types';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -102,17 +102,17 @@ const AdminRegister = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card bg-background/95 backdrop-blur-lg">
-        <div className="flex flex-col items-center mb-6">
-          <div className="rounded-full bg-primary/10 p-3 mb-2">
+      <div className="auth-card">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Shield className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold">Create Admin Account</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign up for administrative access</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2.5">
             <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -122,14 +122,14 @@ const AdminRegister = () => {
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={handleChange}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -140,30 +140,27 @@ const AdminRegister = () => {
                 placeholder="admin@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-            <div className="relative pl-10">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-              <PhoneInput
-                international
-                defaultCountry="US"
-                value={formData.phone}
-                onChange={handlePhoneChange}
-                className="h-11 rounded-lg border border-input/50 bg-background shadow-sm w-full"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+            <PhoneInput
+              international
+              defaultCountry="US"
+              value={formData.phone}
+              onChange={handlePhoneChange}
+              className="h-11 rounded-lg border border-input/50 bg-background/80 shadow-sm focus-within:ring-2 focus-within:ring-ring/70 focus-within:border-ring"
+              required
+              disabled={isSubmitting}
+            />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -174,7 +171,7 @@ const AdminRegister = () => {
                 placeholder="Create a secure password"
                 value={formData.password}
                 onChange={handleChange}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
@@ -182,7 +179,7 @@ const AdminRegister = () => {
             <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -193,7 +190,7 @@ const AdminRegister = () => {
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
@@ -202,6 +199,7 @@ const AdminRegister = () => {
           
           <Button 
             type="submit" 
+            variant="gradient"
             className="w-full h-11 mt-2 rounded-lg font-medium" 
             disabled={isSubmitting}
           >
@@ -216,7 +214,7 @@ const AdminRegister = () => {
           </Button>
         </form>
         
-        <div className="mt-6 text-center space-y-4">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-sm">
             Already have an admin account?{" "}
             <Link to="/admin-login" className="font-medium text-primary hover:underline transition-colors">

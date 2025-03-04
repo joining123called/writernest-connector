@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, KeyRound } from 'lucide-react';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -31,8 +31,11 @@ const ForgotPassword = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card bg-background/95 backdrop-blur-lg">
-        <div className="flex flex-col items-center mb-6">
+      <div className="auth-card">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <KeyRound className="h-6 w-6 text-primary" />
+          </div>
           <h1 className="text-2xl font-semibold">Reset Password</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isSubmitted ? 
@@ -43,7 +46,7 @@ const ForgotPassword = () => {
         
         {isSubmitted ? (
           <div className="text-center space-y-6">
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="p-5 bg-primary/5 rounded-lg border border-primary/10">
               <p className="text-sm">
                 If an account exists with the email you provided, we've sent password reset instructions.
               </p>
@@ -62,8 +65,8 @@ const ForgotPassword = () => {
           </div>
         ) : (
           <>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2.5">
                 <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -73,7 +76,7 @@ const ForgotPassword = () => {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                    className="pl-10 rounded-lg"
                     required
                     disabled={isSubmitting}
                   />
@@ -82,7 +85,8 @@ const ForgotPassword = () => {
               
               <Button 
                 type="submit" 
-                className="w-full h-11 mt-2 rounded-lg font-medium" 
+                variant="gradient"
+                className="w-full h-11 mt-4 rounded-lg font-medium" 
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -96,8 +100,8 @@ const ForgotPassword = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
-              <Link to="/login" className="inline-flex items-center text-sm text-primary hover:underline">
+            <div className="mt-8 text-center">
+              <Link to="/login" className="inline-flex items-center text-sm text-primary hover:underline font-medium">
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 Back to login
               </Link>

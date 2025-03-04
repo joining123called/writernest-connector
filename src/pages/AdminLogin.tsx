@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,17 +55,17 @@ const AdminLogin = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card bg-background/95 backdrop-blur-lg">
-        <div className="flex flex-col items-center mb-6">
-          <div className="rounded-full bg-primary/10 p-3 mb-2">
+      <div className="auth-card">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Shield className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold">Admin Sign In</h1>
           <p className="text-sm text-muted-foreground mt-1">Access the admin dashboard</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2.5">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -75,17 +75,17 @@ const AdminLogin = () => {
                 placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-              <Link to="/admin-forgot-password" className="text-xs text-primary hover:underline">
+              <Link to="/admin-forgot-password" className="text-xs text-primary hover:underline font-medium">
                 Forgot password?
               </Link>
             </div>
@@ -97,7 +97,7 @@ const AdminLogin = () => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 pl-10 rounded-lg border-input/50 bg-background shadow-sm"
+                className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
               />
@@ -106,6 +106,7 @@ const AdminLogin = () => {
           
           <Button 
             type="submit" 
+            variant="gradient"
             className="w-full h-11 mt-2 rounded-lg font-medium" 
             disabled={isSubmitting}
           >
@@ -120,7 +121,7 @@ const AdminLogin = () => {
           </Button>
         </form>
         
-        <div className="mt-6 text-center space-y-4">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-sm">
             Need an admin account?{" "}
             <Link to="/admin-register" className="font-medium text-primary hover:underline transition-colors">
