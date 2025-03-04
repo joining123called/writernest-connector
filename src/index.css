@@ -98,6 +98,7 @@
   }
 }
 
+/* Auth pages styling */
 .auth-container {
   @apply min-h-screen w-full flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 lg:p-10 animate-fade-in;
   background: 
@@ -124,6 +125,22 @@
   height: 4px;
   background: linear-gradient(to right, hsl(var(--primary)), rgba(158, 119, 237, 0.7));
   z-index: 1;
+}
+
+/* Dashboard styling */
+.dashboard-container {
+  @apply p-4 sm:p-6 md:p-8 lg:p-10 max-w-7xl mx-auto;
+}
+
+/* Custom card styles */
+.premium-card {
+  @apply rounded-xl border border-border/50 bg-card/90 shadow-md hover:shadow-lg transition-all duration-300;
+}
+
+.stats-card {
+  @apply rounded-xl p-6 transition-all duration-300 hover:shadow-md;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)/90%) 100%);
+  backdrop-filter: blur(10px);
 }
 
 /* Custom styles for PhoneInput */
@@ -154,6 +171,17 @@
   border-color: hsl(var(--ring));
 }
 
+/* Remove phone icon in the UI */
+.PhoneInputCountryIcon {
+  display: none;
+}
+
+/* Fix alignment in PhoneInput */
+.PhoneInputCountrySelectArrow {
+  margin-left: 0.5rem;
+}
+
+/* Animations */
 @keyframes slide-in {
   0% {
     opacity: 0;
@@ -172,4 +200,22 @@
   100% {
     opacity: 1;
   }
+}
+
+/* Utility animations */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dashboard specific transitions */
+.sidebar-transition {
+  transition: width 0.3s ease-in-out;
+}
+
+.content-transition {
+  transition: margin-left 0.3s ease-in-out;
 }

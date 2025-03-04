@@ -1,12 +1,12 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const AdminDashboard = () => {
-  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,26 +24,84 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="dashboard-container">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-card rounded-2xl p-8 shadow-lg">
-          <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-          
-          <div className="mb-8">
-            <p className="text-lg">Welcome, {user?.fullName}!</p>
-            <p className="text-muted-foreground">You are logged in as an Administrator.</p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.fullName}! Here's an overview of the platform.
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Total Users</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">324</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +18 from last week
+            </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={() => signOut()}
-            className="w-full md:w-auto"
-          >
-            Logout
-          </Button>
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Active Orders</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">42</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +7 from yesterday
+            </div>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Open Disputes</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">5</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              -2 from last week
+            </div>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Total Revenue</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">$24,680</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +$4,350 from last month
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xl border bg-card p-6 shadow-sm md:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">Platform Activity</h2>
+            <p className="text-muted-foreground">Platform activity overview will appear here.</p>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Recent Disputes</h2>
+            <p className="text-muted-foreground">Recent disputes will appear here.</p>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">New Users</h2>
+            <p className="text-muted-foreground">New user registrations will appear here.</p>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Financial Overview</h2>
+            <p className="text-muted-foreground">Financial metrics will appear here.</p>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

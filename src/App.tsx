@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/contexts/auth"; // Updated import
+import { AuthProvider } from "@/contexts/auth"; 
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -35,9 +35,19 @@ const AnimatedRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
-        <Route path="/writer-dashboard" element={<WriterDashboard />} />
+        
+        {/* Client Dashboard Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
+        <Route path="/client-dashboard/:page" element={<ClientDashboard />} />
+        
+        {/* Writer Dashboard Routes */}
+        <Route path="/writer-dashboard" element={<WriterDashboard />} />
+        <Route path="/writer-dashboard/:page" element={<WriterDashboard />} />
+        
+        {/* Admin Dashboard Routes */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard/:page" element={<AdminDashboard />} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

@@ -1,12 +1,12 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const ClientDashboard = () => {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,26 +24,65 @@ const ClientDashboard = () => {
   }
 
   return (
-    <div className="dashboard-container">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-card rounded-2xl p-8 shadow-lg">
-          <h1 className="text-3xl font-bold mb-6">Client Dashboard</h1>
-          
-          <div className="mb-8">
-            <p className="text-lg">Welcome, {user?.fullName}!</p>
-            <p className="text-muted-foreground">You are logged in as a Client.</p>
+    <DashboardLayout>
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Client Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.fullName}! Here's an overview of your academic orders.
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Active Orders</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">3</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +2 from last week
+            </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={() => signOut()}
-            className="w-full md:w-auto"
-          >
-            Logout
-          </Button>
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Completed Orders</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">12</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +5 from last month
+            </div>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Pending Revisions</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">1</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              -2 from last week
+            </div>
+          </div>
+          
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Total Spent</span>
+            </div>
+            <div className="mt-4 text-3xl font-bold">$1,240</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              +$345 from last month
+            </div>
+          </div>
+        </div>
+        
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
+          <p className="text-muted-foreground">Your recent orders will appear here.</p>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
