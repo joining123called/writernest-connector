@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/auth"; 
 import { AnimatePresence } from "framer-motion";
+import { Suspense, lazy, Component, ErrorInfo, ReactNode } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,8 +20,50 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/profile/ProfilePage";
 import NotFound from "./pages/NotFound";
 
-// Create a new QueryClient instance
-const queryClient = new QueryClient();
+// Create a new QueryClient instance with retry disabled to prevent infinite loops
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Error boundary component
+class ErrorBoundary extends Component<{ children: ReactNode, fallback: ReactNode }> {
+  state = { hasError: false, error: null };
+  
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("App error caught by boundary:", error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    
+    return this.props.children;
+  }
+}
+
+// Fallback component for errors
+const ErrorFallback = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <h2 className="text-2xl font-bold text-destructive mb-4">Something went wrong</h2>
+    <p className="text-muted-foreground mb-6">The application encountered an error. Please try refreshing the page.</p>
+    <button 
+      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+      onClick={() => window.location.href = '/'}
+    >
+      Go to home page
+    </button>
+  </div>
+);
 
 // AnimatedRoutes component to handle route transitions
 const AnimatedRoutes = () => {
@@ -62,17 +105,21 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <AnimatedRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary fallback={<ErrorFallback />}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <AnimatedRoutes />
+            </AuthProvider>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -1,159 +1,172 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { User } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Camera, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { Loader2, Upload, X } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Added the import
 
 interface AvatarUploadProps {
-  userId: string;
-  url?: string;
-  onUploadComplete: (url: string) => void;
-  size?: 'sm' | 'md' | 'lg';
-  name?: string;
+  user: User;
+  onAvatarUpdate: (avatarUrl: string) => void;
 }
 
-export const AvatarUpload = ({ 
-  userId, 
-  url, 
-  onUploadComplete,
-  size = 'md',
-  name = ''
-}: AvatarUploadProps) => {
-  const [uploading, setUploading] = useState(false);
+export const AvatarUpload: React.FC<AvatarUploadProps> = ({ user, onAvatarUpdate }) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  
-  // Get initials from name
-  const initials = name
-    ?.split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
 
-  // Define avatar size classes
-  const sizeClasses = {
-    sm: 'h-16 w-16',
-    md: 'h-24 w-24',
-    lg: 'h-32 w-32'
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
   };
 
-  // Define button size classes
-  const buttonSizeClasses = {
-    sm: 'h-6 w-6',
-    md: 'h-8 w-8',
-    lg: 'h-10 w-10'
-  };
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+
     try {
-      setUploading(true);
-      
-      if (!event.target.files || event.target.files.length === 0) {
-        return;
-      }
-      
-      const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/${Math.random().toString(36).slice(2)}.${fileExt}`;
-      
-      // Check file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Profile picture must be less than 2MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a valid image file (JPEG, PNG, GIF, or WEBP)",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: storageError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
-        
-      if (uploadError) {
-        throw uploadError;
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (storageError) {
+        throw storageError;
       }
-      
-      // Get public URL
-      const { data } = supabase.storage
+
+      const { data: publicURL } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
-        
-      // Update user profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: data.publicUrl })
-        .eq('id', userId);
-        
-      if (updateError) {
-        throw updateError;
+
+      if (!publicURL?.publicUrl) {
+        throw new Error('Failed to retrieve public URL');
       }
-      
-      // Callback with new URL
-      onUploadComplete(data.publicUrl);
-      
+
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicURL.publicUrl })
+        .eq('id', user.id);
+
+      if (dbError) {
+        throw dbError;
+      }
+
+      onAvatarUpdate(publicURL.publicUrl);
+
       toast({
         title: "Avatar updated",
-        description: "Your profile picture has been updated successfully",
+        description: "Your avatar has been updated successfully.",
       });
-      
     } catch (error: any) {
+      console.error("Avatar upload error:", error);
       toast({
-        title: "Upload failed",
-        description: error.message || "There was an error uploading your profile picture",
+        title: "Failed to update avatar",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-      console.error('Error uploading avatar:', error);
     } finally {
-      setUploading(false);
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Reset the file input
+      }
     }
   };
-  
+
   return (
-    <div className="relative">
-      <Avatar className={cn("border-2 border-border/40", sizeClasses[size])}>
-        {url ? <AvatarImage src={url} alt={name || 'User avatar'} /> : null}
-        <AvatarFallback>{initials || '?'}</AvatarFallback>
+    <div className="flex flex-col items-center space-y-4">
+      <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
+        <AvatarImage src={user.avatarUrl || undefined} alt={user.fullName} />
+        <AvatarFallback>{user.fullName?.charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
-      
-      <div className="absolute -bottom-2 -right-2">
-        <div className="relative">
-          <Button 
-            type="button" 
-            size="icon" 
-            variant="secondary"
-            className={cn("rounded-full shadow-md", buttonSizeClasses[size])}
-            disabled={uploading}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      <div className="flex items-center space-x-2">
+        <Button size="sm" variant="outline" onClick={handleAvatarClick} disabled={isUploading}>
+          {isUploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Uploading
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Update Avatar
+            </>
+          )}
+        </Button>
+        {user.avatarUrl && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={async () => {
+              setIsUploading(true);
+              try {
+                const { error: storageError } = await supabase.storage
+                  .from('avatars')
+                  .remove([user.avatarUrl.split('/').pop() as string]);
+
+                if (storageError) {
+                  throw storageError;
+                }
+
+                const { error: dbError } = await supabase
+                  .from('profiles')
+                  .update({ avatar_url: null })
+                  .eq('id', user.id);
+
+                if (dbError) {
+                  throw dbError;
+                }
+
+                onAvatarUpdate(null);
+
+                toast({
+                  title: "Avatar removed",
+                  description: "Your avatar has been removed successfully.",
+                });
+              } catch (error: any) {
+                console.error("Avatar removal error:", error);
+                toast({
+                  title: "Failed to remove avatar",
+                  description: error.message || "An unexpected error occurred.",
+                  variant: "destructive",
+                });
+              } finally {
+                setIsUploading(false);
+              }
+            }}
+            disabled={isUploading}
           >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Removing
+              </>
             ) : (
-              <Camera className="h-4 w-4" />
+              <>
+                <X className="mr-2 h-4 w-4" />
+                Remove
+              </>
             )}
           </Button>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleUpload}
-            disabled={uploading}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import type { Toast } from '@/hooks/use-toast';
@@ -73,6 +74,8 @@ export const signIn = async (
       return { error: profileError };
     }
 
+    console.log("Profile data from login:", profile);
+
     const user: User = {
       id: profile.id,
       email: profile.email,
@@ -81,7 +84,7 @@ export const signIn = async (
       role: profile.role as UserRole,
       createdAt: profile.created_at,
       avatarUrl: profile.avatar_url || undefined,
-      bio: profile.bio || undefined,
+      bio: profile.bio || undefined, // Ensure bio is included
     };
 
     setState({

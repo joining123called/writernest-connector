@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -31,7 +30,13 @@ export const useAuthProvider = () => {
   
   // Memoized fetchUser function
   const fetchUser = useCallback(async () => {
-    await fetchCurrentUser(setState);
+    console.log("Fetching current user...");
+    try {
+      await fetchCurrentUser(setState);
+      console.log("User fetch complete");
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
   }, []);
 
   // Clean up function for interval
@@ -44,22 +49,28 @@ export const useAuthProvider = () => {
 
   // Fetch user on mount and auth state change
   useEffect(() => {
+    console.log("Auth provider initialized");
     const initAuth = async () => {
+      console.log("Initializing auth...");
       await fetchUser();
     };
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event);
       // The session validation is now handled by useSession hook
       if (session && isValid) {
+        console.log("Valid session detected");
         initAuth();
       } else if (!session) {
+        console.log("No session detected, resetting state");
         setState(initialState);
       }
     });
 
     return () => {
+      console.log("Cleaning up auth provider");
       subscription.unsubscribe();
       clearRefreshInterval();
     };
@@ -70,10 +81,15 @@ export const useAuthProvider = () => {
     // Clean up any existing interval first
     clearRefreshInterval();
     
-    if (!state.session) return;
+    if (!state.session) {
+      console.log("No session, skipping refresh interval setup");
+      return;
+    }
     
+    console.log("Setting up session refresh interval");
     // Refresh the session token every 10 minutes
     refreshIntervalRef.current = setInterval(() => {
+      console.log("Refreshing session...");
       refreshSession();
     }, 10 * 60 * 1000);
     
