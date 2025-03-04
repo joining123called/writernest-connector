@@ -8,12 +8,12 @@ export type PlatformSettings = {
     logo: string;
     contactEmail: string;
     supportPhone: string;
-    logoUrl?: string;
-    faviconUrl?: string;
-    platformName?: string;
-    defaultLanguage?: string;
-    timezone?: string;
-    metaDescription?: string;
+    logoUrl: string;
+    faviconUrl: string;
+    platformName: string;
+    defaultLanguage: string;
+    timezone: string;
+    metaDescription: string;
   };
   orderForm: {
     serviceName: string;
@@ -127,7 +127,7 @@ export const usePlatformSettings = () => {
     }));
   };
 
-  const uploadFile = (file: File) => {
+  const uploadFile = (file: File): Promise<string> => {
     // Placeholder for file upload functionality
     console.log("File upload placeholder:", file);
     return Promise.resolve("/placeholder.svg");

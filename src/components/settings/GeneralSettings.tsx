@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -67,18 +66,16 @@ export function GeneralSettings() {
       const file = e.target.files[0];
       try {
         const logoUrl = await uploadFile(file);
-        if (logoUrl) {
-          updateSettings({
-            general: {
-              ...settings.general,
-              logoUrl
-            }
-          });
-          toast({
-            title: "Logo uploaded",
-            description: "Your logo has been updated successfully."
-          });
-        }
+        updateSettings({
+          general: {
+            ...settings.general,
+            logoUrl
+          }
+        });
+        toast({
+          title: "Logo uploaded",
+          description: "Your logo has been updated successfully."
+        });
       } catch (error) {
         toast({
           title: "Upload failed",
@@ -94,18 +91,16 @@ export function GeneralSettings() {
       const file = e.target.files[0];
       try {
         const faviconUrl = await uploadFile(file);
-        if (faviconUrl) {
-          updateSettings({
-            general: {
-              ...settings.general,
-              faviconUrl
-            }
-          });
-          toast({
-            title: "Favicon uploaded",
-            description: "Your favicon has been updated successfully."
-          });
-        }
+        updateSettings({
+          general: {
+            ...settings.general,
+            faviconUrl
+          }
+        });
+        toast({
+          title: "Favicon uploaded",
+          description: "Your favicon has been updated successfully."
+        });
       } catch (error) {
         toast({
           title: "Upload failed",
