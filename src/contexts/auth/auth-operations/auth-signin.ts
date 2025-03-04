@@ -86,7 +86,6 @@ export const signIn = async (
       phone: profile.phone,
       role: profile.role as UserRole,
       createdAt: profile.created_at,
-      avatarUrl: profile.avatar_url || undefined, // Added avatarUrl field
     };
 
     setState({
