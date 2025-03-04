@@ -10,16 +10,16 @@ interface SidebarHeaderProps {
 }
 
 export const SidebarHeader = ({ collapsed, toggleSidebar }: SidebarHeaderProps) => {
-  const { settings, isLoadingSettings } = usePlatformSettings();
+  const { settings } = usePlatformSettings();
   const [platformName, setPlatformName] = useState('AcademicOrder');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoadingSettings && settings) {
-      setPlatformName(settings.platformName);
-      setLogoUrl(settings.logoUrl);
+    if (settings) {
+      setPlatformName(settings.general.siteName);
+      setLogoUrl(settings.general.logo);
     }
-  }, [isLoadingSettings, settings]);
+  }, [settings]);
 
   return (
     <div className="flex h-16 items-center justify-between border-b border-sidebar-border/30 px-4">

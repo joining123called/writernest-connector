@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -56,23 +55,27 @@ export function OrderFormSettings() {
   const form = useForm<z.infer<typeof formSettingsSchema>>({
     resolver: zodResolver(formSettingsSchema),
     defaultValues: {
-      serviceName: "Essay Writing Service",
-      serviceDescription: "Professional academic writing assistance for students of all levels",
-      showSubjectFields: true,
-      showPageCount: true,
-      showWordCount: true,
-      showDeadlineOptions: true,
-      showCitationStyles: true,
-      showInstructions: true,
-      basePricePerPage: "15.99",
-      urgentDeliveryMultiplier: "1.5",
-      minimumHours: "6",
-      standardDeliveryDays: "7",
-      priceDisplayMode: "total",
-      orderSummaryPosition: "right",
-      enabledPaperTypes: paperTypes.map(type => type.value),
-      enabledSubjects: subjects.map(subject => subject.value),
-      wordsPerPage: "275",
+      serviceName: settings.orderForm.serviceName,
+      serviceDescription: settings.orderForm.serviceDescription,
+      showSubjectFields: settings.orderForm.showSubjectFields,
+      showPageCount: settings.orderForm.showPageCount,
+      showWordCount: settings.orderForm.showWordCount,
+      showDeadlineOptions: settings.orderForm.showDeadlineOptions,
+      showCitationStyles: settings.orderForm.showCitationStyles,
+      showInstructions: settings.orderForm.showInstructions,
+      basePricePerPage: settings.orderForm.basePricePerPage,
+      urgentDeliveryMultiplier: settings.orderForm.urgentDeliveryMultiplier,
+      minimumHours: settings.orderForm.minimumHours,
+      standardDeliveryDays: settings.orderForm.standardDeliveryDays,
+      priceDisplayMode: settings.orderForm.priceDisplayMode,
+      orderSummaryPosition: settings.orderForm.orderSummaryPosition,
+      enabledPaperTypes: settings.orderForm.enabledPaperTypes.length > 0 
+        ? settings.orderForm.enabledPaperTypes 
+        : paperTypes.map(type => type.value),
+      enabledSubjects: settings.orderForm.enabledSubjects.length > 0 
+        ? settings.orderForm.enabledSubjects 
+        : subjects.map(subject => subject.value),
+      wordsPerPage: settings.orderForm.wordsPerPage,
     }
   });
   
@@ -106,18 +109,16 @@ export function OrderFormSettings() {
       enabledSubjects: data.enabledSubjects,
     };
     
-    // Here we would update our platform settings with these values
-    // For this example, we'll just show a toast notification
-    if (updateSettings) {
-      updateSettings({
-        orderForm: {
-          ...data,
-          pricing: pricingSettings,
-          display: displaySettings,
-          fields: fieldSettings,
-        }
-      });
-    }
+    // Update the platform settings
+    updateSettings({
+      general: settings.general, // Preserve existing general settings
+      orderForm: {
+        ...data,
+        pricing: pricingSettings,
+        display: displaySettings,
+        fields: fieldSettings,
+      }
+    });
     
     toast({
       title: "Settings saved",
