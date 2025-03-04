@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -8,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, LogIn } from 'lucide-react';
 import { UserRole } from '@/types';
+import { withCSRFProtection } from '@/components/security/CSRFProtection';
+import { validateCSRFToken } from '@/contexts/auth/session-management/session-utils';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,19 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate CSRF token
+    const form = e.target as HTMLFormElement;
+    const csrfToken = form.elements.namedItem('csrf_token') as HTMLInputElement;
+    
+    if (!csrfToken || !validateCSRFToken(csrfToken.value)) {
+      toast({
+        title: "Security error",
+        description: "Invalid form submission detected. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!email || !password) {
       toast({
@@ -65,6 +79,8 @@ const Login = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Hidden CSRF token field will be added by the CSRFProtection component */}
+          
           <div className="space-y-2.5">
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative">
@@ -140,4 +156,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default withCSRFProtection(Login);

@@ -6,6 +6,7 @@ import { AuthState } from './types';
 import { User, UserRole } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { initialState } from './AuthContext';
+import { useSession } from '@/hooks/use-session';
 import {
   signUp as authSignUp,
   signIn as authSignIn,
@@ -19,6 +20,11 @@ export const useAuthProvider = () => {
   const [state, setState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { 
+    session: enhancedSession, 
+    isValid, 
+    refreshSession 
+  } = useSession();
 
   // Fetch user on mount and auth state change
   useEffect(() => {
@@ -29,13 +35,30 @@ export const useAuthProvider = () => {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      initAuth();
+      // The session validation is now handled by useSession hook
+      if (session && isValid) {
+        initAuth();
+      } else if (!session) {
+        setState(initialState);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isValid]);
+
+  // Refresh session periodically
+  useEffect(() => {
+    if (!state.session) return;
+    
+    // Refresh the session token every 10 minutes
+    const refreshInterval = setInterval(() => {
+      refreshSession();
+    }, 10 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [state.session, refreshSession]);
 
   // Authentication methods wrapper functions
   const signUp = async (email: string, password: string, userData: Partial<User>) => {

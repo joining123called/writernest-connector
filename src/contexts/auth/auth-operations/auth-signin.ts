@@ -3,6 +3,7 @@ import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import type { Toast } from '@/hooks/use-toast';
 import { AuthState } from '../types';
+import { initializeSession, logSessionEvent } from '../session-management/session-utils';
 
 export const signIn = async (
   email: string, 
@@ -18,6 +19,12 @@ export const signIn = async (
     });
 
     if (error) {
+      // Log failed login attempt
+      await logSessionEvent('unknown', 'login_failed', { 
+        email, 
+        errorMessage: error.message 
+      });
+      
       toast({
         title: "Login failed",
         description: error.message,
@@ -27,6 +34,12 @@ export const signIn = async (
     }
 
     if (data.user) {
+      // Log successful login
+      await logSessionEvent(data.user.id, 'login_successful', {});
+      
+      // Initialize a new session
+      await initializeSession(data.session);
+      
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -76,6 +89,12 @@ export const signIn = async (
 
     return { error: null };
   } catch (err: any) {
+    // Log unexpected error
+    await logSessionEvent('unknown', 'login_error', { 
+      email, 
+      errorMessage: err.message 
+    });
+    
     toast({
       title: "An unexpected error occurred",
       description: err.message,
