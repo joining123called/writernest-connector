@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { AuthState } from './types';
@@ -25,11 +25,27 @@ export const useAuthProvider = () => {
     isValid, 
     refreshSession 
   } = useSession();
+  
+  // Use a ref to avoid unnecessary re-renders
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Memoized fetchUser function
+  const fetchUser = useCallback(async () => {
+    await fetchCurrentUser(setState);
+  }, []);
+
+  // Clean up function for interval
+  const clearRefreshInterval = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+  }, []);
 
   // Fetch user on mount and auth state change
   useEffect(() => {
     const initAuth = async () => {
-      await fetchCurrentUser(setState);
+      await fetchUser();
     };
 
     initAuth();
@@ -45,41 +61,45 @@ export const useAuthProvider = () => {
 
     return () => {
       subscription.unsubscribe();
+      clearRefreshInterval();
     };
-  }, [isValid]);
+  }, [isValid, fetchUser, clearRefreshInterval]);
 
   // Refresh session periodically
   useEffect(() => {
+    // Clean up any existing interval first
+    clearRefreshInterval();
+    
     if (!state.session) return;
     
     // Refresh the session token every 10 minutes
-    const refreshInterval = setInterval(() => {
+    refreshIntervalRef.current = setInterval(() => {
       refreshSession();
     }, 10 * 60 * 1000);
     
-    return () => clearInterval(refreshInterval);
-  }, [state.session, refreshSession]);
+    return clearRefreshInterval;
+  }, [state.session, refreshSession, clearRefreshInterval]);
 
   // Authentication methods wrapper functions
-  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+  const signUp = useCallback(async (email: string, password: string, userData: Partial<User>) => {
     return authSignUp(email, password, userData, toast);
-  };
+  }, [toast]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     return authSignIn(email, password, toast, setState, navigate);
-  };
+  }, [toast, setState, navigate]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     return authSignOut(toast, setState, navigate);
-  };
+  }, [toast, setState, navigate]);
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     return authResetPassword(email, toast);
-  };
+  }, [toast]);
 
-  const updatePassword = async (password: string) => {
+  const updatePassword = useCallback(async (password: string) => {
     return authUpdatePassword(password, toast);
-  };
+  }, [toast]);
 
   // Return the state and methods
   return {

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -19,9 +19,17 @@ export const useSession = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isValid, setIsValid] = useState<boolean>(false);
   const { toast } = useToast();
+  
+  // Use a ref to track if component is mounted
+  const isMounted = useRef(true);
+  
+  // Use a ref for activity listeners to avoid recreating them on each render
+  const activityListeners = useRef<Array<() => void>>([]);
 
   // Load and validate session
   const loadSession = useCallback(async () => {
+    if (!isMounted.current) return;
+    
     setIsLoading(true);
     
     try {
@@ -42,11 +50,14 @@ export const useSession = () => {
           await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
           setSession(null);
           setIsValid(false);
-          toast({
-            title: "Session expired",
-            description: "Your session has expired. Please log in again.",
-            variant: "destructive",
-          });
+          
+          if (isMounted.current) {
+            toast({
+              title: "Session expired",
+              description: "Your session has expired. Please log in again.",
+              variant: "destructive",
+            });
+          }
         }
       } else {
         setSession(null);
@@ -56,24 +67,30 @@ export const useSession = () => {
       console.error('Session loading error:', error);
       setSession(null);
       setIsValid(false);
-      toast({
-        title: "Session error",
-        description: error.message || "Failed to load your session.",
-        variant: "destructive",
-      });
+      
+      if (isMounted.current) {
+        toast({
+          title: "Session error",
+          description: error.message || "Failed to load your session.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   }, [toast]);
 
-  // Monitor user activity to extend session
-  useEffect(() => {
-    if (!session || !isValid) return;
-
+  // Setup and cleanup activity listeners
+  const setupActivityListeners = useCallback((userId: string) => {
+    // Clean up any existing listeners first
+    cleanupActivityListeners();
+    
     // Update session on user activity
     const updateActivity = () => {
-      if (session) {
-        updateSessionActivity(session.user.id);
+      if (userId) {
+        updateSessionActivity(userId);
       }
     };
 
@@ -82,32 +99,52 @@ export const useSession = () => {
     window.addEventListener('keypress', updateActivity);
     window.addEventListener('click', updateActivity);
     window.addEventListener('scroll', updateActivity);
+    
+    // Store references to remove them later
+    activityListeners.current = [
+      () => window.removeEventListener('mousemove', updateActivity),
+      () => window.removeEventListener('keypress', updateActivity),
+      () => window.removeEventListener('click', updateActivity),
+      () => window.removeEventListener('scroll', updateActivity)
+    ];
+  }, []);
+  
+  // Clean up activity listeners
+  const cleanupActivityListeners = useCallback(() => {
+    activityListeners.current.forEach(removeListener => removeListener());
+    activityListeners.current = [];
+  }, []);
+
+  // Monitor user activity to extend session
+  useEffect(() => {
+    if (!session?.user?.id || !isValid) return;
+
+    // Set up activity listeners
+    setupActivityListeners(session.user.id);
 
     // Check for inactivity periodically
     const inactivityCheck = setInterval(() => {
-      if (session && isSessionInactive(session.user.id)) {
+      if (session?.user?.id && isSessionInactive(session.user.id)) {
         // Auto logout after inactivity
         supabase.auth.signOut({ scope: 'local' }).then(() => { // Only sign out this tab/browser
-          setSession(null);
-          setIsValid(false);
-          toast({
-            title: "Session expired",
-            description: "Your session has expired due to inactivity.",
-            variant: "destructive",
-          });
+          if (isMounted.current) {
+            setSession(null);
+            setIsValid(false);
+            toast({
+              title: "Session expired",
+              description: "Your session has expired due to inactivity.",
+              variant: "destructive",
+            });
+          }
         });
       }
     }, 60000); // Check every minute
 
     return () => {
-      // Clean up listeners
-      window.removeEventListener('mousemove', updateActivity);
-      window.removeEventListener('keypress', updateActivity);
-      window.removeEventListener('click', updateActivity);
-      window.removeEventListener('scroll', updateActivity);
+      cleanupActivityListeners();
       clearInterval(inactivityCheck);
     };
-  }, [session, isValid, toast]);
+  }, [session, isValid, toast, setupActivityListeners, cleanupActivityListeners]);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -119,43 +156,59 @@ export const useSession = () => {
       if (event === 'SIGNED_IN' && session) {
         // Initialize a new session
         await initializeSession(session);
-        setSession(session);
-        setIsValid(true);
-      } else if (event === 'SIGNED_OUT') {
-        if (session) {
-          await terminateSession(session.user.id);
+        if (isMounted.current) {
+          setSession(session);
+          setIsValid(true);
+          setupActivityListeners(session.user.id);
         }
-        setSession(null);
-        setIsValid(false);
+      } else if (event === 'SIGNED_OUT') {
+        if (session?.user?.id) {
+          await terminateSession(session.user.id);
+          cleanupActivityListeners();
+        }
+        if (isMounted.current) {
+          setSession(null);
+          setIsValid(false);
+        }
       } else if (event === 'TOKEN_REFRESHED' && session) {
         // Updated session with refreshed token
-        setSession(session);
-        logSessionEvent(session.user.id, 'token_refreshed', {});
+        if (isMounted.current) {
+          setSession(session);
+          logSessionEvent(session.user.id, 'token_refreshed', {});
+        }
       } else if (event === 'USER_UPDATED' && session) {
         // User data was updated
-        setSession(session);
-        logSessionEvent(session.user.id, 'user_updated', {});
+        if (isMounted.current) {
+          setSession(session);
+          logSessionEvent(session.user.id, 'user_updated', {});
+        }
       }
     });
 
+    // Set up component unmount
     return () => {
+      isMounted.current = false;
+      cleanupActivityListeners();
       authListener.subscription.unsubscribe();
     };
-  }, [loadSession]);
+  }, [loadSession, setupActivityListeners, cleanupActivityListeners]);
 
   // Force sign out
   const invalidateSession = useCallback(async () => {
-    if (session) {
+    if (session?.user?.id) {
       await terminateSession(session.user.id);
+      cleanupActivityListeners();
       await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
-      setSession(null);
-      setIsValid(false);
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
+      if (isMounted.current) {
+        setSession(null);
+        setIsValid(false);
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+        });
+      }
     }
-  }, [session, toast]);
+  }, [session, toast, cleanupActivityListeners]);
 
   // Refresh session manually
   const refreshSession = useCallback(async () => {
@@ -164,18 +217,20 @@ export const useSession = () => {
       
       if (error) throw error;
       
-      if (data.session) {
+      if (data.session && isMounted.current) {
         setSession(data.session);
         updateSessionActivity(data.session.user.id);
         setIsValid(true);
       }
     } catch (error: any) {
       console.error('Session refresh error:', error);
-      toast({
-        title: "Session refresh failed",
-        description: error.message || "Failed to refresh your session.",
-        variant: "destructive",
-      });
+      if (isMounted.current) {
+        toast({
+          title: "Session refresh failed",
+          description: error.message || "Failed to refresh your session.",
+          variant: "destructive",
+        });
+      }
     }
   }, [toast]);
 

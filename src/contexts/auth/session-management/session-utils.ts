@@ -36,13 +36,17 @@ export const getSessionStorageKey = (userId: string): string => {
 export const getActiveSessionUserIds = (): string[] => {
   const userIds: string[] = [];
   
-  // Look through localStorage for all session metadata keys
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('session_metadata_')) {
-      const userId = key.replace('session_metadata_', '');
-      userIds.push(userId);
+  try {
+    // Look through localStorage for all session metadata keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('session_metadata_')) {
+        const userId = key.replace('session_metadata_', '');
+        userIds.push(userId);
+      }
     }
+  } catch (error) {
+    console.error('Failed to get active session user IDs:', error);
   }
   
   return userIds;
@@ -52,7 +56,7 @@ export const getActiveSessionUserIds = (): string[] => {
  * Initialize a new session with metadata
  */
 export const initializeSession = async (session: Session): Promise<boolean> => {
-  if (!session) return false;
+  if (!session?.user?.id) return false;
   
   try {
     // Create session metadata
@@ -77,18 +81,22 @@ export const initializeSession = async (session: Session): Promise<boolean> => {
 /**
  * Update session activity timestamp
  */
-export const updateSessionActivity = (userId: string): void => {
+export const updateSessionActivity = (userId: string): boolean => {
+  if (!userId) return false;
+  
   try {
     const storageKey = getSessionStorageKey(userId);
     const metadataStr = localStorage.getItem(storageKey);
-    if (!metadataStr) return;
+    if (!metadataStr) return false;
     
     const metadata: SessionMetadata = JSON.parse(metadataStr);
     metadata.lastActive = Date.now();
     
     localStorage.setItem(storageKey, JSON.stringify(metadata));
+    return true;
   } catch (error) {
     console.error('Failed to update session activity:', error);
+    return false;
   }
 };
 
@@ -96,6 +104,8 @@ export const updateSessionActivity = (userId: string): void => {
  * Check if session is expired due to inactivity
  */
 export const isSessionInactive = (userId: string): boolean => {
+  if (!userId) return true;
+  
   try {
     const storageKey = getSessionStorageKey(userId);
     const metadataStr = localStorage.getItem(storageKey);
@@ -115,12 +125,12 @@ export const isSessionInactive = (userId: string): boolean => {
  * Validate session
  */
 export const validateSession = async (session: Session | null): Promise<boolean> => {
-  if (!session) return false;
+  if (!session?.user?.id) return false;
   
   try {
     // Check if session is expired by time
     const { expires_at } = session;
-    if (new Date(expires_at * 1000) < new Date()) return false;
+    if (expires_at && new Date(expires_at * 1000) < new Date()) return false;
     
     // Check if session is inactive
     if (isSessionInactive(session.user.id)) return false;
@@ -138,15 +148,19 @@ export const validateSession = async (session: Session | null): Promise<boolean>
 /**
  * Terminate session
  */
-export const terminateSession = async (userId: string): Promise<void> => {
+export const terminateSession = async (userId: string): Promise<boolean> => {
+  if (!userId) return false;
+  
   try {
     // Remove session metadata from local storage
     localStorage.removeItem(getSessionStorageKey(userId));
     
     // Log session termination
     await logSessionEvent(userId, 'session_terminated', {});
+    return true;
   } catch (error) {
     console.error('Failed to terminate session:', error);
+    return false;
   }
 };
 
@@ -158,6 +172,11 @@ export const logSessionEvent = async (
   eventType: string, 
   metadata: Partial<SessionMetadata>
 ): Promise<void> => {
+  if (!userId) {
+    console.warn('Cannot log session event: No user ID provided');
+    return;
+  }
+  
   try {
     // In a production environment, you would log to a separate table
     console.log(`[SESSION_LOG] User: ${userId}, Event: ${eventType}, Time: ${new Date().toISOString()}`, metadata);
@@ -178,19 +197,31 @@ export const logSessionEvent = async (
  * Generate CSRF token
  */
 export const generateCSRFToken = (): string => {
-  const token = Math.random().toString(36).substring(2, 15) + 
-               Math.random().toString(36).substring(2, 15);
-  
-  // Store token in session storage (more secure than localStorage)
-  sessionStorage.setItem('csrf_token', token);
-  
-  return token;
+  try {
+    const token = Math.random().toString(36).substring(2, 15) + 
+                Math.random().toString(36).substring(2, 15);
+    
+    // Store token in session storage (more secure than localStorage)
+    sessionStorage.setItem('csrf_token', token);
+    
+    return token;
+  } catch (error) {
+    console.error('Failed to generate CSRF token:', error);
+    return '';
+  }
 };
 
 /**
  * Validate CSRF token
  */
 export const validateCSRFToken = (token: string): boolean => {
-  const storedToken = sessionStorage.getItem('csrf_token');
-  return token === storedToken;
+  if (!token) return false;
+  
+  try {
+    const storedToken = sessionStorage.getItem('csrf_token');
+    return token === storedToken;
+  } catch (error) {
+    console.error('Failed to validate CSRF token:', error);
+    return false;
+  }
 };

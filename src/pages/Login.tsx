@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,19 @@ const Login = () => {
   const { signIn, signOut, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // If user is already logged in, redirect them
+  useEffect(() => {
+    if (user) {
+      if (user.role === UserRole.ADMIN) {
+        navigate('/admin-dashboard');
+      } else if (user.role === UserRole.WRITER) {
+        navigate('/writer-dashboard');
+      } else {
+        navigate('/client-dashboard');
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +76,7 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      // Error is already handled in the signIn function
     } finally {
       setIsSubmitting(false);
     }
@@ -94,6 +109,7 @@ const Login = () => {
                 className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
+                autoComplete="email"
               />
             </div>
           </div>
@@ -116,6 +132,7 @@ const Login = () => {
                 className="pl-10 rounded-lg"
                 required
                 disabled={isSubmitting}
+                autoComplete="current-password"
               />
             </div>
           </div>

@@ -17,27 +17,51 @@ export const signOut = async (
     
     // Log the sign out event
     if (userId) {
-      await logSessionEvent(userId, 'user_logout', {});
-      await terminateSession(userId);
+      await logSessionEvent(userId, 'user_logout_initiated', {});
+      
+      // Terminate the session in our metadata store
+      const terminated = await terminateSession(userId);
+      if (!terminated) {
+        console.warn(`Failed to terminate session for user ${userId}`);
+      }
     }
     
     // Sign out from Supabase, but only for this browser session
-    await supabase.auth.signOut({ scope: 'local' });
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    
+    if (error) {
+      console.error('Signout API error:', error);
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Reset application state
     setState(initialState);
+    
+    // Log completion of signout
+    if (userId) {
+      // This won't be associated with the user anymore
+      await logSessionEvent('unknown', 'user_logout_completed', { 
+        additionalInfo: { previousUserId: userId }
+      });
+    }
     
     // Navigate to login page
     navigate('/login');
     
     toast({
       title: "Logged out successfully",
+      description: "You have been securely logged out.",
     });
   } catch (error: any) {
     console.error('Logout error:', error);
     toast({
       title: "Logout failed",
-      description: error.message,
+      description: error.message || "An unexpected error occurred during logout",
       variant: "destructive",
     });
   }
