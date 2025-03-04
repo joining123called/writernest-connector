@@ -29,7 +29,7 @@ export const SidebarMenuItem = ({
       <Link
         to={path}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all relative overflow-hidden group",
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all relative overflow-hidden group",
           isActive 
             ? "text-sidebar-primary font-medium" 
             : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
@@ -56,13 +56,13 @@ export const SidebarMenuItem = ({
         {/* Icon container */}
         <div 
           className={cn(
-            "relative z-10 flex h-9 w-9 items-center justify-center rounded-md transition-all duration-300 ease-out",
+            "relative z-10 flex h-8 w-8 items-center justify-center rounded-md transition-all duration-300 ease-out",
             isActive 
               ? "bg-primary/10 text-primary" 
               : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground group-hover:bg-sidebar-accent/20"
           )}
         >
-          <Icon className={cn("h-5 w-5 transition-transform duration-300 group-hover:scale-110")} />
+          <Icon className={cn("h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110")} />
         </div>
 
         {/* Label */}

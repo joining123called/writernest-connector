@@ -89,8 +89,8 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
   }
 
   return (
-    <nav className="flex-1 overflow-auto py-4 scrollbar-none">
-      <ul className="space-y-1 px-2">
+    <nav className="flex-1 overflow-auto py-3 scrollbar-none">
+      <ul className="space-y-0.5 px-2">
         {menuItems.map((item) => (
           <SidebarMenuItem
             key={item.path}
