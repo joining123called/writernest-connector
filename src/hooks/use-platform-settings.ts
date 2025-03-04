@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -52,21 +53,20 @@ export const usePlatformSettings = () => {
       const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
         // Convert JSON value to the appropriate type based on the expected property type
         const key = setting.key as keyof PlatformSettings;
-        const expectedType = typeof defaultSettings[key];
         
-        if (expectedType === 'string' || expectedType === 'object') {
-          // String or null values
-          if (setting.value === null) {
+        if (key in defaultSettings) {
+          const expectedType = typeof defaultSettings[key];
+          const value = setting.value;
+          
+          if (value === null) {
             acc[key] = null as any;
-          } else if (typeof setting.value === 'string') {
-            acc[key] = setting.value as any;
+          } else if (expectedType === 'string') {
+            // For string properties, ensure we convert to string
+            acc[key] = String(value) as any;
           } else {
-            // Convert other types to string if string expected
-            acc[key] = String(setting.value);
+            // For other types (like null values), use as is
+            acc[key] = value as any;
           }
-        } else {
-          // For other types, use as is
-          acc[key] = setting.value;
         }
         
         return acc;
