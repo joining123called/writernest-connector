@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth';
-import { Phone, Mail, CalendarClock } from 'lucide-react';
+import { Phone, Mail, CalendarClock, Hash } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const ProfileInfo = () => {
@@ -127,10 +127,11 @@ export const ProfileInfo = () => {
             <span>Joined on {format(new Date(profile.created_at), 'PPP')}</span>
           </div>
           
-          {/* Only show reference number if it exists */}
+          {/* Display reference number with icon */}
           {profile.reference_number && (
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-muted-foreground">Reference: {profile.reference_number}</span>
+              <Hash className="h-5 w-5 text-muted-foreground" />
+              <span>Reference: <span className="font-mono">{profile.reference_number}</span></span>
             </div>
           )}
         </div>

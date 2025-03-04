@@ -18,6 +18,7 @@ export interface Database {
           full_name: string
           phone: string
           role: string
+          reference_number: string | null
         }
         Insert: {
           id: string
@@ -26,6 +27,7 @@ export interface Database {
           full_name: string
           phone: string
           role: string
+          reference_number?: string | null
         }
         Update: {
           id?: string
@@ -34,6 +36,7 @@ export interface Database {
           full_name?: string
           phone?: string
           role?: string
+          reference_number?: string | null
         }
         Relationships: [
           {
@@ -51,6 +54,12 @@ export interface Database {
     Functions: {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_unique_reference_number: {
+        Args: {
+          role_prefix: string
+        }
         Returns: string
       }
     }
