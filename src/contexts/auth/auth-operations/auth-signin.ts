@@ -1,13 +1,13 @@
 
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
-import type { ToastProps } from '@/components/ui/toast';
+import type { Toast } from '@/hooks/use-toast';
 import { AuthState } from '../types';
 
 export const signIn = async (
   email: string, 
   password: string,
-  toast: (props: ToastProps) => void,
+  toast: (props: Toast) => void,
   setState: (state: React.SetStateAction<AuthState>) => void,
   navigate: (path: string) => void
 ) => {

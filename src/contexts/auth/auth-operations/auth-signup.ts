@@ -1,13 +1,13 @@
 
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
-import type { ToastProps } from '@/components/ui/toast';
+import type { Toast } from '@/hooks/use-toast';
 
 export const signUp = async (
   email: string, 
   password: string, 
   userData: Partial<User>,
-  toast: (props: ToastProps) => void
+  toast: (props: Toast) => void
 ) => {
   try {
     const { data, error } = await supabase.auth.signUp({

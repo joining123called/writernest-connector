@@ -1,11 +1,11 @@
 
 import { supabase } from '@/lib/supabase';
-import type { ToastProps } from '@/components/ui/toast';
+import type { Toast } from '@/hooks/use-toast';
 import { AuthState } from '../types';
 import { initialState } from '../AuthContext';
 
 export const signOut = async (
-  toast: (props: ToastProps) => void,
+  toast: (props: Toast) => void,
   setState: (state: React.SetStateAction<AuthState>) => void,
   navigate: (path: string) => void
 ) => {
