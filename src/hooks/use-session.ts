@@ -10,7 +10,8 @@ import {
   initializeSession,
   logSessionEvent,
   isSessionInactive,
-  INACTIVITY_TIMEOUT
+  INACTIVITY_TIMEOUT,
+  getSessionStorageKey
 } from '@/contexts/auth/session-management/session-utils';
 
 export const useSession = () => {
@@ -38,7 +39,7 @@ export const useSession = () => {
           logSessionEvent(currentSession.user.id, 'session_validated', {});
         } else {
           // Session is invalid, clear it
-          await supabase.auth.signOut();
+          await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
           setSession(null);
           setIsValid(false);
           toast({
@@ -86,7 +87,7 @@ export const useSession = () => {
     const inactivityCheck = setInterval(() => {
       if (session && isSessionInactive(session.user.id)) {
         // Auto logout after inactivity
-        supabase.auth.signOut().then(() => {
+        supabase.auth.signOut({ scope: 'local' }).then(() => { // Only sign out this tab/browser
           setSession(null);
           setIsValid(false);
           toast({
@@ -144,7 +145,7 @@ export const useSession = () => {
   const invalidateSession = useCallback(async () => {
     if (session) {
       await terminateSession(session.user.id);
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
       setSession(null);
       setIsValid(false);
       toast({

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { User, UserRole } from '@/types';
@@ -23,6 +24,13 @@ export interface EnhancedSession {
 }
 
 /**
+ * Get the storage key for a specific user's session metadata
+ */
+export const getSessionStorageKey = (userId: string): string => {
+  return `session_metadata_${userId}`;
+};
+
+/**
  * Initialize a new session with metadata
  */
 export const initializeSession = async (session: Session): Promise<boolean> => {
@@ -36,7 +44,7 @@ export const initializeSession = async (session: Session): Promise<boolean> => {
     };
     
     // Store session metadata in local storage (encrypted in a real implementation)
-    localStorage.setItem(`session_metadata_${session.user.id}`, JSON.stringify(metadata));
+    localStorage.setItem(getSessionStorageKey(session.user.id), JSON.stringify(metadata));
     
     // Log session creation
     await logSessionEvent(session.user.id, 'session_created', metadata);
@@ -53,13 +61,14 @@ export const initializeSession = async (session: Session): Promise<boolean> => {
  */
 export const updateSessionActivity = (userId: string): void => {
   try {
-    const metadataStr = localStorage.getItem(`session_metadata_${userId}`);
+    const storageKey = getSessionStorageKey(userId);
+    const metadataStr = localStorage.getItem(storageKey);
     if (!metadataStr) return;
     
     const metadata: SessionMetadata = JSON.parse(metadataStr);
     metadata.lastActive = Date.now();
     
-    localStorage.setItem(`session_metadata_${userId}`, JSON.stringify(metadata));
+    localStorage.setItem(storageKey, JSON.stringify(metadata));
   } catch (error) {
     console.error('Failed to update session activity:', error);
   }
@@ -70,7 +79,8 @@ export const updateSessionActivity = (userId: string): void => {
  */
 export const isSessionInactive = (userId: string): boolean => {
   try {
-    const metadataStr = localStorage.getItem(`session_metadata_${userId}`);
+    const storageKey = getSessionStorageKey(userId);
+    const metadataStr = localStorage.getItem(storageKey);
     if (!metadataStr) return true;
     
     const metadata: SessionMetadata = JSON.parse(metadataStr);
@@ -113,7 +123,7 @@ export const validateSession = async (session: Session | null): Promise<boolean>
 export const terminateSession = async (userId: string): Promise<void> => {
   try {
     // Remove session metadata from local storage
-    localStorage.removeItem(`session_metadata_${userId}`);
+    localStorage.removeItem(getSessionStorageKey(userId));
     
     // Log session termination
     await logSessionEvent(userId, 'session_terminated', {});

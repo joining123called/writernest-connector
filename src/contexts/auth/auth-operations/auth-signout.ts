@@ -21,8 +21,8 @@ export const signOut = async (
       await terminateSession(userId);
     }
     
-    // Sign out from Supabase
-    await supabase.auth.signOut();
+    // Sign out from Supabase, but only for this browser session
+    await supabase.auth.signOut({ scope: 'local' });
     
     // Reset application state
     setState(initialState);
