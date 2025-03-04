@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, ImageIcon, Loader2, Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import timezones from '@/lib/timezones';
 import languages from '@/lib/languages';
+import { supabase } from '@/lib/supabase';
 
+// Define the schema for general settings
 const generalSettingsSchema = z.object({
   platformName: z.string().min(2, {
     message: "Platform name must be at least 2 characters."
@@ -25,12 +27,58 @@ const generalSettingsSchema = z.object({
 
 type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
 
+// This would typically come from your API or backend
+const fetchSettings = async (): Promise<GeneralSettingsValues> => {
+  // In a real app, we would fetch from the backend
+  // For now, we're using local storage as a demo
+  const savedSettings = localStorage.getItem('platformSettings');
+  if (savedSettings) {
+    return JSON.parse(savedSettings);
+  }
+  
+  return {
+    platformName: "Essay Writing Service",
+    defaultLanguage: "en",
+    timezone: "UTC",
+  };
+};
+
+// This would typically save to your API or backend
+const saveSettings = async (settings: GeneralSettingsValues): Promise<void> => {
+  // In a real app, we would POST to the backend
+  // For now, we're using local storage as a demo
+  localStorage.setItem('platformSettings', JSON.stringify(settings));
+  
+  // Simulate an API delay
+  return new Promise((resolve) => setTimeout(resolve, 500));
+};
+
 export const GeneralSettings = () => {
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [isLogoUploading, setIsLogoUploading] = useState(false);
   const [isFaviconUploading, setIsFaviconUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  // Load saved logo and favicon on initial render
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('platformLogo');
+    const savedFavicon = localStorage.getItem('platformFavicon');
+    
+    if (savedLogo) setLogoPreview(savedLogo);
+    if (savedFavicon) setFaviconPreview(savedFavicon);
+    
+    // Also load settings into the form
+    const loadSettings = async () => {
+      const settings = await fetchSettings();
+      form.reset(settings);
+      setInitialLoad(false);
+    };
+    
+    loadSettings();
+  }, []);
 
   const form = useForm<GeneralSettingsValues>({
     resolver: zodResolver(generalSettingsSchema),
@@ -41,14 +89,29 @@ export const GeneralSettings = () => {
     },
   });
 
-  const onSubmit = (data: GeneralSettingsValues) => {
-    // In a real app, we would save these settings to the database
-    console.log('Saving general settings:', data);
-    
-    toast({
-      title: "Settings updated",
-      description: "Your platform settings have been updated successfully.",
-    });
+  const onSubmit = async (data: GeneralSettingsValues) => {
+    setIsSubmitting(true);
+    try {
+      await saveSettings(data);
+      
+      // Update document title as an example of real-time changes
+      document.title = data.platformName;
+      
+      toast({
+        title: "Settings updated",
+        description: "Your platform settings have been updated successfully.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      toast({
+        title: "Failed to update settings",
+        description: "There was an error saving your settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,8 +123,18 @@ export const GeneralSettings = () => {
       // For now, we'll just create a preview
       const reader = new FileReader();
       reader.onload = () => {
-        setLogoPreview(reader.result as string);
+        const result = reader.result as string;
+        setLogoPreview(result);
         setIsLogoUploading(false);
+        
+        // Save to localStorage for demo purposes
+        localStorage.setItem('platformLogo', result);
+        
+        // Also update favicon in browser (demo effect)
+        if (result) {
+          const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+          if (link) link.href = result;
+        }
         
         toast({
           title: "Logo uploaded",
@@ -81,8 +154,18 @@ export const GeneralSettings = () => {
       // For now, we'll just create a preview
       const reader = new FileReader();
       reader.onload = () => {
-        setFaviconPreview(reader.result as string);
+        const result = reader.result as string;
+        setFaviconPreview(result);
         setIsFaviconUploading(false);
+        
+        // Save to localStorage for demo purposes
+        localStorage.setItem('platformFavicon', result);
+        
+        // Actually update favicon in browser (demo effect)
+        if (result) {
+          const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+          if (link) link.href = result;
+        }
         
         toast({
           title: "Favicon uploaded",
@@ -92,6 +175,32 @@ export const GeneralSettings = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    localStorage.removeItem('platformLogo');
+    toast({
+      title: "Logo removed",
+      description: "Your platform logo has been removed.",
+    });
+  };
+
+  const handleRemoveFavicon = () => {
+    setFaviconPreview(null);
+    localStorage.removeItem('platformFavicon');
+    toast({
+      title: "Favicon removed",
+      description: "Your platform favicon has been removed.",
+    });
+  };
+
+  if (initialLoad) {
+    return (
+      <div className="flex justify-center items-center h-60">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,13 +241,14 @@ export const GeneralSettings = () => {
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select language" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="max-h-80">
                           {languages.map((lang) => (
                             <SelectItem key={lang.code} value={lang.code}>
                               {lang.name}
@@ -163,6 +273,7 @@ export const GeneralSettings = () => {
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -186,7 +297,23 @@ export const GeneralSettings = () => {
                 />
               </div>
 
-              <Button type="submit">Save Changes</Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
             </form>
           </Form>
         </CardContent>
@@ -252,7 +379,7 @@ export const GeneralSettings = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setLogoPreview(null)}
+                        onClick={handleRemoveLogo}
                       >
                         Remove
                       </Button>
@@ -310,7 +437,7 @@ export const GeneralSettings = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setFaviconPreview(null)}
+                        onClick={handleRemoveFavicon}
                       >
                         Remove
                       </Button>
