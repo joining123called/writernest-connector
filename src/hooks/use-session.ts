@@ -114,6 +114,8 @@ export const useSession = () => {
     loadSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`Auth state change: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
+      
       if (event === 'SIGNED_IN' && session) {
         // Initialize a new session
         await initializeSession(session);

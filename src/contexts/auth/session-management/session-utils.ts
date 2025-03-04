@@ -31,6 +31,24 @@ export const getSessionStorageKey = (userId: string): string => {
 };
 
 /**
+ * Get a list of all active session user IDs
+ */
+export const getActiveSessionUserIds = (): string[] => {
+  const userIds: string[] = [];
+  
+  // Look through localStorage for all session metadata keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('session_metadata_')) {
+      const userId = key.replace('session_metadata_', '');
+      userIds.push(userId);
+    }
+  }
+  
+  return userIds;
+};
+
+/**
  * Initialize a new session with metadata
  */
 export const initializeSession = async (session: Session): Promise<boolean> => {
