@@ -102,7 +102,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
               <div className="relative">
                 <Avatar className="h-9 w-9 border border-border/40 bg-background/50">
-                  <AvatarImage src={user.avatarUrl} alt={user.fullName || ''} />
+                  {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.fullName || ''} />}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <span className="absolute bottom-0 end-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500">

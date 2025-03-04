@@ -22,6 +22,7 @@ export const fetchUserProfile = async (userId: string) => {
     phone: profile.phone,
     role: profile.role as UserRole,
     createdAt: profile.created_at,
+    avatarUrl: profile.avatar_url || undefined, // Added avatarUrl field
   };
 
   return { profile: user, error: null };
