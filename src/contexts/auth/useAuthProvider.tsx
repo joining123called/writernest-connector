@@ -31,6 +31,7 @@ export const useAuthProvider = () => {
   
   // Memoized fetchUser function
   const fetchUser = useCallback(async () => {
+    console.log('Fetching current user...');
     await fetchCurrentUser(setState);
   }, []);
 
@@ -44,13 +45,17 @@ export const useAuthProvider = () => {
 
   // Fetch user on mount and auth state change
   useEffect(() => {
+    console.log('Auth provider mounted, initializing auth...');
+    
     const initAuth = async () => {
       await fetchUser();
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(`Auth state change: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
+      
       // The session validation is now handled by useSession hook
       if (session && isValid) {
         initAuth();
@@ -72,6 +77,8 @@ export const useAuthProvider = () => {
     
     if (!state.session) return;
     
+    console.log('Setting up session refresh interval');
+    
     // Refresh the session token every 10 minutes
     refreshIntervalRef.current = setInterval(() => {
       refreshSession();
@@ -82,14 +89,17 @@ export const useAuthProvider = () => {
 
   // Authentication methods wrapper functions
   const signUp = useCallback(async (email: string, password: string, userData: Partial<User>) => {
+    console.log('Signing up new user:', email);
     return authSignUp(email, password, userData, toast);
   }, [toast]);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    console.log('Sign in requested for:', email);
     return authSignIn(email, password, toast, setState, navigate);
   }, [toast, setState, navigate]);
 
   const signOut = useCallback(async () => {
+    console.log('Sign out requested');
     return authSignOut(toast, setState, navigate);
   }, [toast, setState, navigate]);
 
