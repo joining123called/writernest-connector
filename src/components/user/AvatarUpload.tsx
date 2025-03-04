@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface AvatarUploadProps {
   userId: string;
