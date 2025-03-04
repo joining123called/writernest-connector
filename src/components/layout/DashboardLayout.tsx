@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -20,6 +20,26 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setCollapsed(true);
+      }
+    };
+    
+    // Set initial state
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -37,25 +57,35 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/98 to-background/95">
       {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={toggleMobileSidebar}
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+            onClick={toggleMobileSidebar}
+          />
+        )}
+      </AnimatePresence>
       
-      {/* Sidebar - desktop: visible, mobile: hidden + overlay */}
-      <div className={cn(
-        "md:block",
-        mobileOpen ? "block" : "hidden"
-      )}>
-        <DashboardSidebar 
-          collapsed={collapsed} 
-          toggleSidebar={toggleSidebar} 
-          userRole={user.role as UserRole}
-          onSignOut={signOut}
-        />
-      </div>
+      {/* Sidebar - desktop: visible, mobile: shown in overlay */}
+      <AnimatePresence>
+        {(mobileOpen || !collapsed || window.innerWidth >= 768) && (
+          <div className={cn(
+            "md:block",
+            mobileOpen ? "block" : "hidden"
+          )}>
+            <DashboardSidebar 
+              collapsed={collapsed} 
+              toggleSidebar={toggleSidebar} 
+              userRole={user.role as UserRole}
+              onSignOut={signOut}
+            />
+          </div>
+        )}
+      </AnimatePresence>
       
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
@@ -65,9 +95,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-6 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
           <div className="flex flex-1 items-center gap-4">
             {/* Mobile menu button */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMobileSidebar}>
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMobileSidebar} aria-label="Toggle menu">
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              <span className="sr-only">Toggle menu</span>
             </Button>
             
             <div className="flex flex-1 items-center">
@@ -76,7 +105,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <Input
                   type="search"
                   placeholder="Search..."
-                  className="pl-10 w-full bg-background/50 border-border/30 focus-visible:bg-background/80"
+                  className="pl-10 w-full bg-background/50 border-border/30 focus-visible:bg-background/80 transition-all"
                 />
               </div>
             </div>

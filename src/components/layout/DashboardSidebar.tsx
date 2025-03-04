@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation, useMatch } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
@@ -111,14 +111,17 @@ export const DashboardSidebar = ({
   return (
     <motion.aside
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-border/40 bg-card/40 backdrop-blur-xl transition-all duration-300 ease-in-out",
-        collapsed ? "w-[80px]" : "w-[260px]"
+        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r transition-all duration-300 ease-in-out",
+        collapsed ? "w-[80px]" : "w-[260px]",
+        "bg-gradient-to-b from-sidebar/95 to-sidebar/98 backdrop-blur-xl",
+        "border-sidebar-border/40 shadow-sm"
       )}
       initial={false}
       animate={{ width: collapsed ? 80 : 260 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Sidebar header with logo */}
-      <div className="flex h-16 items-center border-b border-border/40 px-4">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border/30 px-4">
         <div className="flex items-center">
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-md">
             <FileText className="h-5 w-5" />
@@ -128,7 +131,8 @@ export const DashboardSidebar = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="ml-3 font-semibold text-lg tracking-tight"
+              transition={{ duration: 0.2 }}
+              className="ml-3 font-semibold text-lg tracking-tight text-sidebar-foreground"
             >
               AcademicOrder
             </motion.span>
@@ -136,7 +140,8 @@ export const DashboardSidebar = ({
         </div>
         <button
           onClick={toggleSidebar}
-          className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+          className="rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -156,28 +161,46 @@ export const DashboardSidebar = ({
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group relative",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all relative overflow-hidden group",
                     isActive 
-                      ? "bg-accent text-accent-foreground font-medium" 
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                      ? "text-sidebar-primary font-medium" 
+                      : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
                   )}
+                  aria-current={isActive ? "page" : undefined}
                 >
+                  {/* Background with gradient hover effect */}
+                  <div 
+                    className={cn(
+                      "absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 bg-gradient-to-r from-sidebar-accent/50 to-sidebar-accent/30",
+                      isActive ? "opacity-100" : "group-hover:opacity-50"
+                    )}
+                  />
+
+                  {/* Active indicator */}
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active-item"
-                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-2 border-primary"
-                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 top-0 h-full w-1 bg-primary rounded-r-full"
+                      transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center justify-center">
-                    <item.icon 
-                      className={cn(
-                        "h-5 w-5 transition-colors", 
-                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-accent-foreground"
-                      )} 
-                    />
-                  </span>
-                  {!collapsed && <span className="relative z-10">{item.label}</span>}
+
+                  {/* Icon container */}
+                  <div 
+                    className={cn(
+                      "relative z-10 flex h-9 w-9 items-center justify-center rounded-md transition-all duration-300 ease-out",
+                      isActive 
+                        ? "bg-primary/10 text-primary" 
+                        : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground group-hover:bg-sidebar-accent/20"
+                    )}
+                  >
+                    <item.icon className={cn("h-5 w-5 transition-transform duration-300 group-hover:scale-110")} />
+                  </div>
+
+                  {/* Label */}
+                  {!collapsed && (
+                    <span className="relative z-10 font-medium transition-colors">{item.label}</span>
+                  )}
                 </Link>
               </li>
             );
@@ -186,13 +209,24 @@ export const DashboardSidebar = ({
       </nav>
 
       {/* Logout button */}
-      <div className="mt-auto border-t border-border/40 p-3">
+      <div className="mt-auto border-t border-sidebar-border/30 p-3">
         <button
           onClick={onSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-all duration-200"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm group relative overflow-hidden"
+          aria-label="Sign out"
         >
-          <LogOut className="h-5 w-5" />
-          {!collapsed && <span>Logout</span>}
+          {/* Hover background */}
+          <div className="absolute inset-0 rounded-lg bg-red-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          
+          {/* Icon container */}
+          <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground/70 group-hover:text-red-500 transition-all duration-300">
+            <LogOut className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+          </div>
+          
+          {/* Label */}
+          {!collapsed && (
+            <span className="relative z-10 group-hover:text-red-500 transition-colors duration-300">Logout</span>
+          )}
         </button>
       </div>
     </motion.aside>
