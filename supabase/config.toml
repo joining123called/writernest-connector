@@ -1,1 +1,18 @@
+
 project_id = "ylnywzlvcreanyhancke"
+
+# Migration settings
+[migrations]
+auto_apply = true # Apply migrations on deployment
+
+# Database settings
+[database]
+# Add database-specific settings here
+
+# Auth settings
+[auth]
+# Add auth-specific settings here
+
+# API settings
+[api]
+# Add API-specific settings here
