@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -59,15 +60,20 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      console.log('Attempting to sign in with:', email);
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error('Sign in error:', error);
         throw error;
+      } else if (user && user.role === UserRole.ADMIN) {
+        // If somehow an admin logs in through the client login form
+        toast({
+          title: "Access denied",
+          description: "Please use the admin login page to sign in as an administrator.",
+          variant: "destructive",
+        });
+        // Sign out the admin user immediately
+        await signOut();
       }
-      
-      // Success handling is done in the signIn function with appropriate redirects
     } catch (error: any) {
       console.error('Login error:', error);
       // Error is already handled in the signIn function

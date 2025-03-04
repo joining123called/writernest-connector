@@ -22,8 +22,6 @@ export const signIn = async (
   }
   
   try {
-    console.log(`Attempting to sign in user: ${email}`);
-    
     // Log the sign-in attempt (without the password!)
     await logSessionEvent('unknown', 'login_attempt', { 
       additionalInfo: { email } 
@@ -35,8 +33,6 @@ export const signIn = async (
     });
 
     if (error) {
-      console.error('Supabase auth error:', error);
-      
       // Log failed login attempt
       await logSessionEvent('unknown', 'login_failed', { 
         additionalInfo: { email },
@@ -53,8 +49,6 @@ export const signIn = async (
 
     if (!data.user || !data.session) {
       const errorMsg = "Authentication successful but user data is missing";
-      console.error(errorMsg);
-      
       toast({
         title: "Login error",
         description: errorMsg,
@@ -63,8 +57,6 @@ export const signIn = async (
       return { error: new Error(errorMsg) };
     }
 
-    console.log('Login successful for user:', data.user.id);
-    
     // Log successful login
     await logSessionEvent(data.user.id, 'login_successful', {});
     
@@ -79,8 +71,6 @@ export const signIn = async (
       .single();
 
     if (profileError) {
-      console.error('Profile fetch error:', profileError);
-      
       toast({
         title: "Profile fetch failed",
         description: profileError.message,
@@ -96,13 +86,7 @@ export const signIn = async (
       phone: profile.phone,
       role: profile.role as UserRole,
       createdAt: profile.created_at,
-      // Always include reference_number if it exists
-      referenceNumber: profile.reference_number || undefined,
-      // Always include avatar_url if it exists
-      avatarUrl: profile.avatar_url || undefined
     };
-
-    console.log('User profile fetched:', user);
 
     setState({
       user,
@@ -128,12 +112,12 @@ export const signIn = async (
     return { error: null };
   } catch (err: any) {
     // Log unexpected error
-    console.error('Unexpected login error:', err);
-    
     await logSessionEvent('unknown', 'login_error', { 
       additionalInfo: { email },
       errorMessage: err.message 
     });
+    
+    console.error('Login error:', err);
     
     toast({
       title: "An unexpected error occurred",
