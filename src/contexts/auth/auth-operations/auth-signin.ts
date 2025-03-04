@@ -19,9 +19,9 @@ export const signIn = async (
     });
 
     if (error) {
-      // Log failed login attempt
+      // Log failed login attempt with email in additionalInfo
       await logSessionEvent('unknown', 'login_failed', { 
-        email, 
+        additionalInfo: { email },
         errorMessage: error.message 
       });
       
@@ -91,7 +91,7 @@ export const signIn = async (
   } catch (err: any) {
     // Log unexpected error
     await logSessionEvent('unknown', 'login_error', { 
-      email, 
+      additionalInfo: { email },
       errorMessage: err.message 
     });
     

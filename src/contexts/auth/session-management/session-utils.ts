@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { User, UserRole } from '@/types';
@@ -13,6 +12,9 @@ export interface SessionMetadata {
   userAgent: string;
   ipAddress?: string;
   deviceInfo?: string;
+  email?: string;
+  errorMessage?: string;
+  additionalInfo?: Record<string, any>;
 }
 
 export interface EnhancedSession {
