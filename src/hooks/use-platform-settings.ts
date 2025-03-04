@@ -40,7 +40,7 @@ export const usePlatformSettings = () => {
       // Get all settings from the platform_settings table
       const { data, error } = await supabase
         .from('platform_settings')
-        .select('key, value');
+        .select('*');
 
       if (error) {
         throw error;
