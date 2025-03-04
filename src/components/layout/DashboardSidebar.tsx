@@ -19,7 +19,8 @@ import {
   Settings, 
   LogOut, 
   Gavel, 
-  ShoppingBag
+  ShoppingBag,
+  UserCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,6 +44,11 @@ export const DashboardSidebar = ({
 }: SidebarProps) => {
   const location = useLocation();
   
+  // Define common menu items for all roles
+  const commonMenuItems: MenuItem[] = [
+    { label: 'Profile', path: '/profile', icon: UserCircle },
+  ];
+  
   // Define menu items for each role
   const clientMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/client-dashboard', icon: LayoutDashboard },
@@ -52,6 +58,7 @@ export const DashboardSidebar = ({
     { label: 'Disputes', path: '/client-dashboard/disputes', icon: AlertTriangle },
     { label: 'Messages', path: '/client-dashboard/messages', icon: MessageSquare },
     { label: 'Finance', path: '/client-dashboard/finance', icon: DollarSign },
+    ...commonMenuItems,
   ];
 
   const writerMenuItems: MenuItem[] = [
@@ -63,6 +70,7 @@ export const DashboardSidebar = ({
     { label: 'Messages', path: '/writer-dashboard/messages', icon: MessageSquare },
     { label: 'Statistics', path: '/writer-dashboard/statistics', icon: BarChart3 },
     { label: 'Finance', path: '/writer-dashboard/finance', icon: DollarSign },
+    ...commonMenuItems,
   ];
 
   const adminMenuItems: MenuItem[] = [
@@ -75,6 +83,7 @@ export const DashboardSidebar = ({
     { label: 'Messages', path: '/admin-dashboard/messages', icon: MessageSquare },
     { label: 'Statistics & Reports', path: '/admin-dashboard/statistics', icon: BarChart3 },
     { label: 'Settings', path: '/admin-dashboard/settings', icon: Settings },
+    ...commonMenuItems,
   ];
 
   // Select menu items based on user role

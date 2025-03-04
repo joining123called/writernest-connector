@@ -16,6 +16,8 @@ import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProfilePage from "./pages/ProfilePage";
+import UserProfilePage from "./pages/UserProfilePage";
 import NotFound from "./pages/NotFound";
 
 // Create a new QueryClient instance
@@ -35,6 +37,10 @@ const AnimatedRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
+        
+        {/* Profile Routes */}
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/:userId" element={<UserProfilePage />} />
         
         {/* Client Dashboard Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
