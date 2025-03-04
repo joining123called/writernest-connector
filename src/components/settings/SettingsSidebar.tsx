@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsNavItem {
@@ -19,6 +19,7 @@ interface SettingsSidebarProps {
 export const SettingsSidebar = ({ activeTab, setActiveTab }: SettingsSidebarProps) => {
   const navItems: SettingsNavItem[] = [
     { id: 'general', label: 'General', icon: Settings, isImplemented: true },
+    { id: 'order-form', label: 'Order Form Management', icon: FileText, isImplemented: false },
     // We're removing the other nav items as requested
   ];
 
