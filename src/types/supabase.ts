@@ -18,7 +18,6 @@ export interface Database {
           full_name: string
           phone: string
           role: string
-          avatar_url?: string  // Added the avatar_url field as optional
         }
         Insert: {
           id: string
@@ -27,7 +26,6 @@ export interface Database {
           full_name: string
           phone: string
           role: string
-          avatar_url?: string  // Added the avatar_url field as optional
         }
         Update: {
           id?: string
@@ -36,7 +34,6 @@ export interface Database {
           full_name?: string
           phone?: string
           role?: string
-          avatar_url?: string  // Added the avatar_url field as optional
         }
         Relationships: [
           {

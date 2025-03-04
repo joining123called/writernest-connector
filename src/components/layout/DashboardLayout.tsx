@@ -9,7 +9,7 @@ import { Bell, Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -102,7 +102,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
               <div className="relative">
                 <Avatar className="h-9 w-9 border border-border/40 bg-background/50">
-                  {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.fullName || ''} />}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <span className="absolute bottom-0 end-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500">
