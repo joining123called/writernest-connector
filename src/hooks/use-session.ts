@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -20,25 +19,19 @@ export const useSession = () => {
   const [isValid, setIsValid] = useState<boolean>(false);
   const { toast } = useToast();
   
-  // Use a ref to track if component is mounted
   const isMounted = useRef(true);
-  
-  // Use a ref for activity listeners to avoid recreating them on each render
   const activityListeners = useRef<Array<() => void>>([]);
 
-  // Load and validate session
   const loadSession = useCallback(async () => {
     if (!isMounted.current) return;
     
     setIsLoading(true);
     
     try {
-      // Get current session from Supabase
       const { data } = await supabase.auth.getSession();
       const currentSession = data.session;
       
       if (currentSession) {
-        // Validate session
         const valid = await validateSession(currentSession);
         
         if (valid) {
@@ -46,8 +39,7 @@ export const useSession = () => {
           setIsValid(true);
           logSessionEvent(currentSession.user.id, 'session_validated', {});
         } else {
-          // Session is invalid, clear it
-          await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
+          await supabase.auth.signOut({ scope: 'local' });
           setSession(null);
           setIsValid(false);
           
@@ -82,25 +74,20 @@ export const useSession = () => {
     }
   }, [toast]);
 
-  // Setup and cleanup activity listeners
   const setupActivityListeners = useCallback((userId: string) => {
-    // Clean up any existing listeners first
     cleanupActivityListeners();
     
-    // Update session on user activity
     const updateActivity = () => {
       if (userId) {
         updateSessionActivity(userId);
       }
     };
 
-    // Attach activity listeners
     window.addEventListener('mousemove', updateActivity);
     window.addEventListener('keypress', updateActivity);
     window.addEventListener('click', updateActivity);
     window.addEventListener('scroll', updateActivity);
     
-    // Store references to remove them later
     activityListeners.current = [
       () => window.removeEventListener('mousemove', updateActivity),
       () => window.removeEventListener('keypress', updateActivity),
@@ -108,25 +95,20 @@ export const useSession = () => {
       () => window.removeEventListener('scroll', updateActivity)
     ];
   }, []);
-  
-  // Clean up activity listeners
+
   const cleanupActivityListeners = useCallback(() => {
     activityListeners.current.forEach(removeListener => removeListener());
     activityListeners.current = [];
   }, []);
 
-  // Monitor user activity to extend session
   useEffect(() => {
     if (!session?.user?.id || !isValid) return;
 
-    // Set up activity listeners
     setupActivityListeners(session.user.id);
 
-    // Check for inactivity periodically
     const inactivityCheck = setInterval(() => {
       if (session?.user?.id && isSessionInactive(session.user.id)) {
-        // Auto logout after inactivity
-        supabase.auth.signOut({ scope: 'local' }).then(() => { // Only sign out this tab/browser
+        supabase.auth.signOut({ scope: 'local' }).then(() => {
           if (isMounted.current) {
             setSession(null);
             setIsValid(false);
@@ -138,7 +120,7 @@ export const useSession = () => {
           }
         });
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
     return () => {
       cleanupActivityListeners();
@@ -146,7 +128,6 @@ export const useSession = () => {
     };
   }, [session, isValid, toast, setupActivityListeners, cleanupActivityListeners]);
 
-  // Listen for auth state changes
   useEffect(() => {
     loadSession();
 
@@ -154,7 +135,6 @@ export const useSession = () => {
       console.log(`Auth state change: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
       
       if (event === 'SIGNED_IN' && session) {
-        // Initialize a new session
         await initializeSession(session);
         if (isMounted.current) {
           setSession(session);
@@ -171,13 +151,11 @@ export const useSession = () => {
           setIsValid(false);
         }
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        // Updated session with refreshed token
         if (isMounted.current) {
           setSession(session);
           logSessionEvent(session.user.id, 'token_refreshed', {});
         }
       } else if (event === 'USER_UPDATED' && session) {
-        // User data was updated
         if (isMounted.current) {
           setSession(session);
           logSessionEvent(session.user.id, 'user_updated', {});
@@ -185,7 +163,28 @@ export const useSession = () => {
       }
     });
 
-    // Set up component unmount
+    const applyStoredSettings = () => {
+      try {
+        const storedSettings = localStorage.getItem('platformSettings');
+        if (storedSettings) {
+          const settings = JSON.parse(storedSettings);
+          
+          if (settings.platformName) {
+            document.title = settings.platformName;
+          }
+          
+          if (settings.faviconUrl) {
+            const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+            if (link) link.href = settings.faviconUrl;
+          }
+        }
+      } catch (error) {
+        console.error('Error applying stored settings:', error);
+      }
+    };
+
+    applyStoredSettings();
+
     return () => {
       isMounted.current = false;
       cleanupActivityListeners();
@@ -193,12 +192,11 @@ export const useSession = () => {
     };
   }, [loadSession, setupActivityListeners, cleanupActivityListeners]);
 
-  // Force sign out
   const invalidateSession = useCallback(async () => {
     if (session?.user?.id) {
       await terminateSession(session.user.id);
       cleanupActivityListeners();
-      await supabase.auth.signOut({ scope: 'local' }); // Only sign out this tab/browser
+      await supabase.auth.signOut({ scope: 'local' });
       if (isMounted.current) {
         setSession(null);
         setIsValid(false);
@@ -210,7 +208,6 @@ export const useSession = () => {
     }
   }, [session, toast, cleanupActivityListeners]);
 
-  // Refresh session manually
   const refreshSession = useCallback(async () => {
     try {
       const { data, error } = await supabase.auth.refreshSession();

@@ -14,7 +14,7 @@ import { Upload, ImageIcon, Loader2, Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import timezones from '@/lib/timezones';
 import languages from '@/lib/languages';
-import { supabase } from '@/lib/supabase';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 // Define the schema for general settings
 const generalSettingsSchema = z.object({
@@ -27,59 +27,24 @@ const generalSettingsSchema = z.object({
 
 type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
 
-// This would typically come from your API or backend
-const fetchSettings = async (): Promise<GeneralSettingsValues> => {
-  // In a real app, we would fetch from the backend
-  // For now, we're using local storage as a demo
-  const savedSettings = localStorage.getItem('platformSettings');
-  if (savedSettings) {
-    return JSON.parse(savedSettings);
-  }
-  
-  return {
-    platformName: "Essay Writing Service",
-    defaultLanguage: "en",
-    timezone: "UTC",
-  };
-};
-
-// This would typically save to your API or backend
-const saveSettings = async (settings: GeneralSettingsValues): Promise<void> => {
-  // In a real app, we would POST to the backend
-  // For now, we're using local storage as a demo
-  localStorage.setItem('platformSettings', JSON.stringify(settings));
-  
-  // Simulate an API delay
-  return new Promise((resolve) => setTimeout(resolve, 500));
-};
-
 export const GeneralSettings = () => {
   const { toast } = useToast();
+  const { 
+    settings, 
+    isLoadingSettings, 
+    updateSettings, 
+    uploadFile, 
+    isAdmin, 
+    initialLoad 
+  } = usePlatformSettings();
+  
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [isLogoUploading, setIsLogoUploading] = useState(false);
   const [isFaviconUploading, setIsFaviconUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Load saved logo and favicon on initial render
-  useEffect(() => {
-    const savedLogo = localStorage.getItem('platformLogo');
-    const savedFavicon = localStorage.getItem('platformFavicon');
-    
-    if (savedLogo) setLogoPreview(savedLogo);
-    if (savedFavicon) setFaviconPreview(savedFavicon);
-    
-    // Also load settings into the form
-    const loadSettings = async () => {
-      const settings = await fetchSettings();
-      form.reset(settings);
-      setInitialLoad(false);
-    };
-    
-    loadSettings();
-  }, []);
-
+  // Initialize form with settings from Supabase
   const form = useForm<GeneralSettingsValues>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
@@ -89,24 +54,50 @@ export const GeneralSettings = () => {
     },
   });
 
+  // Load settings into the form when they're fetched
+  useEffect(() => {
+    if (!isLoadingSettings && settings) {
+      form.reset({
+        platformName: settings.platformName,
+        defaultLanguage: settings.defaultLanguage,
+        timezone: settings.timezone,
+      });
+      
+      // Set logo and favicon previews
+      setLogoPreview(settings.logoUrl);
+      setFaviconPreview(settings.faviconUrl);
+    }
+  }, [isLoadingSettings, settings, form]);
+
   const onSubmit = async (data: GeneralSettingsValues) => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission denied",
+        description: "Only administrators can update platform settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await saveSettings(data);
+      const success = await updateSettings(data);
       
-      // Update document title as an example of real-time changes
-      document.title = data.platformName;
-      
-      toast({
-        title: "Settings updated",
-        description: "Your platform settings have been updated successfully.",
-        variant: "default",
-      });
-    } catch (error) {
+      if (success) {
+        // Update document title as an example of real-time changes
+        document.title = data.platformName;
+        
+        toast({
+          title: "Settings updated",
+          description: "Your platform settings have been updated successfully.",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
       console.error("Failed to save settings:", error);
       toast({
         title: "Failed to update settings",
-        description: "There was an error saving your settings. Please try again.",
+        description: error.message || "There was an error saving your settings. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -114,87 +105,133 @@ export const GeneralSettings = () => {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setIsLogoUploading(true);
-      
-      // Here we would normally upload the file to a server
-      // For now, we'll just create a preview
+    if (!file) return;
+    
+    setIsLogoUploading(true);
+    
+    try {
+      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
         setLogoPreview(result);
-        setIsLogoUploading(false);
-        
-        // Save to localStorage for demo purposes
-        localStorage.setItem('platformLogo', result);
-        
-        // Also update favicon in browser (demo effect)
-        if (result) {
-          const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-          if (link) link.href = result;
-        }
-        
+      };
+      reader.readAsDataURL(file);
+      
+      // Upload to Supabase
+      const publicUrl = await uploadFile(file, 'logo');
+      
+      if (publicUrl) {
+        // Update favicon in browser (demo effect)
         toast({
           title: "Logo uploaded",
           description: "Your platform logo has been updated successfully.",
         });
-      };
-      reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+    } finally {
+      setIsLogoUploading(false);
     }
   };
 
-  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setIsFaviconUploading(true);
-      
-      // Here we would normally upload the file to a server
-      // For now, we'll just create a preview
+    if (!file) return;
+    
+    setIsFaviconUploading(true);
+    
+    try {
+      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
         setFaviconPreview(result);
-        setIsFaviconUploading(false);
-        
-        // Save to localStorage for demo purposes
-        localStorage.setItem('platformFavicon', result);
-        
+      };
+      reader.readAsDataURL(file);
+      
+      // Upload to Supabase
+      const publicUrl = await uploadFile(file, 'favicon');
+      
+      if (publicUrl) {
         // Actually update favicon in browser (demo effect)
-        if (result) {
-          const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-          if (link) link.href = result;
-        }
+        const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (link && publicUrl) link.href = publicUrl;
         
         toast({
           title: "Favicon uploaded",
           description: "Your platform favicon has been updated successfully.",
         });
-      };
-      reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      console.error('Error uploading favicon:', error);
+    } finally {
+      setIsFaviconUploading(false);
     }
   };
 
-  const handleRemoveLogo = () => {
-    setLogoPreview(null);
-    localStorage.removeItem('platformLogo');
-    toast({
-      title: "Logo removed",
-      description: "Your platform logo has been removed.",
-    });
+  const handleRemoveLogo = async () => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission denied",
+        description: "Only administrators can update platform settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateSettings({ logoUrl: null });
+      setLogoPreview(null);
+      toast({
+        title: "Logo removed",
+        description: "Your platform logo has been removed.",
+      });
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      toast({
+        title: "Error removing logo",
+        description: "An error occurred while removing the logo.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRemoveFavicon = () => {
-    setFaviconPreview(null);
-    localStorage.removeItem('platformFavicon');
-    toast({
-      title: "Favicon removed",
-      description: "Your platform favicon has been removed.",
-    });
+  const handleRemoveFavicon = async () => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission denied",
+        description: "Only administrators can update platform settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateSettings({ faviconUrl: null });
+      setFaviconPreview(null);
+      
+      // Reset favicon to default
+      const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (link) link.href = '/favicon.ico';
+      
+      toast({
+        title: "Favicon removed",
+        description: "Your platform favicon has been removed.",
+      });
+    } catch (error) {
+      console.error('Error removing favicon:', error);
+      toast({
+        title: "Error removing favicon",
+        description: "An error occurred while removing the favicon.",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (initialLoad) {
+  if (isLoadingSettings || initialLoad) {
     return (
       <div className="flex justify-center items-center h-60">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -299,7 +336,7 @@ export const GeneralSettings = () => {
 
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isAdmin}
                 className="flex items-center gap-2"
               >
                 {isSubmitting ? (
@@ -314,6 +351,12 @@ export const GeneralSettings = () => {
                   </>
                 )}
               </Button>
+              
+              {!isAdmin && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Only administrators can modify platform settings.
+                </p>
+              )}
             </form>
           </Form>
         </CardContent>
@@ -353,7 +396,7 @@ export const GeneralSettings = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => document.getElementById('logo-upload')?.click()}
-                      disabled={isLogoUploading}
+                      disabled={isLogoUploading || !isAdmin}
                       className="relative"
                     >
                       {isLogoUploading ? (
@@ -373,6 +416,7 @@ export const GeneralSettings = () => {
                         accept="image/*"
                         className="hidden"
                         onChange={handleLogoUpload}
+                        disabled={!isAdmin}
                       />
                     </Button>
                     {logoPreview && (
@@ -380,6 +424,7 @@ export const GeneralSettings = () => {
                         variant="outline" 
                         size="sm" 
                         onClick={handleRemoveLogo}
+                        disabled={!isAdmin}
                       >
                         Remove
                       </Button>
@@ -412,7 +457,7 @@ export const GeneralSettings = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => document.getElementById('favicon-upload')?.click()}
-                      disabled={isFaviconUploading}
+                      disabled={isFaviconUploading || !isAdmin}
                     >
                       {isFaviconUploading ? (
                         <>
@@ -431,6 +476,7 @@ export const GeneralSettings = () => {
                         accept="image/x-icon,image/png,image/svg+xml"
                         className="hidden"
                         onChange={handleFaviconUpload}
+                        disabled={!isAdmin}
                       />
                     </Button>
                     {faviconPreview && (
@@ -438,6 +484,7 @@ export const GeneralSettings = () => {
                         variant="outline" 
                         size="sm" 
                         onClick={handleRemoveFavicon}
+                        disabled={!isAdmin}
                       >
                         Remove
                       </Button>
@@ -454,6 +501,7 @@ export const GeneralSettings = () => {
         <CardFooter>
           <p className="text-sm text-muted-foreground">
             These images will be used throughout the platform and in browser tabs.
+            {!isAdmin && " Only administrators can modify these settings."}
           </p>
         </CardFooter>
       </Card>
