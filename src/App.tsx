@@ -16,6 +16,7 @@ import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminSettings from "./pages/AdminSettings";
 import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import NotFound from "./pages/NotFound";
@@ -53,6 +54,7 @@ const AnimatedRoutes = () => {
         {/* Admin Dashboard Routes */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard/:page" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard/settings" element={<AdminSettings />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
