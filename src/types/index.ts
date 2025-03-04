@@ -13,6 +13,7 @@ export interface User {
   role: UserRole;
   createdAt: string;
   referenceNumber?: string;  // Optional because it might not be present for all users
+  avatarUrl?: string;        // Optional field for user's profile picture
 }
 
 export interface FormData {
