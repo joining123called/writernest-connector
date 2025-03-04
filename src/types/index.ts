@@ -1,4 +1,3 @@
-
 export enum UserRole {
   ADMIN = 'admin',
   WRITER = 'writer',
@@ -13,7 +12,7 @@ export interface User {
   role: UserRole;
   createdAt: string;
   avatarUrl?: string;
-  bio?: string; // Added bio field
+  bio?: string;
 }
 
 export interface FormData {
@@ -24,4 +23,3 @@ export interface FormData {
   role: UserRole;
   confirmPassword?: string;
 }
-
