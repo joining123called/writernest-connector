@@ -8,6 +8,12 @@ export type PlatformSettings = {
     logo: string;
     contactEmail: string;
     supportPhone: string;
+    logoUrl?: string;
+    faviconUrl?: string;
+    platformName?: string;
+    defaultLanguage?: string;
+    timezone?: string;
+    metaDescription?: string;
   };
   orderForm: {
     serviceName: string;
@@ -61,6 +67,12 @@ export const usePlatformSettings = () => {
       logo: '/logo.svg',
       contactEmail: 'support@essaypro.com',
       supportPhone: '+1 (800) 123-4567',
+      logoUrl: '/logo.svg',
+      faviconUrl: '/favicon.ico',
+      platformName: 'EssayPro',
+      defaultLanguage: 'en',
+      timezone: 'UTC',
+      metaDescription: 'Professional academic writing assistance for students of all levels',
     },
     orderForm: {
       serviceName: "Essay Writing Service",
@@ -104,6 +116,10 @@ export const usePlatformSettings = () => {
     }
   });
 
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const isAdmin = true; // Placeholder for actual admin check
+
   const updateSettings = (newSettings: Partial<PlatformSettings>) => {
     setSettings(prevSettings => ({
       ...prevSettings,
@@ -111,5 +127,18 @@ export const usePlatformSettings = () => {
     }));
   };
 
-  return { settings, updateSettings };
+  const uploadFile = (file: File) => {
+    // Placeholder for file upload functionality
+    console.log("File upload placeholder:", file);
+    return Promise.resolve("/placeholder.svg");
+  };
+
+  return { 
+    settings, 
+    updateSettings, 
+    isLoadingSettings, 
+    uploadFile, 
+    isAdmin, 
+    initialLoad 
+  };
 };

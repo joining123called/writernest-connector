@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { languages } from '@/lib/languages';
-import { timezones } from '@/lib/timezones';
+import languages from '@/lib/languages';
+import timezones from '@/lib/timezones';
 import { useToast } from '@/hooks/use-toast';
 import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
@@ -26,7 +26,7 @@ const formSchema = z.object({
 
 export function GeneralSettings() {
   const { toast } = useToast();
-  const { settings, updateSettings } = usePlatformSettings();
+  const { settings, updateSettings, isLoadingSettings, uploadFile, isAdmin, initialLoad } = usePlatformSettings();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,9 +35,9 @@ export function GeneralSettings() {
       siteDescription: settings.general.siteDescription,
       contactEmail: settings.general.contactEmail,
       supportPhone: settings.general.supportPhone,
-      defaultLanguage: 'en',
-      timezone: 'UTC',
-      metaDescription: '',
+      defaultLanguage: settings.general.defaultLanguage || 'en',
+      timezone: settings.general.timezone || 'UTC',
+      metaDescription: settings.general.metaDescription || '',
     }
   });
   
@@ -50,6 +50,9 @@ export function GeneralSettings() {
         siteDescription: data.siteDescription,
         contactEmail: data.contactEmail,
         supportPhone: data.supportPhone,
+        defaultLanguage: data.defaultLanguage,
+        timezone: data.timezone,
+        metaDescription: data.metaDescription,
       }
     });
     
@@ -58,6 +61,60 @@ export function GeneralSettings() {
       description: "Your platform settings have been updated successfully."
     });
   }
+  
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      try {
+        const logoUrl = await uploadFile(file);
+        if (logoUrl) {
+          updateSettings({
+            general: {
+              ...settings.general,
+              logoUrl
+            }
+          });
+          toast({
+            title: "Logo uploaded",
+            description: "Your logo has been updated successfully."
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "There was an error uploading your logo.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+  
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      try {
+        const faviconUrl = await uploadFile(file);
+        if (faviconUrl) {
+          updateSettings({
+            general: {
+              ...settings.general,
+              faviconUrl
+            }
+          });
+          toast({
+            title: "Favicon uploaded",
+            description: "Your favicon has been updated successfully."
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "There was an error uploading your favicon.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
   
   return (
     <div className="space-y-6">

@@ -111,9 +111,24 @@ export function OrderFormSettings() {
     
     // Update the platform settings
     updateSettings({
-      general: settings.general, // Preserve existing general settings
       orderForm: {
-        ...data,
+        serviceName: data.serviceName,
+        serviceDescription: data.serviceDescription,
+        showSubjectFields: data.showSubjectFields,
+        showPageCount: data.showPageCount,
+        showWordCount: data.showWordCount,
+        showDeadlineOptions: data.showDeadlineOptions,
+        showCitationStyles: data.showCitationStyles,
+        showInstructions: data.showInstructions,
+        basePricePerPage: data.basePricePerPage,
+        urgentDeliveryMultiplier: data.urgentDeliveryMultiplier,
+        minimumHours: data.minimumHours,
+        standardDeliveryDays: data.standardDeliveryDays,
+        priceDisplayMode: data.priceDisplayMode,
+        orderSummaryPosition: data.orderSummaryPosition,
+        enabledPaperTypes: data.enabledPaperTypes,
+        enabledSubjects: data.enabledSubjects,
+        wordsPerPage: data.wordsPerPage,
         pricing: pricingSettings,
         display: displaySettings,
         fields: fieldSettings,
