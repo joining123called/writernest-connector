@@ -48,6 +48,7 @@ export const usePlatformSettings = () => {
 
       // Convert the array of settings to an object
       const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
+        // Convert JSON value to the appropriate type
         acc[setting.key as keyof PlatformSettings] = setting.value;
         return acc;
       }, {});
@@ -75,7 +76,10 @@ export const usePlatformSettings = () => {
         // Update existing setting
         const { error } = await supabase
           .from('platform_settings')
-          .update({ value, updated_at: new Date() })
+          .update({ 
+            value, 
+            updated_at: new Date().toISOString() 
+          })
           .eq('key', key);
 
         if (error) throw error;
