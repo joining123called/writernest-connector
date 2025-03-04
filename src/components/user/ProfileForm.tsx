@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -126,11 +125,8 @@ export const ProfileForm = ({ user, onProfileUpdate }: ProfileFormProps) => {
       <CardContent>
         <div className="flex justify-center mb-6">
           <AvatarUpload 
-            userId={user.id}
-            url={user.avatarUrl}
-            onUploadComplete={handleAvatarUpdate}
-            size="lg"
-            name={user.fullName}
+            user={user}
+            onAvatarUpdate={handleAvatarUpdate}
           />
         </div>
         
