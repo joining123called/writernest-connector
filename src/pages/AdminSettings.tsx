@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SettingsSidebar } from '@/components/settings/SettingsSidebar';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
+import { OrderFormSettings } from '@/components/settings/OrderFormSettings';
 import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
@@ -31,6 +32,8 @@ const AdminSettings = () => {
     switch (activeTab) {
       case 'general':
         return <GeneralSettings />;
+      case 'order-form':
+        return <OrderFormSettings />;
       default:
         return <GeneralSettings />;
     }

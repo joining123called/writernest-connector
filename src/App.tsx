@@ -15,6 +15,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientOrderPage from "./pages/ClientOrderPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSettings from "./pages/AdminSettings";
 import ProfilePage from "./pages/ProfilePage";
@@ -46,6 +47,7 @@ const AnimatedRoutes = () => {
         {/* Client Dashboard Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/client-dashboard/:page" element={<ClientDashboard />} />
+        <Route path="/client-dashboard/order" element={<ClientOrderPage />} />
         
         {/* Writer Dashboard Routes */}
         <Route path="/writer-dashboard" element={<WriterDashboard />} />

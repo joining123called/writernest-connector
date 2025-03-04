@@ -19,7 +19,7 @@ interface SettingsSidebarProps {
 export const SettingsSidebar = ({ activeTab, setActiveTab }: SettingsSidebarProps) => {
   const navItems: SettingsNavItem[] = [
     { id: 'general', label: 'General', icon: Settings, isImplemented: true },
-    { id: 'order-form', label: 'Order Form Management', icon: FileText, isImplemented: false },
+    { id: 'order-form', label: 'Order Form Management', icon: FileText, isImplemented: true },
     // We're removing the other nav items as requested
   ];
 
