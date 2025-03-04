@@ -16,6 +16,7 @@ import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProfilePage from "./pages/profile/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 // Create a new QueryClient instance
@@ -39,14 +40,20 @@ const AnimatedRoutes = () => {
         {/* Client Dashboard Routes */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/client-dashboard/:page" element={<ClientDashboard />} />
+        <Route path="/client-dashboard/profile" element={<ProfilePage />} />
+        <Route path="/client-dashboard/settings" element={<ProfilePage />} />
         
         {/* Writer Dashboard Routes */}
         <Route path="/writer-dashboard" element={<WriterDashboard />} />
         <Route path="/writer-dashboard/:page" element={<WriterDashboard />} />
+        <Route path="/writer-dashboard/profile" element={<ProfilePage />} />
+        <Route path="/writer-dashboard/settings" element={<ProfilePage />} />
         
         {/* Admin Dashboard Routes */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard/:page" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard/profile" element={<ProfilePage />} />
+        <Route path="/admin-dashboard/settings" element={<ProfilePage />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

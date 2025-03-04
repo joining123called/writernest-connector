@@ -1,4 +1,3 @@
-
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import type { Toast } from '@/hooks/use-toast';
@@ -22,7 +21,6 @@ export const signIn = async (
   }
   
   try {
-    // Log the sign-in attempt (without the password!)
     await logSessionEvent('unknown', 'login_attempt', { 
       additionalInfo: { email } 
     });
@@ -33,7 +31,6 @@ export const signIn = async (
     });
 
     if (error) {
-      // Log failed login attempt
       await logSessionEvent('unknown', 'login_failed', { 
         additionalInfo: { email },
         errorMessage: error.message 
@@ -57,13 +54,10 @@ export const signIn = async (
       return { error: new Error(errorMsg) };
     }
 
-    // Log successful login
     await logSessionEvent(data.user.id, 'login_successful', {});
     
-    // Initialize a new session
     await initializeSession(data.session);
     
-    // Fetch user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -86,7 +80,8 @@ export const signIn = async (
       phone: profile.phone,
       role: profile.role as UserRole,
       createdAt: profile.created_at,
-      avatarUrl: profile.avatar_url || undefined, // Added avatarUrl field
+      avatarUrl: profile.avatar_url || undefined,
+      bio: profile.bio || undefined,
     };
 
     setState({
@@ -101,7 +96,6 @@ export const signIn = async (
       description: `Welcome back, ${profile.full_name || 'User'}!`,
     });
 
-    // Redirect based on user role
     if (user.role === UserRole.ADMIN) {
       navigate('/admin-dashboard');
     } else if (user.role === UserRole.WRITER) {
@@ -112,7 +106,6 @@ export const signIn = async (
 
     return { error: null };
   } catch (err: any) {
-    // Log unexpected error
     await logSessionEvent('unknown', 'login_error', { 
       additionalInfo: { email },
       errorMessage: err.message 
