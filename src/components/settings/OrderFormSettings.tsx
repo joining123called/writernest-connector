@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
+import { paperTypes, subjects, deadlines, citationStyles } from '../order/PriceCalculator';
 
 const formSettingsSchema = z.object({
   // General settings
@@ -38,10 +40,18 @@ const formSettingsSchema = z.object({
   // Display settings
   priceDisplayMode: z.enum(["perPage", "total"]),
   orderSummaryPosition: z.enum(["right", "bottom"]),
+  
+  // Paper types and subjects customization
+  enabledPaperTypes: z.array(z.string()).default([]),
+  enabledSubjects: z.array(z.string()).default([]),
+  
+  // Custom words per page
+  wordsPerPage: z.string().regex(/^\d+$/, { message: "Must be a valid number" }),
 });
 
 export function OrderFormSettings() {
   const { toast } = useToast();
+  const { settings, updateSettings } = usePlatformSettings();
   
   const form = useForm<z.infer<typeof formSettingsSchema>>({
     resolver: zodResolver(formSettingsSchema),
@@ -59,12 +69,56 @@ export function OrderFormSettings() {
       minimumHours: "6",
       standardDeliveryDays: "7",
       priceDisplayMode: "total",
-      orderSummaryPosition: "right"
+      orderSummaryPosition: "right",
+      enabledPaperTypes: paperTypes.map(type => type.value),
+      enabledSubjects: subjects.map(subject => subject.value),
+      wordsPerPage: "275",
     }
   });
   
   function onSubmit(data: z.infer<typeof formSettingsSchema>) {
-    console.log(data);
+    console.log("Form settings updated:", data);
+    
+    // Save pricing settings to be used by PriceCalculator
+    const pricingSettings = {
+      basePricePerPage: parseFloat(data.basePricePerPage),
+      urgentDeliveryMultiplier: parseFloat(data.urgentDeliveryMultiplier),
+      wordsPerPage: parseInt(data.wordsPerPage),
+      minimumHours: parseInt(data.minimumHours),
+      standardDeliveryDays: parseInt(data.standardDeliveryDays),
+    };
+    
+    // Save display settings to control OrderForm layout
+    const displaySettings = {
+      orderSummaryPosition: data.orderSummaryPosition,
+      priceDisplayMode: data.priceDisplayMode,
+    };
+    
+    // Save field visibility settings to control OrderFormFields
+    const fieldSettings = {
+      showSubjectFields: data.showSubjectFields,
+      showPageCount: data.showPageCount,
+      showWordCount: data.showWordCount,
+      showDeadlineOptions: data.showDeadlineOptions,
+      showCitationStyles: data.showCitationStyles,
+      showInstructions: data.showInstructions,
+      enabledPaperTypes: data.enabledPaperTypes,
+      enabledSubjects: data.enabledSubjects,
+    };
+    
+    // Here we would update our platform settings with these values
+    // For this example, we'll just show a toast notification
+    if (updateSettings) {
+      updateSettings({
+        orderForm: {
+          ...data,
+          pricing: pricingSettings,
+          display: displaySettings,
+          fields: fieldSettings,
+        }
+      });
+    }
+    
     toast({
       title: "Settings saved",
       description: "Order form settings have been updated successfully."
@@ -296,6 +350,22 @@ export function OrderFormSettings() {
                         </FormControl>
                         <FormDescription>
                           The standard price per page in USD
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="wordsPerPage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Words Per Page</FormLabel>
+                        <FormControl>
+                          <Input type="text" placeholder="275" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Define how many words count as one page
                         </FormDescription>
                       </FormItem>
                     )}
