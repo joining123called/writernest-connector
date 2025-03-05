@@ -29,6 +29,10 @@ export interface OrderFormSettingsType {
   // Display settings
   priceDisplayMode: "perPage" | "total";
   orderSummaryPosition: "right" | "bottom";
+  
+  // Currency settings
+  defaultCurrency: string;
+  showCurrencySelector: boolean;
 }
 
 // Default settings
@@ -51,7 +55,9 @@ const defaultSettings: OrderFormSettingsType = {
   minimumHours: 6,
   standardDeliveryDays: 7,
   priceDisplayMode: "total",
-  orderSummaryPosition: "right"
+  orderSummaryPosition: "right",
+  defaultCurrency: "USD",
+  showCurrencySelector: true
 };
 
 export function useOrderFormSettings() {

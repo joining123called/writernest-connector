@@ -7,6 +7,8 @@ import { Clock, Lock } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
+import { CurrencySelector } from './CurrencySelector';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface OrderSummaryProps {
   form: UseFormReturn<OrderFormValues>;
@@ -32,6 +34,7 @@ interface OrderSummaryProps {
     showCitationStyles: boolean;
     showSources: boolean;
     priceDisplayMode: "perPage" | "total";
+    showCurrencySelector?: boolean;
   };
 }
 
@@ -43,14 +46,17 @@ export function OrderSummary({
   onSubmit,
   settings
 }: OrderSummaryProps) {
+  const { formatPrice, convertPrice } = useCurrency();
+  
   const handleSubmit = () => {
     onSubmit();
   };
   
   return (
     <Card className="bg-gray-50 dark:bg-slate-900">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Order Summary</CardTitle>
+        {settings.showCurrencySelector && <CurrencySelector />}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -116,16 +122,16 @@ export function OrderSummary({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Base price:</span>
               {settings.priceDisplayMode === 'perPage' ? (
-                <span>${orderSummary.pricePerPage.toFixed(2)} × {orderSummary.pages}</span>
+                <span>{formatPrice(convertPrice(orderSummary.pricePerPage))} × {orderSummary.pages}</span>
               ) : (
-                <span>${orderSummary.totalPrice.toFixed(2)}</span>
+                <span>{formatPrice(convertPrice(orderSummary.totalPrice))}</span>
               )}
             </div>
             
             {orderSummary.discount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Discount (15%):</span>
-                <span>-${orderSummary.discount.toFixed(2)}</span>
+                <span>-{formatPrice(convertPrice(orderSummary.discount))}</span>
               </div>
             )}
           </div>
@@ -134,12 +140,12 @@ export function OrderSummary({
         <div className="border-t border-border pt-4">
           <div className="flex justify-between text-xl font-bold">
             <span>Total:</span>
-            <span>${orderSummary.finalPrice.toFixed(2)}</span>
+            <span>{formatPrice(convertPrice(orderSummary.finalPrice))}</span>
           </div>
           
           {orderSummary.discount > 0 && (
             <div className="text-green-600 text-sm text-right mt-1">
-              You save: ${orderSummary.discount.toFixed(2)}
+              You save: {formatPrice(convertPrice(orderSummary.discount))}
             </div>
           )}
         </div>

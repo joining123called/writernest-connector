@@ -30,6 +30,10 @@ export const formSettingsSchema = z.object({
   // Display settings
   priceDisplayMode: z.enum(["perPage", "total"]),
   orderSummaryPosition: z.enum(["right", "bottom"]),
+  
+  // Currency settings
+  defaultCurrency: z.string().min(3).max(3).default("USD"),
+  showCurrencySelector: z.boolean().default(true),
 });
 
 export type OrderFormSettingsSchema = z.infer<typeof formSettingsSchema>;
