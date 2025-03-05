@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -101,16 +102,22 @@ export const usePlatformSettings = () => {
             if (value === null) {
               acc[key] = null;
             } else if (expectedType === 'string') {
+              // Convert to string regardless of the source type
               acc[key] = String(value);
             } else if (expectedType === 'boolean') {
+              // Convert to boolean regardless of the source type
               acc[key] = Boolean(value);
             } else {
+              // For any other type, attempt sensible conversion based on source type
               if (typeof value === 'number') {
                 acc[key] = String(value);
               } else if (Array.isArray(value)) {
-                acc[key] = value;
+                // Since our index signature only accepts string | boolean | null | undefined,
+                // we need to convert arrays to strings
+                acc[key] = JSON.stringify(value);
               } else if (typeof value === 'object' && value !== null) {
-                acc[key] = value;
+                // Convert objects to strings as well
+                acc[key] = JSON.stringify(value);
               } else {
                 acc[key] = String(value);
               }
