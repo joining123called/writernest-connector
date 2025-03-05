@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -83,7 +84,25 @@ export const WalletDashboard = () => {
         if (settingsError) throw settingsError;
         
         if (settingsData && settingsData.value) {
+          console.log('Found wallet settings:', settingsData.value);
           setWalletSettings(settingsData.value as unknown as WalletSettings);
+        } else {
+          console.log('No wallet settings found, using defaults');
+          // Use default settings if none found
+          setWalletSettings({
+            id: 'wallet_settings',
+            min_deposit_amount: 5,
+            max_deposit_amount: 1000,
+            allow_withdrawals: true,
+            withdrawal_fee_percentage: 2.5,
+            enable_wallet_system: true,
+            payment_methods: {
+              paypal: {
+                enabled: false,
+                client_id: ''
+              }
+            }
+          });
         }
       } catch (error) {
         console.error('Error fetching wallet data:', error);
@@ -287,7 +306,8 @@ export const WalletDashboard = () => {
     );
   }
 
-  if (!walletSettings?.enable_wallet_system) {
+  // Make sure the wallet system is actually enabled before showing it
+  if (!walletSettings || walletSettings.enable_wallet_system === false) {
     return (
       <div className="space-y-6">
         <Card>
@@ -368,7 +388,7 @@ export const WalletDashboard = () => {
                   </p>
                 </div>
                 
-                {walletSettings?.payment_methods.paypal.enabled && walletData && (
+                {walletSettings?.payment_methods?.paypal?.enabled && walletData && walletSettings?.payment_methods?.paypal?.client_id && (
                   <div className="border rounded-lg p-4 mt-6">
                     <div className="flex items-center gap-2 mb-4">
                       <CreditCard className="h-5 w-5 text-blue-600" />

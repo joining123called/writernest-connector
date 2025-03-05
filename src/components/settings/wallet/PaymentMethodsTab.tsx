@@ -34,6 +34,9 @@ export const PaymentMethodsTab: React.FC<PaymentMethodsTabProps> = ({
 }) => {
   if (!settings) return null;
 
+  // Make sure the payment_methods structure exists even if it's empty in the database
+  const paypalEnabled = settings.payment_methods?.paypal?.enabled || false;
+
   return (
     <Card>
       <CardHeader>
@@ -52,7 +55,7 @@ export const PaymentMethodsTab: React.FC<PaymentMethodsTabProps> = ({
           setClientSecret={setClientSecret}
           setWebhookId={setWebhookId}
           setIsSandbox={setIsSandbox}
-          enabled={settings.payment_methods.paypal.enabled}
+          enabled={paypalEnabled}
           onEnabledChange={(checked) => handlePayPalChange('enabled', checked)}
         />
         

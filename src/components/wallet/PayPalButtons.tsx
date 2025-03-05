@@ -24,7 +24,11 @@ export const PayPalButtons = ({
   const paypalScriptLoaded = useRef(false);
 
   useEffect(() => {
-    if (!clientId || amount <= 0 || !paypalButtonRef.current) return;
+    // Only proceed if we have valid parameters and the DOM element is available
+    if (!clientId || clientId === '' || amount <= 0 || !paypalButtonRef.current) {
+      console.log("PayPal buttons not loaded: Missing required parameters", { clientId, amount });
+      return;
+    }
 
     const loadPayPalScript = () => {
       // Don't load script if it's already loading or loaded
@@ -32,6 +36,7 @@ export const PayPalButtons = ({
         return;
       }
 
+      console.log("Loading PayPal script with client ID:", clientId);
       paypalScriptLoaded.current = true;
       const script = document.createElement('script');
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
@@ -136,6 +141,15 @@ export const PayPalButtons = ({
       }
     };
   }, [amount, clientId, onError, onSuccess, toast, walletId]);
+
+  // Display a better message when client ID is missing
+  if (!clientId || clientId === '') {
+    return (
+      <div className="paypal-button-container p-4 text-center">
+        <p className="text-yellow-600">PayPal is not properly configured. Please contact the administrator.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="paypal-button-container">

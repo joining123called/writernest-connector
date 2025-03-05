@@ -39,9 +39,27 @@ export const WalletSettings = () => {
         if (error) throw error;
 
         if (data && data.value) {
-          // Cast the data to WalletSettingsType
-          setSettings(data.value as WalletSettingsType);
+          console.log('Loaded wallet settings:', data.value);
+          
+          // Ensure the settings object has the expected structure
+          const loadedSettings = data.value as WalletSettingsType;
+          
+          // Make sure payment_methods structure exists
+          if (!loadedSettings.payment_methods) {
+            loadedSettings.payment_methods = {
+              paypal: {
+                enabled: false
+              }
+            };
+          } else if (!loadedSettings.payment_methods.paypal) {
+            loadedSettings.payment_methods.paypal = {
+              enabled: false
+            };
+          }
+          
+          setSettings(loadedSettings);
         } else {
+          console.log('No wallet settings found, creating defaults');
           // Create default wallet settings if they don't exist
           const { error: createError } = await supabase
             .from('platform_settings')
@@ -63,6 +81,8 @@ export const WalletSettings = () => {
           .maybeSingle();
 
         if (!configError && paypalConfig) {
+          console.log('Found PayPal gateway config:', paypalConfig);
+          
           // Map the database fields to our interface
           const config = {
             ...paypalConfig,
@@ -75,6 +95,8 @@ export const WalletSettings = () => {
           setClientSecret(config.config.client_secret || '');
           setWebhookId(config.config.webhook_id || '');
           setIsSandbox(config.is_sandbox || config.is_test_mode || true);
+        } else {
+          console.log('No PayPal config found');
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
@@ -99,6 +121,8 @@ export const WalletSettings = () => {
     setIsSaving(true);
     
     try {
+      console.log('Saving wallet settings:', settings);
+      
       // Update platform settings for wallet
       const { error } = await supabase
         .from('platform_settings')
@@ -122,7 +146,7 @@ export const WalletSettings = () => {
           clientSecret,
           webhookId,
           isSandbox,
-          isActive: settings.payment_methods.paypal.enabled
+          isActive: settings.payment_methods?.paypal?.enabled || false
         })
       });
       
@@ -160,16 +184,26 @@ export const WalletSettings = () => {
   const handlePayPalChange = (field: string, value: any) => {
     if (!settings) return;
     
-    setSettings({
-      ...settings,
-      payment_methods: {
-        ...settings.payment_methods,
-        paypal: {
-          ...settings.payment_methods.paypal,
-          [field]: value
-        }
-      }
-    });
+    const updatedSettings = { ...settings };
+    
+    // Ensure payment_methods structure exists
+    if (!updatedSettings.payment_methods) {
+      updatedSettings.payment_methods = { paypal: { enabled: false } };
+    }
+    
+    // Ensure paypal object exists
+    if (!updatedSettings.payment_methods.paypal) {
+      updatedSettings.payment_methods.paypal = { enabled: false };
+    }
+    
+    // Update the specific field
+    updatedSettings.payment_methods.paypal = {
+      ...updatedSettings.payment_methods.paypal,
+      [field]: value
+    };
+    
+    console.log('Updated PayPal settings:', updatedSettings.payment_methods.paypal);
+    setSettings(updatedSettings);
   };
 
   if (isLoading) {
