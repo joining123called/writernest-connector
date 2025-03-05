@@ -111,64 +111,69 @@ export function OrderFormFields({ form }: OrderFormFieldsProps) {
             )}
           />
           
-          <FormField
-            control={form.control}
-            name="deadlineDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Deadline Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="mt-3">
-          <FormField
-            control={form.control}
-            name="deadlineTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Deadline Time</FormLabel>
-                <FormControl>
-                  <TimePicker value={field.value} onChange={field.onChange} />
-                </FormControl>
-                <FormDescription>
-                  Select the time for your deadline
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Updated deadline section - combined date and time */}
+          <FormItem className="space-y-2">
+            <FormLabel>Deadline</FormLabel>
+            <div className="flex items-center space-x-2">
+              <div className="flex-1">
+                <FormField
+                  control={form.control}
+                  name="deadlineDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col mb-0">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="w-2/5">
+                <FormField
+                  control={form.control}
+                  name="deadlineTime"
+                  render={({ field }) => (
+                    <FormItem className="mb-0">
+                      <FormControl>
+                        <TimePicker value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            <FormDescription>
+              Select both date and time for your deadline
+            </FormDescription>
+          </FormItem>
         </div>
         
         <div className="mt-6">
