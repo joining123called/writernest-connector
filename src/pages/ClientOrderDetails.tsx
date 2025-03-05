@@ -2,25 +2,16 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { FileText, Download, Calendar, Clock, FileSymlink, Book, Hash, DollarSign } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, FileIcon, Download } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
-
-interface OrderFile {
-  id: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  file_type: string;
-}
 
 interface OrderDetails {
   id: string;
@@ -29,73 +20,83 @@ interface OrderDetails {
   subject: string;
   topic: string | null;
   pages: number;
+  status: string;
   deadline: string;
   instructions: string | null;
   citation_style: string | null;
   sources: number | null;
   final_price: number;
-  status: string;
+  created_at: string;
+}
+
+interface OrderFile {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  file_type: string;
   created_at: string;
 }
 
 const ClientOrderDetails = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const { user, isLoading: isAuthLoading } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [order, setOrder] = React.useState<OrderDetails | null>(null);
-  const [files, setFiles] = React.useState<OrderFile[]>([]);
+  const [orderDetails, setOrderDetails] = React.useState<OrderDetails | null>(null);
+  const [orderFiles, setOrderFiles] = React.useState<OrderFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   React.useEffect(() => {
-    if (!isAuthLoading && (!user || user.role !== UserRole.CLIENT)) {
-      navigate('/login');
-      return;
-    }
-
     const fetchOrderDetails = async () => {
-      if (!orderId || !user) return;
-
+      if (!orderId) return;
+      
       try {
         setIsLoading(true);
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
         
-        // Fetch order details
-        const { data: orderData, error: orderError } = await supabase
-          .from('assignment_details')
-          .select('*')
-          .eq('id', orderId)
-          .eq('user_id', user.id)
-          .single();
-
-        if (orderError) {
-          throw orderError;
-        }
-
-        if (!orderData) {
-          toast({
-            title: "Order not found",
-            description: "The requested order does not exist or you don't have access to it.",
-            variant: "destructive",
-          });
-          navigate('/client-dashboard/orders');
+        if (!currentUser) {
+          navigate('/login');
           return;
         }
 
-        setOrder(orderData as OrderDetails);
-
-        // Fetch files associated with this order
-        const { data: filesData, error: filesError } = await supabase
+        // Using 'any' as a temporary workaround for Supabase type issues
+        const { data, error } = await (supabase as any)
+          .from('assignment_details')
+          .select('*')
+          .eq('id', orderId)
+          .eq('user_id', currentUser.id)
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (!data) {
+          navigate('/client-dashboard/orders');
+          toast({
+            title: "Order not found",
+            description: "The order you're looking for doesn't exist or you don't have permission to view it.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        setOrderDetails(data as OrderDetails);
+        
+        // Fetch associated files
+        const { data: fileData, error: fileError } = await (supabase as any)
           .from('assignment_files')
           .select('*')
           .eq('assignment_id', orderId);
-
-        if (filesError) {
-          console.error("Error fetching files:", filesError);
+          
+        if (fileError) {
+          console.error('Error fetching files:', fileError);
         } else {
-          setFiles(filesData as OrderFile[]);
+          setOrderFiles(fileData || []);
         }
       } catch (error) {
-        console.error("Error fetching order details:", error);
+        console.error('Error fetching order details:', error);
         toast({
           title: "Error",
           description: "Failed to load order details. Please try again.",
@@ -106,22 +107,56 @@ const ClientOrderDetails = () => {
       }
     };
 
-    if (user && orderId) {
-      fetchOrderDetails();
-    }
-  }, [orderId, user, isAuthLoading, navigate, toast]);
+    fetchOrderDetails();
+  }, [orderId, navigate, toast]);
+
+  const determineLevel = (paperType: string): string => {
+    const levelMap: Record<string, string> = {
+      'research_paper': 'Undergraduate',
+      'essay': 'High School',
+      'thesis': 'Master',
+      'dissertation': 'Ph.D.',
+      'case_study': 'Undergraduate',
+      'term_paper': 'Undergraduate',
+      'book_review': 'High School',
+      'article_review': 'Undergraduate',
+      'annotated_bibliography': 'Master',
+      'reaction_paper': 'High School',
+      'lab_report': 'Ph.D.',
+    };
+    
+    return levelMap[paperType] || 'Undergraduate';
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { color: string, label: string }> = {
+      'pending': { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+      'in_progress': { color: 'bg-blue-100 text-blue-800', label: 'In Progress' },
+      'completed': { color: 'bg-green-100 text-green-800', label: 'Completed' },
+      'revision': { color: 'bg-purple-100 text-purple-800', label: 'Revision' },
+      'cancelled': { color: 'bg-red-100 text-red-800', label: 'Cancelled' }
+    };
+    
+    const config = statusConfig[status] || statusConfig['pending'];
+    
+    return (
+      <Badge variant="outline" className={`${config.color} border-0`}>
+        {config.label}
+      </Badge>
+    );
+  };
 
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage
         .from('assignment_files')
         .download(filePath);
-
+        
       if (error) {
         throw error;
       }
-
-      // Create a download link for the file
+      
+      // Create download link
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -131,37 +166,37 @@ const ClientOrderDetails = () => {
       URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error("Error downloading file:", error);
+      console.error('Error downloading file:', error);
       toast({
-        title: "Download Failed",
-        description: "Could not download the file. Please try again.",
+        title: "Download failed",
+        description: "There was an error downloading the file. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'in_progress':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
-      case 'cancelled':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  if (isAuthLoading || isLoading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-32 w-full" />
+        <div className="space-y-6 animate-pulse">
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="h-48 bg-muted rounded"></div>
+          <div className="h-48 bg-muted rounded"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!orderDetails) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center py-12">
+          <h2 className="text-2xl font-semibold mb-4">Order not found</h2>
+          <p className="text-muted-foreground mb-6">The order you're looking for doesn't exist or you don't have permission to view it.</p>
+          <Button onClick={() => navigate('/client-dashboard/orders')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Orders
+          </Button>
         </div>
       </DashboardLayout>
     );
@@ -170,146 +205,140 @@ const ClientOrderDetails = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Order Details</h1>
-            <p className="text-muted-foreground">
-              View the details of your academic order
+            <Button 
+              variant="ghost" 
+              className="mb-2 -ml-3 h-8"
+              onClick={() => navigate('/client-dashboard/orders')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Orders
+            </Button>
+            <h1 className="text-3xl font-bold tracking-tight mb-1">
+              {orderDetails.topic || orderDetails.paper_type}
+            </h1>
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-muted-foreground">
+                Assignment #{orderDetails.assignment_code}
+              </p>
+              {getStatusBadge(orderDetails.status)}
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-end">
+            <div className="text-3xl font-bold text-green-600">${orderDetails.final_price}</div>
+            <p className="text-sm text-muted-foreground">
+              Created on {format(new Date(orderDetails.created_at), 'MMM d, yyyy')}
             </p>
           </div>
-          <Button 
-            onClick={() => navigate('/client-dashboard/orders')}
-            variant="outline"
-          >
-            Back to Orders
-          </Button>
         </div>
 
-        {order ? (
-          <>
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{order.topic || order.paper_type}</CardTitle>
-                    <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                      <Hash className="h-4 w-4 mr-1" />
-                      Assignment Code: {order.assignment_code}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Order Information</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Assignment Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Type</p>
+                      <p className="font-medium">{orderDetails.paper_type.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Subject</p>
+                      <p className="font-medium">{orderDetails.subject}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Academic Level</p>
+                      <p className="font-medium">{determineLevel(orderDetails.paper_type)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Citation Style</p>
+                      <p className="font-medium">{orderDetails.citation_style || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Sources</p>
+                      <p className="font-medium">{orderDetails.sources || 0}</p>
                     </div>
                   </div>
-                  <div>{getStatusBadge(order.status)}</div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <FileSymlink className="h-4 w-4 mr-2" />
-                      Type
-                    </h3>
-                    <p>{order.paper_type.replace(/_/g, ' ')}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <Book className="h-4 w-4 mr-2" />
-                      Subject
-                    </h3>
-                    <p>{order.subject}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Deadline
-                    </h3>
-                    <p>{format(new Date(order.deadline), 'PPP p')}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <Clock className="h-4 w-4 mr-2" />
-                      Order Date
-                    </h3>
-                    <p>{format(new Date(order.created_at), 'PPP')}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Pages
-                    </h3>
-                    <p>{order.pages} page{order.pages !== 1 ? 's' : ''}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium flex items-center mb-2 text-sm">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Price
-                    </h3>
-                    <p className="text-green-600 font-medium">${order.final_price}</p>
-                  </div>
-                </div>
-
-                {order.instructions && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-2">Instructions</h3>
-                    <p className="text-sm whitespace-pre-line">{order.instructions}</p>
-                  </div>
-                )}
-
-                {order.citation_style && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-2">Citation Style</h3>
-                    <p className="text-sm">{order.citation_style.toUpperCase()}</p>
-                  </div>
-                )}
-
-                {order.sources !== null && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-2">Required Sources</h3>
-                    <p className="text-sm">{order.sources}</p>
-                  </div>
-                )}
-
-                {files.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-2">Attached Files</h3>
-                    <Separator className="my-2" />
-                    <div className="space-y-2">
-                      {files.map((file) => (
-                        <div key={file.id} className="flex items-center justify-between p-2 rounded-md border hover:bg-accent/50">
-                          <div className="flex items-center">
-                            <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span className="text-sm">{file.file_name}</span>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => downloadFile(file.file_path, file.file_name)}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Size & Deadline</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Number of Pages</p>
+                      <p className="font-medium">{orderDetails.pages}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Word Count</p>
+                      <p className="font-medium">{orderDetails.pages * 275} words</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Deadline</p>
+                      <p className="font-medium">{format(new Date(orderDetails.deadline), 'MMM d, yyyy h:mm a')}</p>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Order Not Found</h3>
-              <p className="text-muted-foreground text-center max-w-md">
-                The order you're looking for doesn't exist or you don't have permission to view it.
-              </p>
-              <Button 
-                className="mt-6" 
-                onClick={() => navigate('/client-dashboard/orders')}
-              >
-                Go to My Orders
-              </Button>
+                </div>
+              </div>
+              
+              <Separator className="my-6" />
+              
+              {orderDetails.topic && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Topic</h3>
+                  <p className="text-base">{orderDetails.topic}</p>
+                </div>
+              )}
+              
+              {orderDetails.instructions && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Instructions</h3>
+                  <p className="text-base whitespace-pre-line">{orderDetails.instructions}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+          
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Attached Files</h2>
+              
+              {orderFiles.length === 0 ? (
+                <p className="text-muted-foreground text-center py-6">No files attached to this order</p>
+              ) : (
+                <div className="space-y-3">
+                  {orderFiles.map((file) => (
+                    <div 
+                      key={file.id} 
+                      className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <FileIcon className="h-5 w-5 text-blue-500" />
+                        <div className="truncate max-w-[200px]">
+                          <p className="font-medium text-sm truncate">{file.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.file_size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => downloadFile(file.file_path, file.file_name)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );

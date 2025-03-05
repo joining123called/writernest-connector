@@ -1,13 +1,12 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow, format } from 'date-fns';
-import { FileText, Clock, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { format, formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -37,7 +36,8 @@ export const ClientOrdersList: React.FC = () => {
           return;
         }
 
-        const { data, error } = await supabase
+        // Using 'any' as a temporary workaround for Supabase type issues
+        const { data, error } = await (supabase as any)
           .from('assignment_details')
           .select('*')
           .eq('user_id', user.id)
@@ -63,13 +63,8 @@ export const ClientOrdersList: React.FC = () => {
     fetchOrders();
   }, [toast]);
 
-  const getDeadlineText = (deadlineDate: string) => {
-    const date = new Date(deadlineDate);
-    return formatDistanceToNow(date, { addSuffix: true });
-  };
-
   const determineLevel = (paperType: string): string => {
-    // Map paper types to academic levels (this is a simplified example)
+    // Map paper types to academic levels
     const levelMap: Record<string, string> = {
       'research_paper': 'Undergraduate',
       'essay': 'High School',
@@ -87,6 +82,18 @@ export const ClientOrdersList: React.FC = () => {
     return levelMap[paperType] || 'Undergraduate';
   };
 
+  const formatDeadline = (deadline: string) => {
+    const date = new Date(deadline);
+    const days = Math.floor((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (days > 0) {
+      return `${days}d ${date.getHours()}h`;
+    } else {
+      const hours = Math.floor((date.getTime() - new Date().getTime()) / (1000 * 60 * 60));
+      return `${hours}h`;
+    }
+  };
+
   const viewOrderDetails = (id: string) => {
     navigate(`/client-dashboard/orders/${id}`);
   };
@@ -95,19 +102,15 @@ export const ClientOrdersList: React.FC = () => {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-6">
-                <Skeleton className="h-6 w-3/4 mb-4" />
-                <div className="grid grid-cols-4 gap-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="w-full p-4">
+            <div className="grid grid-cols-5 gap-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -115,7 +118,7 @@ export const ClientOrdersList: React.FC = () => {
 
   if (orders.length === 0) {
     return (
-      <Card className="text-center p-8">
+      <div className="text-center p-8 border rounded-lg bg-card shadow-sm">
         <div className="flex flex-col items-center gap-4">
           <FileText className="h-12 w-12 text-muted-foreground" />
           <h3 className="text-xl font-semibold">No orders yet</h3>
@@ -126,75 +129,50 @@ export const ClientOrdersList: React.FC = () => {
             Create New Order
           </Button>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {orders.map((order) => (
-        <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
-          <CardContent className="p-0">
-            <div className="p-6">
-              <div className="mb-4 flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium text-lg line-clamp-1">
-                    {order.topic || order.paper_type}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Assignment #{order.assignment_code}
-                  </p>
-                </div>
-                <div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-primary hover:text-primary/90"
-                    onClick={() => viewOrderDetails(order.id)}
-                  >
-                    View Details
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Level</p>
-                  <p className="font-medium">{determineLevel(order.paper_type)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Deadline</p>
-                  <p className="font-medium flex items-center">
-                    <Clock className="h-3 w-3 mr-1 inline" />
-                    {getDeadlineText(order.deadline)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Number of pages</p>
-                  <p className="font-medium">{order.pages}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Salary</p>
-                  <p className="font-medium text-green-600">${order.final_price}</p>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-between items-center">
-                <div className="text-xs text-muted-foreground">
-                  {order.status === 'pending' ? 'Awaiting Writer' : 
-                   order.status === 'in_progress' ? 'In Progress' : 
-                   order.status === 'completed' ? 'Completed' : 
-                   order.status}
-                </div>
-                <div className="text-xs">
-                  Due: {format(new Date(order.deadline), 'MMM d, yyyy')}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Topic</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Level</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Deadline</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Number of pages</th>
+              <th className="py-3 px-4 text-right font-medium text-muted-foreground">Salary</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr 
+                key={order.id} 
+                className="border-b last:border-0 hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => viewOrderDetails(order.id)}
+              >
+                <td className="py-3 px-4">
+                  <div className="font-medium">{order.topic || order.paper_type}</div>
+                </td>
+                <td className="py-3 px-4">
+                  {determineLevel(order.paper_type)}
+                </td>
+                <td className="py-3 px-4">
+                  {formatDeadline(order.deadline)}
+                </td>
+                <td className="py-3 px-4">
+                  {order.pages}
+                </td>
+                <td className="py-3 px-4 text-right font-medium text-green-600">
+                  ${order.final_price}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
