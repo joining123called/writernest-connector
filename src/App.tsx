@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/auth"; 
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
@@ -23,14 +23,21 @@ import UserProfilePage from "./pages/UserProfilePage";
 import NotFound from "./pages/NotFound";
 
 // Create a new QueryClient instance
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+      retry: 1, // Limit retries on failure
+    },
+  },
+});
 
 // AnimatedRoutes component to handle route transitions
 const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
@@ -58,6 +65,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin-dashboard/:page" element={<AdminDashboard />} />
         <Route path="/admin-dashboard/settings" element={<AdminSettings />} />
         
+        {/* Fallback route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
