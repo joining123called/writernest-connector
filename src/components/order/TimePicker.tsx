@@ -21,7 +21,6 @@ export function DateTimePicker({ date, onDateChange, time, onTimeChange }: DateT
   const [hours, setHours] = useState<string>("12");
   const [minutes, setMinutes] = useState<string>("00");
   const [period, setPeriod] = useState<"AM" | "PM">("PM");
-  const [open, setOpen] = useState(false);
 
   // Set initial values when component mounts or time changes
   useEffect(() => {
@@ -96,19 +95,8 @@ export function DateTimePicker({ date, onDateChange, time, onTimeChange }: DateT
     { label: "11:59 PM", value: "11:59 PM" },
   ];
 
-  // Handle confirmation and close popover
-  const handleConfirmSelection = () => {
-    // Make sure we have a valid time set
-    if (!hours) setHours("12");
-    if (!minutes) setMinutes("00");
-    updateTime(hours || "12", minutes || "00", period);
-    
-    // Close the popover
-    setOpen(false);
-  };
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -228,7 +216,12 @@ export function DateTimePicker({ date, onDateChange, time, onTimeChange }: DateT
             size="sm" 
             variant="premium"
             className="w-full"
-            onClick={handleConfirmSelection}
+            onClick={() => {
+              // Make sure we have a valid time set
+              if (!hours) setHours("12");
+              if (!minutes) setMinutes("00");
+              updateTime(hours || "12", minutes || "00", period);
+            }}
           >
             <Clock className="h-3.5 w-3.5 mr-2" />
             Confirm Selection

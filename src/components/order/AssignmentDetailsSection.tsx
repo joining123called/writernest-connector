@@ -10,19 +10,9 @@ import { DateTimePicker } from './TimePicker';
 
 type AssignmentDetailsSectionProps = {
   form: UseFormReturn<any>;
-  settings?: any;
 };
 
-export function AssignmentDetailsSection({ form, settings }: AssignmentDetailsSectionProps) {
-  // Filter enabled paper types and subjects based on settings
-  const filteredPaperTypes = settings?.enabledPaperTypes?.length 
-    ? paperTypes.filter(type => settings.enabledPaperTypes.includes(type.value))
-    : paperTypes;
-    
-  const filteredSubjects = settings?.enabledSubjects?.length
-    ? subjects.filter(subject => settings.enabledSubjects.includes(subject.value))
-    : subjects;
-
+export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps) {
   return (
     <Card className="border border-border/10 shadow-sm overflow-hidden bg-gradient-to-br from-background to-background/90 dark:from-background/90 dark:to-background/70">
       <CardHeader className="pb-2 border-b border-border/10">
@@ -39,127 +29,116 @@ export function AssignmentDetailsSection({ form, settings }: AssignmentDetailsSe
       
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(!settings || settings.showSubjectFields !== false) && (
-            <FormField
-              control={form.control}
-              name="paperType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                    <FileText className="h-4 w-4 mr-2 text-primary/70" />
-                    Paper Type
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-11 bg-background border-input/40">
-                        <SelectValue placeholder="Select paper type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filteredPaperTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <FormField
+            control={form.control}
+            name="paperType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                  <FileText className="h-4 w-4 mr-2 text-primary/70" />
+                  Paper Type
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-11 bg-background border-input/40">
+                      <SelectValue placeholder="Select paper type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {paperTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          {(!settings || settings.showSubjectFields !== false) && (
-            <FormField
-              control={form.control}
-              name="subject"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                    <GraduationCap className="h-4 w-4 mr-2 text-primary/70" />
-                    Subject Area
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-11 bg-background border-input/40">
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filteredSubjects.map((subject) => (
-                        <SelectItem key={subject.value} value={subject.value}>
-                          {subject.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                  <GraduationCap className="h-4 w-4 mr-2 text-primary/70" />
+                  Subject Area
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-11 bg-background border-input/40">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.value} value={subject.value}>
+                        {subject.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {(!settings || settings.showPageCount !== false) && (
-            <FormField
-              control={form.control}
-              name="pages"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                    <BookText className="h-4 w-4 mr-2 text-primary/70" />
-                    Number of Pages
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-11 bg-background border-input/40">
-                        <SelectValue placeholder="Select number of pages" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {[...Array(20)].map((_, i) => {
-                        const wordsPerPage = settings?.wordsPerPage ? parseInt(settings.wordsPerPage) : 275;
-                        return (
-                          <SelectItem key={i + 1} value={(i + 1).toString()}>
-                            {i + 1} page{i > 0 ? 's' : ''} {settings?.showWordCount !== false && `/ ${(i + 1) * wordsPerPage} words`}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          
-          {(!settings || settings.showDeadlineOptions !== false) && (
-            <FormField
-              control={form.control}
-              name="deadlineDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                    <Clock className="h-4 w-4 mr-2 text-primary/70" />
-                    Deadline
-                  </FormLabel>
+          <FormField
+            control={form.control}
+            name="pages"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                  <BookText className="h-4 w-4 mr-2 text-primary/70" />
+                  Number of Pages
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <DateTimePicker 
-                      date={field.value} 
-                      onDateChange={field.onChange}
-                      time={form.watch('deadlineTime') || '11:59 PM'}
-                      onTimeChange={(time) => form.setValue('deadlineTime', time)}
-                    />
+                    <SelectTrigger className="h-11 bg-background border-input/40">
+                      <SelectValue placeholder="Select number of pages" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormDescription className="text-xs text-muted-foreground/80">
-                    Select when you need your paper delivered
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+                  <SelectContent>
+                    {[...Array(20)].map((_, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()}>
+                        {i + 1} page{i > 0 ? 's' : ''} / {(i + 1) * 275} words
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="deadlineDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                  <Clock className="h-4 w-4 mr-2 text-primary/70" />
+                  Deadline
+                </FormLabel>
+                <FormControl>
+                  <DateTimePicker 
+                    date={field.value} 
+                    onDateChange={field.onChange}
+                    time={form.watch('deadlineTime') || '11:59 PM'}
+                    onTimeChange={(time) => form.setValue('deadlineTime', time)}
+                  />
+                </FormControl>
+                <FormDescription className="text-xs text-muted-foreground/80">
+                  Select when you need your paper delivered
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       </CardContent>
     </Card>

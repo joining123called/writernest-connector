@@ -15,10 +15,9 @@ type OrderSummaryProps = {
   orderSummary: OrderSummaryData;
   orderFormSchema: z.ZodObject<any>;
   onSubmit: (data: z.infer<z.ZodObject<any>>) => void;
-  settings?: any;
 };
 
-export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit, settings }: OrderSummaryProps) {
+export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: OrderSummaryProps) {
   // Format the deadline for display
   const formatDeadline = () => {
     const deadlineDate = form.watch('deadlineDate');
@@ -29,9 +28,6 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit, se
     const formattedDate = format(deadlineDate, 'MMM d, yyyy');
     return `${formattedDate} at ${deadlineTime}`;
   };
-
-  // Determine price display mode from settings
-  const priceDisplayMode = settings?.priceDisplayMode || 'total';
   
   return (
     <div className="sticky top-6">
@@ -41,41 +37,28 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit, se
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="space-y-3">
-            {(!settings || settings.showSubjectFields !== false) && (
-              <>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Paper type:</span>
-                  <span className="font-medium">{form.watch('paperType') ? 
-                    paperTypes.find(t => t.value === form.watch('paperType'))?.label : 
-                    "Not selected"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subject:</span>
-                  <span className="font-medium">{form.watch('subject') ? 
-                    subjects.find(s => s.value === form.watch('subject'))?.label : 
-                    "Not selected"}</span>
-                </div>
-              </>
-            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Paper type:</span>
+              <span className="font-medium">{form.watch('paperType') ? 
+                paperTypes.find(t => t.value === form.watch('paperType'))?.label : 
+                "Not selected"}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subject:</span>
+              <span className="font-medium">{form.watch('subject') ? 
+                subjects.find(s => s.value === form.watch('subject'))?.label : 
+                "Not selected"}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Length:</span>
+              <span className="font-medium">{orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''} / {orderSummary.words} words</span>
+            </div>
+            <div className="flex justify-between text-sm items-start">
+              <span className="text-muted-foreground">Deadline:</span>
+              <span className="font-medium text-right">{formatDeadline()}</span>
+            </div>
             
-            {(!settings || settings.showPageCount !== false) && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Length:</span>
-                <span className="font-medium">
-                  {orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''}
-                  {(!settings || settings.showWordCount !== false) && ` / ${orderSummary.words} words`}
-                </span>
-              </div>
-            )}
-            
-            {(!settings || settings.showDeadlineOptions !== false) && (
-              <div className="flex justify-between text-sm items-start">
-                <span className="text-muted-foreground">Deadline:</span>
-                <span className="font-medium text-right">{formatDeadline()}</span>
-              </div>
-            )}
-            
-            {(!settings || settings.showCitationStyles !== false) && form.watch('citationStyle') && form.watch('citationStyle') !== "none" && (
+            {form.watch('citationStyle') && form.watch('citationStyle') !== "none" && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Citation style:</span>
                 <span className="font-medium">
@@ -97,17 +80,10 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit, se
           <div>
             <div className="text-lg font-medium mb-3">Price</div>
             <div className="space-y-2">
-              {priceDisplayMode === 'perPage' ? (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Price per page:</span>
-                  <span>${orderSummary.pricePerPage.toFixed(2)} × {orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''}</span>
-                </div>
-              ) : (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Base price:</span>
-                  <span>${orderSummary.pages} × ${orderSummary.pricePerPage.toFixed(2)}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Base price:</span>
+                <span>${orderSummary.pages} × ${orderSummary.pricePerPage.toFixed(2)}</span>
+              </div>
               
               {orderSummary.discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600 dark:text-green-500">
