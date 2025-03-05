@@ -10,7 +10,7 @@ import { CitationAndSourcesFields } from './CitationAndSourcesFields';
 import { FileUploadSection } from './FileUploadSection';
 import { OrderSummary } from './OrderSummary';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
-import { OrderFormValues, OrderFormProps } from './schema';
+import { OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { usePaymentMethods } from '@/hooks/use-payment-methods';
 
@@ -50,7 +50,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     }
     
     form.handleSubmit(() => {
-      handleSubmit(selectedPaymentMethod);
+      handleSubmit();
     })();
   };
   

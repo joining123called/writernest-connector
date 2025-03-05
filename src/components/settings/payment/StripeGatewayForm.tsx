@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,7 +46,9 @@ export function StripeGatewayForm({ gateway }: StripeGatewayFormProps) {
   function onSubmit(data: StripeFormValues) {
     updateGateway({
       id: gateway.id,
-      ...data,
+      is_enabled: data.is_enabled,
+      is_test_mode: data.is_test_mode,
+      config: data.config,
     });
   }
 
@@ -115,7 +116,7 @@ export function StripeGatewayForm({ gateway }: StripeGatewayFormProps) {
           <div className="space-y-4">
             <h4 className="text-base font-medium">API Keys</h4>
             <p className="text-sm text-muted-foreground">
-              Enter your Stripe API keys. You can find these in your Stripe Dashboard.
+              Enter your Stripe API credentials. You can find these in your Stripe Dashboard.
             </p>
 
             <FormField

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,7 +46,9 @@ export function PayPalGatewayForm({ gateway }: PayPalGatewayFormProps) {
   function onSubmit(data: PayPalFormValues) {
     updateGateway({
       id: gateway.id,
-      ...data,
+      is_enabled: data.is_enabled,
+      is_test_mode: data.is_test_mode,
+      config: data.config,
     });
   }
 
