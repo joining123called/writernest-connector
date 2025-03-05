@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    // Get Supabase client
+    // Get Supabase client with admin privileges
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -35,98 +35,86 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Process the payment (simulated)
-    const { amount, paymentMethod, walletId } = await req.json()
+    // Get request data
+    const { paymentMethod, amount, walletId } = await req.json()
     
-    // Validate request
     if (!amount || amount <= 0) {
-      throw new Error('Invalid payment amount')
+      throw new Error('Invalid amount')
     }
-    
-    if (!paymentMethod) {
-      throw new Error('Payment method is required')
-    }
-    
+
     if (!walletId) {
-      throw new Error('Wallet ID is required')
+      throw new Error('Missing wallet ID')
     }
-    
-    // Verify the wallet belongs to the user
+
+    if (!paymentMethod) {
+      throw new Error('Missing payment method')
+    }
+
+    // Verify wallet belongs to user
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
       .eq('id', walletId)
       .eq('user_id', user.id)
       .single()
-      
+
     if (walletError || !wallet) {
       console.error('Wallet verification error:', walletError)
       throw new Error('Wallet not found or does not belong to user')
     }
-    
-    // Here we would integrate with a payment processor
-    // For demo purposes, we'll just update the wallet balance directly
-    
-    // Generate a mock payment result
-    const paymentResult = {
-      id: `payment_${Date.now()}`,
-      status: 'success',
-      amount: amount,
-      currency: 'USD',
-      payment_method: paymentMethod,
-      created_at: new Date().toISOString()
-    }
+
+    // This is a placeholder for actual payment processing logic
+    // In a real implementation, you would integrate with a payment processor here
+    // For now, we'll just simulate a successful payment
     
     // Update wallet balance
     const newBalance = Number(wallet.balance) + Number(amount)
     const { error: updateError } = await supabase
       .from('wallets')
       .update({ 
-        balance: newBalance, 
-        updated_at: new Date().toISOString() 
+        balance: newBalance,
+        updated_at: new Date().toISOString()
       })
       .eq('id', walletId)
-      
+
     if (updateError) {
       console.error('Wallet update error:', updateError)
-      throw new Error('Failed to update wallet balance')
+      throw new Error('Failed to update wallet')
     }
-    
+
     // Record the transaction
     const { error: transactionError } = await supabase
       .from('wallet_transactions')
-      .insert([{
+      .insert({
         wallet_id: walletId,
         amount: amount,
         type: 'deposit',
         status: 'completed',
-        description: `Wallet deposit via ${paymentMethod} (simulated)`,
-        payment_method: paymentMethod,
-        payment_id: paymentResult.id,
-        payment_status: 'success',
-        payment_data: paymentResult
-      }])
-      
+        description: `${paymentMethod} deposit`,
+        payment_gateway: paymentMethod,
+        payment_id: `sim_${Date.now()}`,
+        payment_status: 'COMPLETED'
+      })
+
     if (transactionError) {
       console.error('Transaction record error:', transactionError)
       throw new Error('Failed to record transaction')
     }
-    
-    // Return successful response
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data: paymentResult
+        message: 'Payment processed successfully',
+        newBalance
       }),
       { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     )
-    
   } catch (error) {
-    console.error('Payment processing error:', error)
+    console.error('Process payment error:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'An unknown error occurred during payment processing' 
+        error: error.message || 'Unknown error occurred' 
       }),
       { 
         status: 400, 
