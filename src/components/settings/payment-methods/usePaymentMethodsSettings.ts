@@ -39,9 +39,13 @@ export const usePaymentMethodsSettings = () => {
   useEffect(() => {
     if (settings) {
       // Only update fields that exist in the settings object
-      Object.keys(paymentSettings).forEach((key) => {
+      Object.keys(paymentMethodsSchema.shape).forEach((key) => {
         if (key in settings) {
-          form.setValue(key as keyof PaymentMethodsSchema, (settings as any)[key]);
+          const value = settings[key as keyof typeof settings];
+          // Only set the value if it's defined or it's a boolean (including false)
+          if (value !== undefined || typeof value === 'boolean') {
+            form.setValue(key as keyof PaymentMethodsSchema, value as any);
+          }
         }
       });
     }
@@ -58,24 +62,28 @@ export const usePaymentMethodsSettings = () => {
     }
     
     try {
-      // Convert any undefined or null values to their default values to prevent null value errors
-      const sanitizedData = Object.keys(data).reduce((acc, key) => {
+      console.log("Submitting payment settings:", data);
+      
+      // Ensure boolean fields are properly handled
+      const processedData = Object.keys(data).reduce((acc, key) => {
         const fieldKey = key as keyof PaymentMethodsSchema;
         const value = data[fieldKey];
         
-        // Replace null/undefined with default values to avoid not-null constraint violations
-        if (value === null || value === undefined) {
-          // Get default from schema's default values
-          acc[fieldKey] = defaultPaymentSettings[fieldKey];
+        // Convert undefined to default values for boolean fields
+        if (typeof defaultPaymentSettings[fieldKey] === 'boolean') {
+          acc[fieldKey] = value === undefined ? false : value;
         } else {
-          acc[fieldKey] = value;
+          // Handle non-boolean fields
+          acc[fieldKey] = value === undefined || value === null ? 
+            defaultPaymentSettings[fieldKey] : value;
         }
         
         return acc;
-      }, {} as Record<keyof PaymentMethodsSchema, string | boolean>);
+      }, {} as PaymentMethodsSchema);
       
-      // Cast the sanitized data to any to avoid type errors when passing to updateSettings
-      const success = await updateSettings(sanitizedData as any);
+      console.log("Processed payment settings for update:", processedData);
+      
+      const success = await updateSettings(processedData);
       
       if (success) {
         toast({

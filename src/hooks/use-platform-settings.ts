@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -18,16 +17,54 @@ export interface PlatformSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   metaDescription: string;
+  enableStripe?: boolean;
+  enablePayPal?: boolean;
+  enableSkrill?: boolean;
+  enableMpesa?: boolean;
+  enableFlutterwave?: boolean;
+  enable2Checkout?: boolean;
+  enablePaystack?: boolean;
+  enableAuthorizeNet?: boolean;
+  stripePublishableKey?: string;
+  stripeWebhookSecret?: string;
+  paypalClientId?: string;
+  paypalSecret?: string;
+  paypalEnvironment?: "sandbox" | "production";
+  skrillMerchantId?: string;
+  skrillSecretWord?: string;
+  mpesaConsumerKey?: string;
+  mpesaConsumerSecret?: string;
+  mpesaPasskey?: string;
+  mpesaShortcode?: string;
+  flutterwavePublicKey?: string;
+  flutterwaveSecretKey?: string;
+  twoCheckoutSellerId?: string;
+  twoCheckoutPublishableKey?: string;
+  twoCheckoutPrivateKey?: string;
+  paystackPublicKey?: string;
+  paystackSecretKey?: string;
+  authorizeNetApiLoginId?: string;
+  authorizeNetTransactionKey?: string;
+  authorizeNetEnvironment?: "sandbox" | "production";
 }
 
-// Default settings
 const defaultSettings: PlatformSettings = {
   platformName: "Essay Writing Service",
   defaultLanguage: "en",
   timezone: "UTC",
   logoUrl: null,
   faviconUrl: null,
-  metaDescription: "Lovable Generated Project"
+  metaDescription: "Lovable Generated Project",
+  enableStripe: false,
+  enablePayPal: false,
+  enableSkrill: false,
+  enableMpesa: false,
+  enableFlutterwave: false,
+  enable2Checkout: false,
+  enablePaystack: false,
+  enableAuthorizeNet: false,
+  paypalEnvironment: "sandbox",
+  authorizeNetEnvironment: "sandbox"
 };
 
 export const usePlatformSettings = () => {
@@ -36,17 +73,14 @@ export const usePlatformSettings = () => {
   const { isAdmin, user } = useAuth();
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // Fetch settings from Supabase
   const { data: settings, isLoading: isLoadingSettings, error: settingsError } = useQuery({
     queryKey: ['platform-settings'],
     queryFn: async (): Promise<PlatformSettings> => {
       if (!user) {
-        // If not authenticated, return default settings
         return defaultSettings;
       }
 
       try {
-        // Get all settings from the platform_settings table
         const { data, error } = await supabase
           .from('platform_settings')
           .select('*');
@@ -56,22 +90,20 @@ export const usePlatformSettings = () => {
           throw error;
         }
 
-        // Convert the array of settings to an object
         const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
-          // Convert JSON value to the appropriate type based on the expected property type
           const key = setting.key as keyof PlatformSettings;
           
           if (key in defaultSettings) {
-            const expectedType = typeof defaultSettings[key];
+            const expectedType = typeof defaultSettings[key as keyof typeof defaultSettings];
             const value = setting.value;
             
             if (value === null) {
               acc[key] = null as any;
             } else if (expectedType === 'string') {
-              // For string properties, ensure we convert to string
               acc[key] = String(value) as any;
+            } else if (expectedType === 'boolean') {
+              acc[key] = Boolean(value) as any;
             } else {
-              // For other types (like null values), use as is
               acc[key] = value as any;
             }
           }
@@ -79,7 +111,6 @@ export const usePlatformSettings = () => {
           return acc;
         }, {});
 
-        // Merge with default settings
         return {
           ...defaultSettings,
           ...settingsObject
@@ -90,22 +121,20 @@ export const usePlatformSettings = () => {
       }
     },
     retry: 1,
-    enabled: !!user, // Only run query when user is authenticated
+    enabled: !!user
   });
 
-  // Update a setting in Supabase
   const updateSettingMutation = useMutation({
     mutationFn: async ({ key, value }: PlatformSetting) => {
       if (!isAdmin) {
         throw new Error('Only administrators can update platform settings');
       }
 
-      // Important: Make sure the value is never null or undefined
-      // If it is, replace with an empty string or appropriate default
       const safeValue = value === null || value === undefined ? 
-        (typeof value === 'string' ? "" : {}) : value;
+        (typeof value === 'string' ? "" : (typeof value === 'boolean' ? false : {})) : value;
 
-      // Check if setting exists
+      console.log(`Updating setting: ${key} with value:`, safeValue);
+
       const { data: existingData } = await supabase
         .from('platform_settings')
         .select('id')
@@ -113,7 +142,6 @@ export const usePlatformSettings = () => {
         .maybeSingle();
 
       if (existingData) {
-        // Update existing setting
         const { error } = await supabase
           .from('platform_settings')
           .update({ 
@@ -124,7 +152,6 @@ export const usePlatformSettings = () => {
 
         if (error) throw error;
       } else {
-        // Insert new setting
         const { error } = await supabase
           .from('platform_settings')
           .insert({ key, value: safeValue });
@@ -142,6 +169,7 @@ export const usePlatformSettings = () => {
       });
     },
     onError: (error: any) => {
+      console.error("Update setting error:", error);
       toast({
         title: "Failed to update setting",
         description: error.message || "There was an error updating the setting.",
@@ -150,7 +178,6 @@ export const usePlatformSettings = () => {
     }
   });
 
-  // Update multiple settings at once
   const updateSettings = async (newSettings: Partial<PlatformSettings>) => {
     if (!isAdmin) {
       toast({
@@ -162,37 +189,52 @@ export const usePlatformSettings = () => {
     }
 
     try {
-      // Sanitize the settings object to ensure no null values
+      console.log("Updating settings:", newSettings);
+      
       const sanitizedSettings = Object.entries(newSettings).reduce((acc, [key, value]) => {
-        // If the value is null or undefined, don't include it in the update
-        // This prevents null value constraint violations
-        if (value !== null && value !== undefined) {
-          acc[key] = value;
+        const fieldKey = key as keyof PlatformSettings;
+        
+        if (typeof value === 'boolean') {
+          acc[fieldKey] = value;
+        } else if (value === null || value === undefined) {
+          if (fieldKey in defaultSettings) {
+            acc[fieldKey] = defaultSettings[fieldKey];
+          }
+        } else {
+          acc[fieldKey] = value;
         }
+        
         return acc;
-      }, {} as Record<string, any>);
-
-      // Only proceed if there are settings to update
+      }, {} as Record<keyof PlatformSettings, any>);
+      
       if (Object.keys(sanitizedSettings).length === 0) {
         toast({
           title: "No changes to update",
           description: "No valid settings to update were provided.",
         });
-        return true; // Return true as there was no error
+        return true;
       }
 
-      // Update each setting in sequence
+      console.log("Sanitized settings for update:", sanitizedSettings);
+      
       for (const [key, value] of Object.entries(sanitizedSettings)) {
         await updateSettingMutation.mutateAsync({ key, value });
       }
+      
+      queryClient.invalidateQueries({ queryKey: ['platform-settings'] });
+      
       return true;
     } catch (error) {
       console.error("Failed to update settings:", error);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your payment settings.",
+        variant: "destructive",
+      });
       return false;
     }
   };
 
-  // Upload a file to Supabase storage
   const uploadFile = async (file: File, type: 'logo' | 'favicon'): Promise<string | null> => {
     if (!isAdmin) {
       toast({
@@ -206,12 +248,10 @@ export const usePlatformSettings = () => {
     try {
       if (!file) return null;
 
-      // Create a unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${type}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('platform-assets')
         .upload(filePath, file, {
@@ -221,12 +261,10 @@ export const usePlatformSettings = () => {
 
       if (error) throw error;
 
-      // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('platform-assets')
         .getPublicUrl(filePath);
 
-      // Update the setting in the database
       const settingKey = type === 'logo' ? 'logoUrl' : 'faviconUrl';
       await updateSettingMutation.mutateAsync({ 
         key: settingKey, 
@@ -244,15 +282,12 @@ export const usePlatformSettings = () => {
     }
   };
 
-  // Once settings are loaded, set initialLoad to false and update document
   useEffect(() => {
     if (!isLoadingSettings && settings) {
       setInitialLoad(false);
       
-      // Update document title and meta tags
       document.title = settings.platformName;
       
-      // Update meta description
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute('content', settings.metaDescription);
