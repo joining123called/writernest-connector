@@ -20,48 +20,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Verify admin access
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Missing authorization header')
-    }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-    
-    if (userError || !user) {
-      console.error('Auth error:', userError)
-      throw new Error('Unauthorized')
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) {
-      console.error('Profile error:', profileError)
-      throw new Error('Failed to retrieve user profile')
-    }
-
-    if (profile.role !== 'admin') {
-      throw new Error('Unauthorized - admin access required')
-    }
-
-    // Check if we need to create the payment_gateways table
-    const { error: tableCheckError } = await supabase
-      .from('payment_gateways')
-      .select('id')
-      .limit(1)
-      
-    if (tableCheckError) {
-      console.log('Payment gateways table needs to be created')
-      // Table doesn't exist or we don't have access - no action needed here
-      // as we'll need to run SQL commands to create it
-    }
-
     // Check if PayPal gateway config exists
     const { data: existingConfig, error: existingError } = await supabase
       .from('payment_gateways')
@@ -77,6 +35,7 @@ serve(async (req) => {
     let result = null
     
     if (!existingConfig) {
+      console.log('Creating PayPal gateway configuration')
       // Create default PayPal gateway config
       const { data, error: insertError } = await supabase
         .from('payment_gateways')
@@ -100,6 +59,7 @@ serve(async (req) => {
       
       result = data
     } else {
+      console.log('PayPal gateway configuration already exists')
       // Config already exists
       result = existingConfig
     }

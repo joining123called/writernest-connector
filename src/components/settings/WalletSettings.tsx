@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -8,12 +9,28 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { AdminWalletTransactions } from './AdminWalletTransactions';
-import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
-import { defaultWalletSettings, WalletSettings as WalletSettingsType } from '@/hooks/platform-settings/types';
+import { AlertCircle, Loader2, CreditCard } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PayPalGatewayConfig } from '@/types/paypal';
+import { defaultWalletSettings, WalletSettings as WalletSettingsType, PaymentGateway } from '@/types/wallet';
 import { Json } from '@/types/supabase';
+
+export const AdminWalletTransactions = () => {
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>Transaction Management</CardTitle>
+        <CardDescription>
+          View and manage all wallet transactions across the platform
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-center py-6 text-muted-foreground">
+          Transaction management coming soon...
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const WalletSettings = () => {
   const { isAdmin } = useAuth();
@@ -28,10 +45,24 @@ export const WalletSettings = () => {
 
   useEffect(() => {
     const fetchWalletSettings = async () => {
+      if (!isAdmin) return;
+      
       setIsLoading(true);
       
       try {
-        // Check if wallet settings exist
+        // Initialize wallet settings if they don't exist
+        const initResponse = await supabase.functions.invoke('init-wallet-settings');
+        if (!initResponse.data?.success) {
+          console.error('Failed to initialize wallet settings');
+        }
+        
+        // Also initialize payment gateways
+        const gatewayResponse = await supabase.functions.invoke('init-payment-gateways');
+        if (!gatewayResponse.data?.success) {
+          console.error('Failed to initialize payment gateways');
+        }
+
+        // Get wallet settings
         const { data, error } = await supabase
           .from('platform_settings')
           .select('*')
@@ -41,19 +72,8 @@ export const WalletSettings = () => {
         if (error) throw error;
 
         if (data && data.value) {
-          // Cast the data to WalletSettingsType
           setSettings(data.value as WalletSettingsType);
         } else {
-          // Create default wallet settings if they don't exist
-          const { error: createError } = await supabase
-            .from('platform_settings')
-            .insert({ 
-              key: 'wallet_settings',
-              value: defaultWalletSettings as Json
-            });
-
-          if (createError) throw createError;
-          
           setSettings(defaultWalletSettings);
         }
 
@@ -65,13 +85,12 @@ export const WalletSettings = () => {
           .maybeSingle();
 
         if (!configError && paypalConfig) {
-          // Map the database fields to our interface
           setClientId(paypalConfig.config.client_id || '');
           setClientSecret(paypalConfig.config.client_secret || '');
           setWebhookId(paypalConfig.config.webhook_id || '');
-          setIsSandbox(paypalConfig.is_test_mode || true);
+          setIsSandbox(paypalConfig.is_test_mode);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching wallet settings:', error);
         toast({
           title: 'Error',
@@ -83,9 +102,7 @@ export const WalletSettings = () => {
       }
     };
 
-    if (isAdmin) {
-      fetchWalletSettings();
-    }
+    fetchWalletSettings();
   }, [isAdmin, toast]);
 
   const handleSaveSettings = async () => {
@@ -105,33 +122,28 @@ export const WalletSettings = () => {
         
       if (error) throw error;
       
-      // Also update payment gateway configuration via the edge function
-      const response = await fetch(`${window.location.origin}/.netlify/functions/admin-paypal-config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
-          clientId,
-          clientSecret,
-          webhookId,
-          isSandbox,
-          isActive: settings.payment_methods.paypal.enabled
+      // Update payment gateway configuration
+      const { error: gatewayError } = await supabase
+        .from('payment_gateways')
+        .update({
+          is_enabled: settings.payment_methods.paypal.enabled,
+          is_test_mode: isSandbox,
+          config: {
+            client_id: clientId,
+            client_secret: clientSecret,
+            webhook_id: webhookId
+          },
+          updated_at: new Date().toISOString()
         })
-      });
+        .eq('gateway_name', 'paypal');
       
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update PayPal configuration');
-      }
+      if (gatewayError) throw gatewayError;
       
       toast({
         title: 'Settings saved',
         description: 'Wallet settings have been updated successfully.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving wallet settings:', error);
       toast({
         title: 'Error',
@@ -371,11 +383,10 @@ export const WalletSettings = () => {
                     </Label>
                   </div>
                   
-                  <Alert className="mt-4">
+                  <Alert variant="info" className="mt-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      For webhook integration, create a webhook in your PayPal Developer Dashboard 
-                      pointing to: {window.location.origin}/.netlify/functions/paypal-webhook
+                      For webhook integration, create a webhook in your PayPal Developer Dashboard
                     </AlertDescription>
                   </Alert>
                 </div>

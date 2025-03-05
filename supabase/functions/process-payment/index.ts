@@ -35,8 +35,8 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Process the payment (placeholder for actual payment processing)
-    const { amount, paymentMethod } = await req.json()
+    // Process the payment (simulated)
+    const { amount, paymentMethod, walletId } = await req.json()
     
     // Validate request
     if (!amount || amount <= 0) {
@@ -47,9 +47,27 @@ serve(async (req) => {
       throw new Error('Payment method is required')
     }
     
-    // Here we would integrate with a payment processor
-    // For now, we'll just return a mock payment result
+    if (!walletId) {
+      throw new Error('Wallet ID is required')
+    }
     
+    // Verify the wallet belongs to the user
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('id', walletId)
+      .eq('user_id', user.id)
+      .single()
+      
+    if (walletError || !wallet) {
+      console.error('Wallet verification error:', walletError)
+      throw new Error('Wallet not found or does not belong to user')
+    }
+    
+    // Here we would integrate with a payment processor
+    // For demo purposes, we'll just update the wallet balance directly
+    
+    // Generate a mock payment result
     const paymentResult = {
       id: `payment_${Date.now()}`,
       status: 'success',
@@ -57,6 +75,41 @@ serve(async (req) => {
       currency: 'USD',
       payment_method: paymentMethod,
       created_at: new Date().toISOString()
+    }
+    
+    // Update wallet balance
+    const newBalance = Number(wallet.balance) + Number(amount)
+    const { error: updateError } = await supabase
+      .from('wallets')
+      .update({ 
+        balance: newBalance, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', walletId)
+      
+    if (updateError) {
+      console.error('Wallet update error:', updateError)
+      throw new Error('Failed to update wallet balance')
+    }
+    
+    // Record the transaction
+    const { error: transactionError } = await supabase
+      .from('wallet_transactions')
+      .insert([{
+        wallet_id: walletId,
+        amount: amount,
+        type: 'deposit',
+        status: 'completed',
+        description: `Wallet deposit via ${paymentMethod} (simulated)`,
+        payment_method: paymentMethod,
+        payment_id: paymentResult.id,
+        payment_status: 'success',
+        payment_data: paymentResult
+      }])
+      
+    if (transactionError) {
+      console.error('Transaction record error:', transactionError)
+      throw new Error('Failed to record transaction')
     }
     
     // Return successful response

@@ -1,56 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ArrowUpRight, ArrowDownLeft, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useWallet } from '@/hooks/useWallet';
 
-interface Transaction {
-  id: string;
-  wallet_id: string;
-  amount: number;
-  type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
-  status: 'pending' | 'completed' | 'failed';
-  description: string;
-  created_at: string;
-  reference_id?: string;
-}
+export const WalletTransactionsList = () => {
+  const { transactions, isLoadingTransactions } = useWallet();
 
-interface WalletTransactionsListProps {
-  walletId?: string;
-}
-
-export const WalletTransactionsList = ({ walletId }: WalletTransactionsListProps) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!walletId) return;
-      
-      setLoading(true);
-      
-      try {
-        const { data, error } = await supabase
-          .from('wallet_transactions')
-          .select('*')
-          .eq('wallet_id', walletId)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        
-        setTransactions(data as Transaction[]);
-      } catch (error) {
-        console.error('Error fetching wallet transactions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTransactions();
-  }, [walletId]);
-
-  if (loading) {
+  if (isLoadingTransactions) {
     return (
       <div className="space-y-4 py-4">
         {[...Array(3)].map((_, i) => (
@@ -66,7 +25,7 @@ export const WalletTransactionsList = ({ walletId }: WalletTransactionsListProps
         <RefreshCw className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
         <h3 className="font-medium text-lg">No transactions yet</h3>
         <p className="text-muted-foreground text-sm mt-1">
-          When you make deposits or payments, they will appear here
+          When you make deposits or withdrawals, they will appear here
         </p>
       </div>
     );

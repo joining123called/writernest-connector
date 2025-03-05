@@ -1,11 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { WalletDashboard } from '@/components/wallet/WalletDashboard';
 import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { DollarSign } from 'lucide-react';
 
 const ClientWallet = () => {

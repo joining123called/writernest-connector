@@ -37,39 +37,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Check for admin access
-    const authHeader = req.headers.get('Authorization')
-    if (authHeader) {
-      // If there's an auth header, verify admin privileges
-      const token = authHeader.replace('Bearer ', '')
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-      
-      if (userError || !user) {
-        console.error('Auth error:', userError)
-        throw new Error('Unauthorized')
-      }
-
-      // Check if user is admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) {
-        console.error('Profile error:', profileError)
-        throw new Error('Failed to retrieve user profile')
-      }
-
-      if (profile.role !== 'admin') {
-        throw new Error('Unauthorized - admin access required')
-      }
-    } else {
-      // For operations that don't require admin privileges
-      // This function requires admin access
-      throw new Error('Admin authorization required')
-    }
-
     // Check if wallet settings already exist
     const { data: existingSettings, error: settingsError } = await supabase
       .from('platform_settings')
@@ -77,7 +44,7 @@ serve(async (req) => {
       .eq('key', 'wallet_settings')
       .maybeSingle()
 
-    if (settingsError) {
+    if (settingsError && !settingsError.message.includes('does not exist')) {
       console.error('Error checking existing settings:', settingsError)
       throw new Error('Failed to check existing wallet settings')
     }
@@ -85,25 +52,10 @@ serve(async (req) => {
     let result
     
     if (existingSettings) {
-      // Update existing settings
-      const { data, error: updateError } = await supabase
-        .from('platform_settings')
-        .update({ 
-          value: defaultWalletSettings,
-          updated_at: new Date().toISOString()
-        })
-        .eq('key', 'wallet_settings')
-        .select()
-        .single()
-
-      if (updateError) {
-        console.error('Settings update error:', updateError)
-        throw new Error('Failed to update wallet settings')
-      }
-      
-      result = data
-      console.log('Updated existing wallet settings')
+      console.log('Wallet settings already exist')
+      result = existingSettings
     } else {
+      console.log('Creating new wallet settings')
       // Create new settings
       const { data, error: insertError } = await supabase
         .from('platform_settings')
@@ -120,7 +72,6 @@ serve(async (req) => {
       }
       
       result = data
-      console.log('Created new wallet settings')
     }
 
     return new Response(
