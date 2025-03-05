@@ -31,9 +31,9 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
   
   return (
     <div className="sticky top-6">
-      <Card className="bg-gradient-to-br from-white via-white to-gray-50 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-900/90 shadow-md border border-gray-100 dark:border-gray-800">
-        <CardHeader className="pb-3 border-b border-gray-100 dark:border-gray-800">
-          <CardTitle className="text-xl font-semibold">Order Summary</CardTitle>
+      <Card className="border border-border/10 shadow-md overflow-hidden bg-gradient-to-br from-card/80 to-card/95 backdrop-blur-sm">
+        <CardHeader className="pb-3 border-b border-border/10">
+          <CardTitle className="text-xl font-semibold text-card-foreground/90">Order Summary</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="space-y-3">
@@ -75,7 +75,7 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
             )}
           </div>
           
-          <Separator className="my-4" />
+          <Separator className="my-4 bg-border/10" />
           
           <div>
             <div className="text-lg font-medium mb-3">Price</div>
@@ -94,7 +94,7 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
             </div>
           </div>
           
-          <div className="bg-gray-50 dark:bg-gray-900/50 -mx-6 px-6 py-4 border-t border-b border-gray-100 dark:border-gray-800">
+          <div className="bg-primary/5 dark:bg-primary/10 -mx-6 px-6 py-4 border-t border-b border-border/10">
             <div className="flex justify-between text-xl font-bold">
               <span>Total:</span>
               <motion.span
@@ -102,6 +102,7 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
                 initial={{ scale: 1 }}
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 0.3 }}
+                className="text-primary"
               >
                 ${orderSummary.finalPrice.toFixed(2)}
               </motion.span>
@@ -114,11 +115,11 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
             )}
           </div>
           
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg flex items-start gap-3 text-sm">
+          <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-lg flex items-start gap-3 text-sm">
             <Clock className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-blue-800 dark:text-blue-300">Delivery Information</p>
-              <p className="text-blue-600 dark:text-blue-400">
+              <p className="font-medium text-blue-800 dark:text-blue-400">Delivery Information</p>
+              <p className="text-blue-600/90 dark:text-blue-400/90">
                 {formatDeadline()}
               </p>
             </div>
@@ -126,7 +127,7 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
         </CardContent>
         <CardFooter className="flex-col gap-4 pt-2 pb-6">
           <Button
-            className="w-full h-12 font-medium text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-[0_4px_14px_-3px_rgba(0,0,0,0.2)] hover:shadow-[0_6px_20px_-3px_rgba(0,0,0,0.2)] transition-all duration-200"
+            className="w-full h-12 font-medium text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all duration-200"
             onClick={form.handleSubmit(onSubmit)}
           >
             Complete Your Order

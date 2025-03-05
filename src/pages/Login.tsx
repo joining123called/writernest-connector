@@ -10,6 +10,7 @@ import { Loader2, Mail, Lock, LogIn } from 'lucide-react';
 import { UserRole } from '@/types';
 import { withCSRFProtection } from '@/components/security/CSRFProtection';
 import { validateCSRFToken } from '@/contexts/auth/session-management/session-utils';
+import { motion } from 'framer-motion';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -83,8 +84,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background/90 to-background">
-      <div className="w-full max-w-md px-8 py-10 rounded-xl bg-card shadow-lg border border-border/30 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background/80 via-background/90 to-background">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md px-8 py-10 rounded-xl bg-card/90 shadow-lg border border-border/20 backdrop-blur-sm"
+      >
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-5 shadow-md">
             <LogIn className="h-7 w-7 text-primary" />
@@ -106,7 +112,7 @@ const Login = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 rounded-lg border-input/30 bg-card shadow-sm"
+                className="pl-10 rounded-lg border-input/30 bg-background/60 shadow-sm"
                 required
                 disabled={isSubmitting}
                 autoComplete="email"
@@ -129,7 +135,7 @@ const Login = () => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 rounded-lg border-input/30 bg-card shadow-sm"
+                className="pl-10 rounded-lg border-input/30 bg-background/60 shadow-sm"
                 required
                 disabled={isSubmitting}
                 autoComplete="current-password"
@@ -163,9 +169,9 @@ const Login = () => {
           </p>
           
           <div className="flex items-center justify-center gap-2 pt-2">
-            <div className="h-px bg-border flex-grow"></div>
+            <div className="h-px bg-border/30 flex-grow"></div>
             <span className="text-xs text-muted-foreground px-2">or</span>
-            <div className="h-px bg-border flex-grow"></div>
+            <div className="h-px bg-border/30 flex-grow"></div>
           </div>
           
           <p className="text-xs">
@@ -174,7 +180,7 @@ const Login = () => {
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

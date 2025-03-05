@@ -137,23 +137,23 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   };
   
   return (
-    <div className="container mx-auto">
-      <div className="flex flex-col md:flex-row gap-8">
+    <div className="container px-0 mx-auto">
+      <div className="flex flex-col lg:flex-row gap-8">
         <motion.div 
-          className="w-full md:w-2/3"
+          className="w-full lg:w-2/3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <OrderFormFields form={form} />
             </form>
           </Form>
         </motion.div>
         
         <motion.div 
-          className="w-full md:w-1/3"
+          className="w-full lg:w-1/3"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}

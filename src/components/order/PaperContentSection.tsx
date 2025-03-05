@@ -16,31 +16,31 @@ type PaperContentSectionProps = {
 
 export function PaperContentSection({ form }: PaperContentSectionProps) {
   return (
-    <Card className="border-none shadow-none bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10">
-      <CardHeader className="pb-2">
-        <div className="flex items-center mb-2">
-          <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-full mr-3">
-            <AlignLeft className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    <Card className="border border-border/10 shadow-sm overflow-hidden bg-gradient-to-br from-background to-background/90 dark:from-background/90 dark:to-background/70">
+      <CardHeader className="pb-2 border-b border-border/10">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="bg-primary/10 p-2.5 rounded-full">
+            <AlignLeft className="h-5 w-5 text-primary" />
           </div>
           <CardTitle className="text-2xl font-semibold">Paper Content</CardTitle>
         </div>
-        <CardDescription className="text-base">
+        <CardDescription className="text-base text-muted-foreground/80">
           Provide specific details about your paper
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-4">
+      <CardContent className="pt-6">
         <div className="space-y-6">
           <FormField
             control={form.control}
             name="topic"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Topic / Title</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground/90">Topic / Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your paper topic or title" className="h-11" {...field} />
+                  <Input placeholder="Enter your paper topic or title" className="h-11 bg-background border-input/40" {...field} />
                 </FormControl>
-                <FormDescription>
+                <FormDescription className="text-xs text-muted-foreground/80">
                   Enter a specific topic or leave blank if you want the writer to choose
                 </FormDescription>
                 <FormMessage />
@@ -53,15 +53,15 @@ export function PaperContentSection({ form }: PaperContentSectionProps) {
             name="instructions"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Paper Instructions</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground/90">Paper Instructions</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Enter detailed instructions for your paper..." 
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[120px] resize-none bg-background border-input/40"
                     {...field} 
                   />
                 </FormControl>
-                <FormDescription>
+                <FormDescription className="text-xs text-muted-foreground/80">
                   Include any specific requirements, grading rubric, or sample material
                 </FormDescription>
                 <FormMessage />
@@ -76,13 +76,13 @@ export function PaperContentSection({ form }: PaperContentSectionProps) {
             name="citationStyle"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center">
-                  <Book className="h-4 w-4 mr-2 text-muted-foreground" />
+                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                  <Book className="h-4 w-4 mr-2 text-primary/70" />
                   Citation Style
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 bg-background border-input/40">
                       <SelectValue placeholder="Select citation style" />
                     </SelectTrigger>
                   </FormControl>
@@ -104,10 +104,10 @@ export function PaperContentSection({ form }: PaperContentSectionProps) {
             name="sources"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number of Sources</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground/90">Number of Sources</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 bg-background border-input/40">
                       <SelectValue placeholder="Select number of sources" />
                     </SelectTrigger>
                   </FormControl>
@@ -125,12 +125,12 @@ export function PaperContentSection({ form }: PaperContentSectionProps) {
           />
         </div>
         
-        <div className="border-t border-border/50 pt-6 mt-6">
-          <Button type="button" variant="outline" className="flex gap-2 h-11">
+        <div className="border-t border-border/10 pt-6 mt-6">
+          <Button type="button" variant="outline" className="flex gap-2 h-11 bg-background/80 hover:bg-background shadow-sm">
             <Upload size={16} />
             Upload Additional Files
           </Button>
-          <FormDescription className="mt-2 text-sm">
+          <FormDescription className="mt-2 text-xs text-muted-foreground/80">
             Upload any reference materials or assignment guidelines
           </FormDescription>
         </div>
