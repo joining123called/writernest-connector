@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePaymentMethodsSettings } from './usePaymentMethodsSettings';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -15,52 +14,67 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 const PaymentMethodLogo = ({ method }: { method: string }) => {
   const logos: Record<string, { src: string, alt: string }> = {
     stripe: { 
-      src: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/stripe.svg", 
       alt: "Stripe Logo" 
     },
     paypal: { 
-      src: "https://upload.wikimedia.org/wikipedia/commons/a/a4/Paypal_2014_logo.svg", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/paypal.svg", 
       alt: "PayPal Logo" 
     },
     skrill: { 
-      src: "https://upload.wikimedia.org/wikipedia/en/8/88/Skrill_logo.svg", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/skrill.svg", 
       alt: "Skrill Logo" 
     },
     mpesa: { 
-      src: "https://upload.wikimedia.org/wikipedia/commons/b/b5/M-PESA_LOGO-01.svg", 
+      src: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO.png/320px-M-PESA_LOGO.png", 
       alt: "M-Pesa Logo" 
     },
     flutterwave: { 
-      src: "https://cdn.worldvectorlogo.com/logos/flutterwave-1.svg", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/flutterwave.svg", 
       alt: "Flutterwave Logo" 
     },
     twoCheckout: { 
-      src: "https://www.2checkout.com/images/2co-new-logo.png", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/2checkout.svg", 
       alt: "2Checkout Logo" 
     },
     paystack: { 
-      src: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Paystack_Logo.png/1200px-Paystack_Logo.png", 
+      src: "https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/paystack.svg", 
       alt: "Paystack Logo" 
     },
     authorizeNet: { 
-      src: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Authorize.net_logo.svg", 
+      src: "https://www.authorize.net/content/dam/authorize/images/authorizenet-logo-for-header.svg", 
       alt: "Authorize.Net Logo" 
     }
   };
 
   const logo = logos[method];
 
+  if (!logo) {
+    return (
+      <div className="h-8 w-16 flex items-center justify-center">
+        <CreditCard className="h-6 w-6 text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-8 w-16 flex items-center">
-      {logo ? (
-        <img 
-          src={logo.src} 
-          alt={logo.alt} 
-          className="h-6 object-contain" 
-        />
-      ) : (
-        <div className="bg-muted rounded h-6 w-12"></div>
-      )}
+    <div className="h-8 w-24 flex items-center justify-center bg-white rounded p-1">
+      <img 
+        src={logo.src} 
+        alt={logo.alt} 
+        className="h-6 max-w-full object-contain" 
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.onerror = null;
+          target.style.display = 'none';
+          const parent = target.parentNode as HTMLElement;
+          if (parent) {
+            const fallback = document.createElement('div');
+            fallback.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-muted-foreground"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>`;
+            parent.appendChild(fallback.firstChild as Node);
+          }
+        }}
+      />
     </div>
   );
 };
