@@ -6,10 +6,12 @@ import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
 import { motion } from 'framer-motion';
+import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 
 const ClientOrderPage = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
 
   // Redirect if not a client
   React.useEffect(() => {
@@ -18,7 +20,7 @@ const ClientOrderPage = () => {
     }
   }, [user, isLoading, navigate]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingSettings) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading...</p>
@@ -34,9 +36,9 @@ const ClientOrderPage = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Place Your Order</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{settings.serviceName}</h1>
           <p className="text-muted-foreground">
-            Fill out the form below to submit your writing request.
+            {settings.serviceDescription}
           </p>
         </div>
         

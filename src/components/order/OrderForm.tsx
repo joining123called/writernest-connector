@@ -13,6 +13,7 @@ import { Check, Clock, Upload, Calendar } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, addHours, isToday, isTomorrow, addDays } from "date-fns";
+import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -82,6 +83,8 @@ type OrderFormProps = {
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { toast } = useToast();
+  const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
+  
   const [orderSummary, setOrderSummary] = useState({
     basePrice: 15.99,
     pages: 1,
@@ -111,7 +114,6 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const watchPages = form.watch('pages');
   const watchDeadline = form.watch('deadline');
   
-  // Time slots for the popover
   const timeSlots = [
     { label: "9:00 AM", hours: 9, minutes: 0 },
     { label: "12:00 PM", hours: 12, minutes: 0 },
@@ -122,34 +124,33 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   ];
   
   React.useEffect(() => {
+    if (isLoadingSettings) return;
+    
     const pages = parseInt(watchPages || "1");
     const now = new Date();
     const selectedDate = watchDeadline || now;
     
-    // Calculate hours difference
     const diffTime = Math.abs(selectedDate.getTime() - now.getTime());
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    // Calculate price multiplier based on urgency
     let multiplier = 1.0;
-    if (diffHours <= 6) {
-      multiplier = 2.0;
-    } else if (diffHours <= 12) {
-      multiplier = 1.8;
+    const minHours = settings.minimumHours;
+    
+    if (diffHours <= minHours) {
+      multiplier = settings.urgentDeliveryMultiplier;
     } else if (diffHours <= 24) {
-      multiplier = 1.6;
+      multiplier = settings.urgentDeliveryMultiplier * 0.8;
     } else if (diffHours <= 48) {
-      multiplier = 1.4;
+      multiplier = settings.urgentDeliveryMultiplier * 0.7;
     } else if (diffHours <= 72) {
-      multiplier = 1.2;
-    } else if (diffDays <= 7) {
+      multiplier = settings.urgentDeliveryMultiplier * 0.6;
+    } else if (diffDays <= settings.standardDeliveryDays) {
       multiplier = 1.0;
     } else {
       multiplier = 0.9;
     }
     
-    // Generate deadline text
     let deadlineText = '';
     if (isToday(selectedDate)) {
       deadlineText = `Today at ${format(selectedDate, 'h:mm a')}`;
@@ -161,12 +162,11 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       deadlineText = format(selectedDate, 'MMMM d, yyyy') + ` at ${format(selectedDate, 'h:mm a')}`;
     }
     
-    // If hours are very low, show urgency indicator
     if (diffHours <= 24) {
       deadlineText += " (Urgent)";
     }
     
-    const basePrice = 15.99;
+    const basePrice = settings.basePricePerPage;
     const pricePerPage = basePrice * multiplier;
     const totalPrice = pricePerPage * pages;
     
@@ -188,7 +188,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       discount,
       finalPrice
     });
-  }, [watchPages, watchDeadline]);
+  }, [watchPages, watchDeadline, settings, isLoadingSettings]);
   
   const onSubmit = (data: z.infer<typeof orderFormSchema>) => {
     console.log("Order submitted:", data, orderSummary);
@@ -203,18 +203,27 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     }
   };
   
+  if (isLoadingSettings) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Clock className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading order form...</span>
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-2/3">
+      <div className={`flex flex-col ${settings.orderSummaryPosition === 'right' ? 'md:flex-row' : 'flex-col'} gap-6`}>
+        <div className={`w-full ${settings.orderSummaryPosition === 'right' ? 'md:w-2/3' : 'w-full'}`}>
           <Card className="border-t-4 border-t-primary">
             <CardHeader className="pb-2">
               <div className="flex items-center mb-2">
                 <Check className="h-6 w-6 text-green-500 mr-2" />
-                <CardTitle className="text-2xl">Fill Your Order Details</CardTitle>
+                <CardTitle className="text-2xl">{settings.serviceName}</CardTitle>
               </div>
               <CardDescription>
-                Provide information about your assignment to get an accurate quote.
+                {settings.serviceDescription}
               </CardDescription>
             </CardHeader>
             
@@ -247,246 +256,257 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       )}
                     />
                     
-                    <FormField
-                      control={form.control}
-                      name="subject"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subject Area</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select subject" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {subjects.map((subject) => (
-                                <SelectItem key={subject.value} value={subject.value}>
-                                  {subject.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {settings.showSubjectFields && (
+                      <FormField
+                        control={form.control}
+                        name="subject"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Subject Area</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select subject" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {subjects.map((subject) => (
+                                  <SelectItem key={subject.value} value={subject.value}>
+                                    {subject.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {settings.showPageCount && (
+                      <FormField
+                        control={form.control}
+                        name="pages"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Pages</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select number of pages" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {[...Array(20)].map((_, i) => (
+                                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                    {i + 1} page{i > 0 ? 's' : ''} {settings.showWordCount ? `/ ${(i + 1) * 275} words` : ''}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    
+                    {settings.showDeadlineOptions && (
+                      <FormField
+                        control={form.control}
+                        name="deadline"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Deadline</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className="w-full h-11 px-3 flex justify-between items-center text-left font-normal text-muted-foreground border border-input/40 bg-background/80 hover:bg-accent/30 hover:text-accent-foreground transition-all duration-200"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-4 w-4 text-primary/70" />
+                                      {field.value ? (
+                                        <span className="text-foreground">
+                                          {format(field.value, "PPP")} at {format(field.value, "h:mm a")}
+                                        </span>
+                                      ) : (
+                                        <span>Select deadline date and time</span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                                      {field.value && isToday(field.value) ? "Today" : 
+                                       field.value && isTomorrow(field.value) ? "Tomorrow" : ""}
+                                    </span>
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <div className="border-b p-3">
+                                  <div className="text-sm font-medium mb-2">Select date</div>
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        const newDate = new Date(date);
+                                        if (field.value) {
+                                          newDate.setHours(field.value.getHours());
+                                          newDate.setMinutes(field.value.getMinutes());
+                                        } else {
+                                          newDate.setHours(23);
+                                          newDate.setMinutes(59);
+                                        }
+                                        field.onChange(newDate);
+                                      }
+                                    }}
+                                    disabled={(date) => 
+                                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                                    }
+                                    initialFocus
+                                  />
+                                </div>
+                                <div className="p-3 border-t">
+                                  <div className="text-sm font-medium mb-3">Select time</div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {timeSlots.map((time, i) => {
+                                      const isSelected = field.value && 
+                                        field.value.getHours() === time.hours && 
+                                        field.value.getMinutes() === time.minutes;
+                                      
+                                      return (
+                                        <Button
+                                          key={i}
+                                          type="button"
+                                          variant={isSelected ? "default" : "outline"}
+                                          size="sm"
+                                          className={`h-9 ${isSelected ? 'bg-primary text-white' : 'bg-background'}`}
+                                          onClick={() => {
+                                            const newDate = new Date(field.value || new Date());
+                                            newDate.setHours(time.hours);
+                                            newDate.setMinutes(time.minutes);
+                                            field.onChange(newDate);
+                                          }}
+                                        >
+                                          <Clock className="mr-2 h-3.5 w-3.5" />
+                                          {time.label}
+                                        </Button>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                                
+                                <div className="p-3 border-t">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const tomorrow = addDays(new Date(), 1);
+                                        tomorrow.setHours(23, 59, 0, 0);
+                                        field.onChange(tomorrow);
+                                      }}
+                                    >
+                                      Tomorrow EOD
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const nextWeek = addDays(new Date(), 7);
+                                        nextWeek.setHours(23, 59, 0, 0);
+                                        field.onChange(nextWeek);
+                                      }}
+                                    >
+                                      Next Week
+                                    </Button>
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <FormDescription>
+                              Choose when you need your paper delivered
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                  
+                  {settings.showSubjectFields && (
                     <FormField
                       control={form.control}
-                      name="pages"
+                      name="topic"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Number of Pages</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select number of pages" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {[...Array(20)].map((_, i) => (
-                                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                  {i + 1} page{i > 0 ? 's' : ''} / {(i + 1) * 275} words
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="deadline"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Deadline</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className="w-full h-11 px-3 flex justify-between items-center text-left font-normal text-muted-foreground border border-input/40 bg-background/80 hover:bg-accent/30 hover:text-accent-foreground transition-all duration-200"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-primary/70" />
-                                    {field.value ? (
-                                      <span className="text-foreground">
-                                        {format(field.value, "PPP")} at {format(field.value, "h:mm a")}
-                                      </span>
-                                    ) : (
-                                      <span>Select deadline date and time</span>
-                                    )}
-                                  </div>
-                                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                                    {field.value && isToday(field.value) ? "Today" : 
-                                     field.value && isTomorrow(field.value) ? "Tomorrow" : ""}
-                                  </span>
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <div className="border-b p-3">
-                                <div className="text-sm font-medium mb-2">Select date</div>
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={(date) => {
-                                    // If date is selected, keep time from current value
-                                    if (date) {
-                                      const newDate = new Date(date);
-                                      if (field.value) {
-                                        newDate.setHours(field.value.getHours());
-                                        newDate.setMinutes(field.value.getMinutes());
-                                      } else {
-                                        newDate.setHours(23);
-                                        newDate.setMinutes(59);
-                                      }
-                                      field.onChange(newDate);
-                                    }
-                                  }}
-                                  disabled={(date) => 
-                                    date < new Date(new Date().setHours(0, 0, 0, 0))
-                                  }
-                                  initialFocus
-                                />
-                              </div>
-                              <div className="p-3 border-t">
-                                <div className="text-sm font-medium mb-3">Select time</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {timeSlots.map((time, i) => {
-                                    const isSelected = field.value && 
-                                      field.value.getHours() === time.hours && 
-                                      field.value.getMinutes() === time.minutes;
-                                    
-                                    return (
-                                      <Button
-                                        key={i}
-                                        type="button"
-                                        variant={isSelected ? "default" : "outline"}
-                                        size="sm"
-                                        className={`h-9 ${isSelected ? 'bg-primary text-white' : 'bg-background'}`}
-                                        onClick={() => {
-                                          const newDate = new Date(field.value || new Date());
-                                          newDate.setHours(time.hours);
-                                          newDate.setMinutes(time.minutes);
-                                          field.onChange(newDate);
-                                        }}
-                                      >
-                                        <Clock className="mr-2 h-3.5 w-3.5" />
-                                        {time.label}
-                                      </Button>
-                                    )
-                                  })}
-                                </div>
-                              </div>
-                              
-                              <div className="p-3 border-t">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const tomorrow = addDays(new Date(), 1);
-                                      tomorrow.setHours(23, 59, 0, 0);
-                                      field.onChange(tomorrow);
-                                    }}
-                                  >
-                                    Tomorrow EOD
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const nextWeek = addDays(new Date(), 7);
-                                      nextWeek.setHours(23, 59, 0, 0);
-                                      field.onChange(nextWeek);
-                                    }}
-                                  >
-                                    Next Week
-                                  </Button>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                          <FormLabel>Topic / Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your paper topic or title" {...field} />
+                          </FormControl>
                           <FormDescription>
-                            Choose when you need your paper delivered
+                            Enter a specific topic or leave blank if you want the writer to choose
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
+                  )}
                   
-                  <FormField
-                    control={form.control}
-                    name="topic"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Topic / Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter your paper topic or title" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Enter a specific topic or leave blank if you want the writer to choose
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="instructions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Paper Instructions</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter detailed instructions for your paper..." 
-                            rows={5}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Include any specific requirements, grading rubric, or sample material
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {settings.showInstructions && (
                     <FormField
                       control={form.control}
-                      name="citationStyle"
+                      name="instructions"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Citation Style</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select citation style" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {citationStyles.map((style) => (
-                                <SelectItem key={style.value} value={style.value}>
-                                  {style.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Paper Instructions</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Enter detailed instructions for your paper..." 
+                              rows={5}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Include any specific requirements, grading rubric, or sample material
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {settings.showCitationStyles && (
+                      <FormField
+                        control={form.control}
+                        name="citationStyle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Citation Style</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select citation style" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {citationStyles.map((style) => (
+                                  <SelectItem key={style.value} value={style.value}>
+                                    {style.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     
                     <FormField
                       control={form.control}
@@ -530,7 +550,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
           </Card>
         </div>
         
-        <div className="w-full md:w-1/3">
+        <div className={`w-full ${settings.orderSummaryPosition === 'right' ? 'md:w-1/3' : 'w-full'}`}>
           <div className="sticky top-6">
             <Card className="bg-gray-50 dark:bg-slate-900">
               <CardHeader>
@@ -544,22 +564,31 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       paperTypes.find(t => t.value === form.watch('paperType'))?.label : 
                       "Not selected"}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subject:</span>
-                    <span className="font-medium">{form.watch('subject') ? 
-                      subjects.find(s => s.value === form.watch('subject'))?.label : 
-                      "Not selected"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Size:</span>
-                    <span className="font-medium">{orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''} / {orderSummary.words} words</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Deadline:</span>
-                    <span className="font-medium">{orderSummary.deadlineText}</span>
-                  </div>
+                  {settings.showSubjectFields && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subject:</span>
+                      <span className="font-medium">{form.watch('subject') ? 
+                        subjects.find(s => s.value === form.watch('subject'))?.label : 
+                        "Not selected"}</span>
+                    </div>
+                  )}
+                  {settings.showPageCount && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Size:</span>
+                      <span className="font-medium">
+                        {orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''}
+                        {settings.showWordCount ? ` / ${orderSummary.words} words` : ''}
+                      </span>
+                    </div>
+                  )}
+                  {settings.showDeadlineOptions && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Deadline:</span>
+                      <span className="font-medium">{orderSummary.deadlineText}</span>
+                    </div>
+                  )}
                   
-                  {form.watch('citationStyle') && form.watch('citationStyle') !== "none" && (
+                  {settings.showCitationStyles && form.watch('citationStyle') && form.watch('citationStyle') !== "none" && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Citation style:</span>
                       <span className="font-medium">
@@ -581,7 +610,11 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                   <div className="space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Base price:</span>
-                      <span>${orderSummary.pages} × ${orderSummary.pricePerPage.toFixed(2)}</span>
+                      {settings.priceDisplayMode === 'perPage' ? (
+                        <span>${orderSummary.pricePerPage.toFixed(2)} × {orderSummary.pages}</span>
+                      ) : (
+                        <span>${orderSummary.totalPrice.toFixed(2)}</span>
+                      )}
                     </div>
                     
                     {orderSummary.discount > 0 && (

@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { supabase } from '@/lib/supabase';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
+import { useOrderFormSettings, OrderFormSettings } from '@/hooks/use-order-form-settings';
 
 const formSettingsSchema = z.object({
   // General settings
@@ -42,33 +46,93 @@ const formSettingsSchema = z.object({
 
 export function OrderFormSettings() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { settings, isLoading } = useOrderFormSettings();
+  
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof formSettingsSchema>) => {
+      const { error } = await supabase
+        .from('platform_settings')
+        .upsert(
+          { 
+            key: 'orderFormSettings', 
+            value: data,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'key' }
+        );
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order-form-settings'] });
+      toast({
+        title: "Settings saved",
+        description: "Order form settings have been updated successfully."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to save settings",
+        description: error.message || "There was an error saving the settings.",
+        variant: "destructive",
+      });
+    }
+  });
   
   const form = useForm<z.infer<typeof formSettingsSchema>>({
     resolver: zodResolver(formSettingsSchema),
     defaultValues: {
-      serviceName: "Essay Writing Service",
-      serviceDescription: "Professional academic writing assistance for students of all levels",
-      showSubjectFields: true,
-      showPageCount: true,
-      showWordCount: true,
-      showDeadlineOptions: true,
-      showCitationStyles: true,
-      showInstructions: true,
-      basePricePerPage: "15.99",
-      urgentDeliveryMultiplier: "1.5",
-      minimumHours: "6",
-      standardDeliveryDays: "7",
-      priceDisplayMode: "total",
-      orderSummaryPosition: "right"
+      serviceName: settings.serviceName,
+      serviceDescription: settings.serviceDescription,
+      showSubjectFields: settings.showSubjectFields,
+      showPageCount: settings.showPageCount,
+      showWordCount: settings.showWordCount,
+      showDeadlineOptions: settings.showDeadlineOptions,
+      showCitationStyles: settings.showCitationStyles,
+      showInstructions: settings.showInstructions,
+      basePricePerPage: settings.basePricePerPage.toString(),
+      urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
+      minimumHours: settings.minimumHours.toString(),
+      standardDeliveryDays: settings.standardDeliveryDays.toString(),
+      priceDisplayMode: settings.priceDisplayMode,
+      orderSummaryPosition: settings.orderSummaryPosition
     }
   });
   
+  // Update form values when settings are loaded
+  React.useEffect(() => {
+    if (!isLoading) {
+      form.reset({
+        serviceName: settings.serviceName,
+        serviceDescription: settings.serviceDescription,
+        showSubjectFields: settings.showSubjectFields,
+        showPageCount: settings.showPageCount,
+        showWordCount: settings.showWordCount,
+        showDeadlineOptions: settings.showDeadlineOptions,
+        showCitationStyles: settings.showCitationStyles,
+        showInstructions: settings.showInstructions,
+        basePricePerPage: settings.basePricePerPage.toString(),
+        urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
+        minimumHours: settings.minimumHours.toString(),
+        standardDeliveryDays: settings.standardDeliveryDays.toString(),
+        priceDisplayMode: settings.priceDisplayMode,
+        orderSummaryPosition: settings.orderSummaryPosition
+      });
+    }
+  }, [isLoading, settings, form]);
+  
   function onSubmit(data: z.infer<typeof formSettingsSchema>) {
-    console.log(data);
-    toast({
-      title: "Settings saved",
-      description: "Order form settings have been updated successfully."
-    });
+    saveSettingsMutation.mutate(data);
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
   
   return (
@@ -439,7 +503,15 @@ export function OrderFormSettings() {
             </TabsContent>
             
             <div className="flex justify-end">
-              <Button type="submit">Save Changes</Button>
+              <Button 
+                type="submit" 
+                disabled={saveSettingsMutation.isPending}
+              >
+                {saveSettingsMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Save Changes
+              </Button>
             </div>
           </form>
         </Form>
