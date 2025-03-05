@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CreditCard, Lock, Loader2 } from 'lucide-react';
+import { Clock, CreditCard, Lock, Loader2, Check } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
@@ -66,7 +65,6 @@ export function OrderSummary({
   };
   
   const handleSubmit = () => {
-    // Include payment data with the order submission
     onSubmit();
   };
   
@@ -220,6 +218,14 @@ export function OrderSummary({
             </div>
           ) : "Submit Order"}
         </Button>
+        {selectedPaymentMethod && isPaymentComplete && !isProcessingPayment && (
+          <div className="text-sm text-green-600 dark:text-green-400 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>{enabledPaymentMethods.find(m => m.id === selectedPaymentMethod)?.name} selected</span>
+            </div>
+          </div>
+        )}
         <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1">
           <Lock className="h-3 w-3" />
           Protected by SSL encryption

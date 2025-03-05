@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { OrderForm } from '@/components/order/OrderForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -18,7 +17,6 @@ const ClientOrderPage = () => {
   const { hasEnabledPaymentMethods } = usePaymentMethods();
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
-  // Redirect if not a client
   React.useEffect(() => {
     if (!isLoading && (!user || user.role !== UserRole.CLIENT)) {
       navigate('/login');
@@ -36,27 +34,24 @@ const ClientOrderPage = () => {
   const handleOrderSubmit = (data) => {
     console.log("Order submitted:", data);
     
-    // Log uploaded files if any
     if (data.files && data.files.length > 0) {
       console.log(`${data.files.length} files uploaded:`, 
         data.files.map(f => ({ name: f.name, size: f.size, type: f.type }))
       );
     }
     
-    // Process payment if enabled, otherwise just confirm order
     if (hasEnabledPaymentMethods && data.paymentData) {
       setPaymentProcessing(true);
       
-      // Simulate payment processing
       setTimeout(() => {
         setPaymentProcessing(false);
         toast({
           title: "Payment Successful",
-          description: `Your payment was processed and your order has been submitted.`,
+          description: `Your payment was processed successfully.`,
         });
       }, 1500);
       
-      console.log("Payment data:", data.paymentData);
+      console.log("Processing payment data:", data.paymentData);
     } else {
       toast({
         title: "Order Submitted",

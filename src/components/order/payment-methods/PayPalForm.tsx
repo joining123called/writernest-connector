@@ -1,15 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Info } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 interface PayPalFormProps {
   onDataChange: (data: any) => void;
 }
 
 export function PayPalForm({ onDataChange }: PayPalFormProps) {
-  // In a real implementation, this would initialize the PayPal SDK
+  // Initialize PayPal payment data
   React.useEffect(() => {
     onDataChange({
       type: 'paypal',
@@ -19,23 +18,17 @@ export function PayPalForm({ onDataChange }: PayPalFormProps) {
   
   return (
     <Card className="mt-4">
-      <CardContent className="pt-4 text-center">
-        <div className="p-4 flex flex-col items-center justify-center space-y-4">
-          <p className="text-muted-foreground">
-            You'll be redirected to PayPal to complete your payment after submitting your order.
-          </p>
-          
+      <CardContent className="pt-4 flex justify-center">
+        <div className="flex flex-col items-center space-y-3 py-4">
           <img 
             src="https://cdn.jsdelivr.net/gh/gilbarbara/logos@master/logos/paypal.svg" 
-            alt="PayPal Logo" 
-            className="h-14 bg-white p-2 rounded-md"
+            alt="PayPal" 
+            className="h-16 bg-white p-2 rounded-md shadow-sm"
           />
           
-          <div className="text-sm bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex items-start gap-3 text-blue-800 dark:text-blue-300">
-            <Info className="h-5 w-5 flex-shrink-0 text-blue-500" />
-            <p className="text-left">
-              PayPal provides buyer protection and allows you to pay using your PayPal balance, bank account, or credit card.
-            </p>
+          <div className="text-sm flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
+            <Shield className="h-4 w-4" />
+            <span>Buyer Protection</span>
           </div>
         </div>
       </CardContent>
