@@ -58,8 +58,24 @@ export const usePaymentMethodsSettings = () => {
     }
     
     try {
-      // Cast the data to any to avoid type errors when passing to updateSettings
-      const success = await updateSettings(data as any);
+      // Convert any undefined or null values to their default values to prevent null value errors
+      const sanitizedData = Object.keys(data).reduce((acc, key) => {
+        const fieldKey = key as keyof PaymentMethodsSchema;
+        const value = data[fieldKey];
+        
+        // Replace null/undefined with default values to avoid not-null constraint violations
+        if (value === null || value === undefined) {
+          // Get default from schema's default values
+          acc[fieldKey] = defaultPaymentSettings[fieldKey];
+        } else {
+          acc[fieldKey] = value;
+        }
+        
+        return acc;
+      }, {} as PaymentMethodsSchema);
+      
+      // Cast the sanitized data to any to avoid type errors when passing to updateSettings
+      const success = await updateSettings(sanitizedData as any);
       
       if (success) {
         toast({

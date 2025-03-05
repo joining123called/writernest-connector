@@ -100,6 +100,11 @@ export const usePlatformSettings = () => {
         throw new Error('Only administrators can update platform settings');
       }
 
+      // Important: Make sure the value is never null or undefined
+      // If it is, replace with an empty string or appropriate default
+      const safeValue = value === null || value === undefined ? 
+        (typeof value === 'string' ? "" : {}) : value;
+
       // Check if setting exists
       const { data: existingData } = await supabase
         .from('platform_settings')
@@ -112,7 +117,7 @@ export const usePlatformSettings = () => {
         const { error } = await supabase
           .from('platform_settings')
           .update({ 
-            value, 
+            value: safeValue, 
             updated_at: new Date().toISOString() 
           })
           .eq('key', key);
@@ -122,12 +127,12 @@ export const usePlatformSettings = () => {
         // Insert new setting
         const { error } = await supabase
           .from('platform_settings')
-          .insert({ key, value });
+          .insert({ key, value: safeValue });
 
         if (error) throw error;
       }
 
-      return { key, value };
+      return { key, value: safeValue };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['platform-settings'] });
@@ -157,8 +162,27 @@ export const usePlatformSettings = () => {
     }
 
     try {
+      // Sanitize the settings object to ensure no null values
+      const sanitizedSettings = Object.entries(newSettings).reduce((acc, [key, value]) => {
+        // If the value is null or undefined, don't include it in the update
+        // This prevents null value constraint violations
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Only proceed if there are settings to update
+      if (Object.keys(sanitizedSettings).length === 0) {
+        toast({
+          title: "No changes to update",
+          description: "No valid settings to update were provided.",
+        });
+        return true; // Return true as there was no error
+      }
+
       // Update each setting in sequence
-      for (const [key, value] of Object.entries(newSettings)) {
+      for (const [key, value] of Object.entries(sanitizedSettings)) {
         await updateSettingMutation.mutateAsync({ key, value });
       }
       return true;
