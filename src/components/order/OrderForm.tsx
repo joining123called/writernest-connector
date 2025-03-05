@@ -10,6 +10,7 @@ import { OrderSummary } from './OrderSummary';
 import { usePriceCalculator } from './PriceCalculator';
 import { add } from 'date-fns';
 import { motion } from 'framer-motion';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -39,6 +40,7 @@ type OrderFormProps = {
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { toast } = useToast();
+  const { settings } = usePlatformSettings();
   
   // Set default deadline date to 7 days from now at 11:59 PM
   const defaultDeadlineDate = add(new Date(), { days: 7 });
@@ -136,36 +138,72 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     }
   };
   
+  // Determine the layout based on settings
+  const summaryPosition = settings?.orderForm?.orderSummaryPosition || 'right';
+  
   return (
     <div className="container px-0 mx-auto">
-      <div className="flex flex-col lg:flex-row gap-8">
-        <motion.div 
-          className="w-full lg:w-2/3"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <OrderFormFields form={form} />
-            </form>
-          </Form>
-        </motion.div>
-        
-        <motion.div 
-          className="w-full lg:w-1/3"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <OrderSummary 
-            form={form} 
-            orderSummary={orderSummary} 
-            orderFormSchema={orderFormSchema}
-            onSubmit={onSubmit}
-          />
-        </motion.div>
-      </div>
+      {summaryPosition === 'right' ? (
+        <div className="flex flex-col lg:flex-row gap-8">
+          <motion.div 
+            className="w-full lg:w-2/3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <OrderFormFields form={form} />
+              </form>
+            </Form>
+          </motion.div>
+          
+          <motion.div 
+            className="w-full lg:w-1/3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <OrderSummary 
+              form={form} 
+              orderSummary={orderSummary} 
+              orderFormSchema={orderFormSchema}
+              onSubmit={onSubmit}
+              settings={settings?.orderForm}
+            />
+          </motion.div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-8">
+          <motion.div 
+            className="w-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <OrderFormFields form={form} />
+              </form>
+            </Form>
+          </motion.div>
+          
+          <motion.div 
+            className="w-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <OrderSummary 
+              form={form} 
+              orderSummary={orderSummary} 
+              orderFormSchema={orderFormSchema}
+              onSubmit={onSubmit}
+              settings={settings?.orderForm}
+            />
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
