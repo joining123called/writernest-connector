@@ -10,6 +10,7 @@ export function usePaymentMethods() {
     queryKey: ['payment-methods'],
     queryFn: async (): Promise<PaymentMethod[]> => {
       try {
+        console.log('Fetching payment methods from database...');
         const { data, error } = await supabase
           .from('payment_gateways')
           .select('*')
@@ -19,6 +20,8 @@ export function usePaymentMethods() {
           console.error('Error fetching payment methods:', error);
           throw error;
         }
+
+        console.log('Payment gateways fetched:', data);
 
         // If no payment gateways are configured or enabled, return an empty array
         if (!data || data.length === 0) {
@@ -55,12 +58,14 @@ export function usePaymentMethods() {
         // Return an empty array instead of throwing to prevent UI breakage
         return [];
       }
-    }
+    },
+    refetchOnWindowFocus: false
   });
 
   return {
     paymentMethods: paymentMethods || [],
     isLoading,
-    error
+    error,
+    hasPaymentMethods: Array.isArray(paymentMethods) && paymentMethods.length > 0
   };
 }

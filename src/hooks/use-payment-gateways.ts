@@ -24,6 +24,8 @@ async function updatePaymentGateway(
 ): Promise<PaymentGateway> {
   const { id, ...updateData } = gateway;
   
+  console.log('Updating payment gateway:', id, updateData);
+  
   const { data, error } = await supabase
     .from('payment_gateways')
     .update({
@@ -39,6 +41,7 @@ async function updatePaymentGateway(
     throw error;
   }
 
+  console.log('Payment gateway updated:', data);
   return data;
 }
 
@@ -53,23 +56,27 @@ export function usePaymentGateways() {
     error
   } = useQuery({
     queryKey: ['payment-gateways'],
-    queryFn: fetchPaymentGateways
+    queryFn: fetchPaymentGateways,
+    retry: 2,
+    refetchOnWindowFocus: false
   });
 
   const updateGatewayMutation = useMutation({
     mutationFn: updatePaymentGateway,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payment-gateways'] });
+      // Also invalidate payment-methods query which might be using this data
+      queryClient.invalidateQueries({ queryKey: ['payment-methods'] });
       toast({
         title: 'Payment gateway updated',
-        description: 'Your payment gateway settings have been saved successfully.',
+        description: `${data.gateway_name} settings have been saved successfully.`,
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Failed to update payment gateway:', error);
       toast({
         title: 'Update failed',
-        description: 'There was an error updating your payment gateway settings.',
+        description: error.message || 'There was an error updating your payment gateway settings.',
         variant: 'destructive',
       });
     }
@@ -82,6 +89,8 @@ export function usePaymentGateways() {
     selectedGateway,
     setSelectedGateway,
     updateGateway: updateGatewayMutation.mutate,
-    isPending: updateGatewayMutation.isPending
+    isPending: updateGatewayMutation.isPending,
+    isError: updateGatewayMutation.isError,
+    updateGatewayAsync: updateGatewayMutation.mutateAsync
   };
 }
