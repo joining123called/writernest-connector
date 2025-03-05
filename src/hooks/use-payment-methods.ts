@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { PaymentMethod } from '@/types/payment';
 import { CreditCard } from 'lucide-react';
+import React from 'react';
 
 export function usePaymentMethods() {
   const { data: paymentMethods, isLoading, error } = useQuery({
