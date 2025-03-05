@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -103,7 +103,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       paperType: "",
       subject: "",
       pages: "1",
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deadline: new Date(Date.now() + settings.standardDeliveryDays * 24 * 60 * 60 * 1000),
       topic: "",
       instructions: "",
       citationStyle: "apa",
@@ -111,6 +111,15 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     },
   });
   
+  useEffect(() => {
+    if (!isLoadingSettings) {
+      form.reset({
+        ...form.getValues(),
+        deadline: new Date(Date.now() + settings.standardDeliveryDays * 24 * 60 * 60 * 1000),
+      });
+    }
+  }, [isLoadingSettings, settings, form]);
+
   const watchPages = form.watch('pages');
   const watchDeadline = form.watch('deadline');
   

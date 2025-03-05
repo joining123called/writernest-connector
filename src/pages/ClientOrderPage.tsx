@@ -7,10 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
 import { motion } from 'framer-motion';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
+import { useToast } from '@/hooks/use-toast';
 
 const ClientOrderPage = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
 
   // Redirect if not a client
@@ -28,6 +30,14 @@ const ClientOrderPage = () => {
     );
   }
 
+  const handleOrderSubmit = (data) => {
+    console.log("Order submitted:", data);
+    toast({
+      title: "Order Submitted",
+      description: "Your order has been successfully submitted.",
+    });
+  };
+
   return (
     <DashboardLayout>
       <motion.div
@@ -43,11 +53,7 @@ const ClientOrderPage = () => {
         </div>
         
         <OrderForm 
-          onOrderSubmit={(data) => {
-            console.log("Order submitted:", data);
-            // Here you'd typically handle the order submission
-            // For now, we'll just log it
-          }}
+          onOrderSubmit={handleOrderSubmit}
         />
       </motion.div>
     </DashboardLayout>
