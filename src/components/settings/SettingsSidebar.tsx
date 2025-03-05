@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, FileText, CreditCard } from 'lucide-react';
+import { Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsNavItem {
@@ -20,7 +20,6 @@ export const SettingsSidebar = ({ activeTab, setActiveTab }: SettingsSidebarProp
   const navItems: SettingsNavItem[] = [
     { id: 'general', label: 'General', icon: Settings, isImplemented: true },
     { id: 'order-form', label: 'Order Form Management', icon: FileText, isImplemented: true },
-    { id: 'payment-methods', label: 'Payment Methods', icon: CreditCard, isImplemented: true },
   ];
 
   return (
