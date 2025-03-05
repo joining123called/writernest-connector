@@ -12,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminWalletTransactions } from './AdminWalletTransactions';
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import { defaultWalletSettings, WalletSettings as WalletSettingsType } from '@/hooks/platform-settings/types';
-import { Json } from '@/types/supabase';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PayPalGatewayConfig } from '@/types/paypal';
 
 export const WalletSettings = () => {
   const { isAdmin } = useAuth();
@@ -49,7 +49,7 @@ export const WalletSettings = () => {
             .from('platform_settings')
             .insert({ 
               key: 'wallet_settings',
-              value: defaultWalletSettings as unknown as Json
+              value: defaultWalletSettings
             });
 
           if (createError) throw createError;
@@ -65,10 +65,11 @@ export const WalletSettings = () => {
           .maybeSingle();
 
         if (!configError && paypalConfig) {
-          setClientId(paypalConfig.config.client_id || '');
-          setClientSecret(paypalConfig.config.client_secret || '');
-          setWebhookId(paypalConfig.config.webhook_id || '');
-          setIsSandbox(paypalConfig.is_sandbox);
+          const config = paypalConfig as unknown as PayPalGatewayConfig;
+          setClientId(config.config.client_id || '');
+          setClientSecret(config.config.client_secret || '');
+          setWebhookId(config.config.webhook_id || '');
+          setIsSandbox(config.is_sandbox);
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
@@ -97,7 +98,7 @@ export const WalletSettings = () => {
       const { error } = await supabase
         .from('platform_settings')
         .update({ 
-          value: settings as unknown as Json,
+          value: settings,
           updated_at: new Date().toISOString()
         })
         .eq('key', 'wallet_settings');
@@ -370,7 +371,7 @@ export const WalletSettings = () => {
                     </Label>
                   </div>
                   
-                  <Alert variant="info" className="mt-4">
+                  <Alert className="mt-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
                       For webhook integration, create a webhook in your PayPal Developer Dashboard 

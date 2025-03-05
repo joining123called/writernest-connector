@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ import {
 import { format } from 'date-fns';
 import { WalletSettings } from '@/hooks/platform-settings/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PayPalButtons } from './PayPalButtons';
 
 interface WalletData {
   id: string;
@@ -39,7 +40,6 @@ export const WalletDashboard = () => {
   const [depositAmount, setDepositAmount] = useState<number>(0);
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('deposit');
-  const paypalButtonContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchWalletData = async () => {
@@ -100,111 +100,37 @@ export const WalletDashboard = () => {
     fetchWalletData();
   }, [user, toast]);
 
-  // PayPal script loading
-  useEffect(() => {
-    if (!walletSettings?.payment_methods.paypal.enabled || 
-        !walletSettings?.payment_methods.paypal.client_id ||
-        activeTab !== 'deposit' || 
-        isLoading) {
-      return;
+  const handlePayPalSuccess = async (transactionId: string, amount: number) => {
+    if (!walletData) return;
+    
+    try {
+      toast({
+        title: 'Deposit successful',
+        description: `$${amount.toFixed(2)} has been added to your wallet.`,
+      });
+      
+      // Refresh wallet data
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('id', walletData.id)
+        .single();
+        
+      if (error) throw error;
+      
+      setWalletData(data as WalletData);
+    } catch (error) {
+      console.error('Error updating wallet after PayPal payment:', error);
     }
+  };
 
-    const loadPayPalScript = () => {
-      const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${walletSettings.payment_methods.paypal.client_id}&currency=USD`;
-      script.async = true;
-      script.onload = () => {
-        if (window.paypal && paypalButtonContainerRef.current) {
-          paypalButtonContainerRef.current.innerHTML = '';
-          window.paypal.Buttons({
-            createOrder: (data: any, actions: any) => {
-              return actions.order.create({
-                purchase_units: [{
-                  amount: {
-                    value: depositAmount.toString()
-                  }
-                }]
-              });
-            },
-            onApprove: async (data: any, actions: any) => {
-              try {
-                const details = await actions.order.capture();
-                console.log('Transaction completed by ' + details.payer.name.given_name);
-                
-                // Update wallet balance after successful payment
-                if (walletData) {
-                  const newBalance = Number(walletData.balance) + Number(depositAmount);
-                  
-                  const { error: updateError } = await supabase
-                    .from('wallets')
-                    .update({ balance: newBalance, updated_at: new Date().toISOString() })
-                    .eq('id', walletData.id);
-                    
-                  if (updateError) throw updateError;
-
-                  // Record the transaction
-                  const { error: transactionError } = await supabase
-                    .from('wallet_transactions')
-                    .insert([{
-                      wallet_id: walletData.id,
-                      amount: depositAmount,
-                      type: 'deposit',
-                      status: 'completed',
-                      description: 'PayPal deposit',
-                      reference_id: details.id
-                    }]);
-                    
-                  if (transactionError) throw transactionError;
-
-                  // Update local state
-                  setWalletData({
-                    ...walletData,
-                    balance: newBalance,
-                    updated_at: new Date().toISOString()
-                  });
-
-                  toast({
-                    title: 'Deposit successful',
-                    description: `$${depositAmount.toFixed(2)} has been added to your wallet.`,
-                  });
-                }
-              } catch (error) {
-                console.error('Error processing PayPal payment:', error);
-                toast({
-                  title: 'Payment error',
-                  description: 'There was an error processing your payment.',
-                  variant: 'destructive'
-                });
-              }
-            },
-            onError: (err: any) => {
-              console.error('PayPal error:', err);
-              toast({
-                title: 'PayPal error',
-                description: 'There was an error with PayPal. Please try again.',
-                variant: 'destructive'
-              });
-            }
-          }).render(paypalButtonContainerRef.current);
-        }
-      };
-      document.body.appendChild(script);
-    };
-
-    // Check if the PayPal script is already loaded
-    if (!document.querySelector('script[src*="paypal.com/sdk/js"]') && 
-        depositAmount >= (walletSettings?.min_deposit_amount || 5)) {
-      loadPayPalScript();
-    }
-
-    return () => {
-      const paypalScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
-      if (paypalScript && paypalButtonContainerRef.current) {
-        paypalButtonContainerRef.current.innerHTML = '';
-        //paypalScript.remove(); // Don't remove script as it can cause issues with reloading
-      }
-    };
-  }, [walletSettings, depositAmount, activeTab, isLoading, walletData, toast]);
+  const handlePayPalError = (errorMessage: string) => {
+    toast({
+      title: 'Payment error',
+      description: errorMessage,
+      variant: 'destructive'
+    });
+  };
 
   const handleSimulatedDeposit = async () => {
     if (!walletData || depositAmount <= 0) {
@@ -442,7 +368,7 @@ export const WalletDashboard = () => {
                   </p>
                 </div>
                 
-                {walletSettings?.payment_methods.paypal.enabled && (
+                {walletSettings?.payment_methods.paypal.enabled && walletData && (
                   <div className="border rounded-lg p-4 mt-6">
                     <div className="flex items-center gap-2 mb-4">
                       <CreditCard className="h-5 w-5 text-blue-600" />
@@ -451,14 +377,15 @@ export const WalletDashboard = () => {
                     
                     {depositAmount >= (walletSettings?.min_deposit_amount || 5) && 
                      depositAmount <= (walletSettings?.max_deposit_amount || 1000) ? (
-                      <div ref={paypalButtonContainerRef} className="paypal-button-container">
-                        <div className="flex justify-center items-center h-12">
-                          <RefreshCw className="h-5 w-5 animate-spin mr-2 text-blue-600" />
-                          <span>Loading PayPal...</span>
-                        </div>
-                      </div>
+                      <PayPalButtons 
+                        amount={depositAmount}
+                        clientId={walletSettings.payment_methods.paypal.client_id || ''}
+                        walletId={walletData.id}
+                        onSuccess={handlePayPalSuccess}
+                        onError={handlePayPalError}
+                      />
                     ) : (
-                      <Alert variant="default" className="bg-blue-50">
+                      <Alert>
                         <AlertCircle className="h-4 w-4 text-blue-600" />
                         <AlertDescription>
                           Please enter a valid amount between ${walletSettings?.min_deposit_amount || 5} and ${walletSettings?.max_deposit_amount || 1000} to enable PayPal payment.

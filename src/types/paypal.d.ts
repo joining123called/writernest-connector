@@ -1,26 +1,38 @@
 
-interface PayPalButtonsComponentOptions {
-  createOrder: (data: any, actions: any) => Promise<string>;
-  onApprove: (data: any, actions: any) => Promise<void>;
-  onError?: (err: any) => void;
-  onCancel?: (data: any) => void;
-  style?: {
-    layout?: 'vertical' | 'horizontal';
-    color?: 'gold' | 'blue' | 'silver' | 'white' | 'black';
-    shape?: 'rect' | 'pill';
-    height?: number;
-    label?: 'paypal' | 'checkout' | 'buynow' | 'pay';
+declare global {
+  interface Window {
+    paypal: any;
+  }
+}
+
+export interface CaptureOrderResponse {
+  id: string;
+  status: string;
+  payment_source: any;
+  purchase_units: any[];
+  payer: any;
+  links: any[];
+  [key: string]: any;
+}
+
+export interface CreateOrderResponse {
+  id: string;
+  status: string;
+  links: any[];
+  [key: string]: any;
+}
+
+export interface PayPalGatewayConfig {
+  id?: string;
+  name: string;
+  is_active: boolean;
+  is_sandbox: boolean;
+  config: {
+    client_id: string;
+    client_secret: string;
+    webhook_id?: string;
+    [key: string]: string | undefined;
   };
-}
-
-interface PayPalButtonsComponent {
-  render: (container: HTMLElement) => void;
-}
-
-interface PayPalNamespace {
-  Buttons: (options: PayPalButtonsComponentOptions) => PayPalButtonsComponent;
-}
-
-interface Window {
-  paypal?: PayPalNamespace;
+  created_at?: string;
+  updated_at?: string;
 }

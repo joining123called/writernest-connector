@@ -1,149 +1,153 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { createPayPalOrder, capturePayPalOrder } from './PayPalUtils';
+import React, { useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { CaptureOrderResponse } from '@/types/paypal';
+import { Loader2 } from 'lucide-react';
 
 interface PayPalButtonsProps {
   amount: number;
-  walletId: string;
+  onSuccess: (transactionId: string, amount: number) => void;
+  onError: (error: string) => void;
   clientId: string;
-  onSuccess: (data: any) => void;
-  onError: (error: any) => void;
-  onCancel?: () => void;
+  walletId: string;
 }
 
 export const PayPalButtons = ({ 
   amount, 
-  walletId,
-  clientId,
-  onSuccess,
-  onError,
-  onCancel
+  onSuccess, 
+  onError, 
+  clientId, 
+  walletId 
 }: PayPalButtonsProps) => {
-  const paypalButtonRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
   const { toast } = useToast();
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const paypalScriptLoaded = useRef(false);
 
-  // Load PayPal script
   useEffect(() => {
-    if (!clientId || scriptLoaded) return;
+    if (!clientId || amount <= 0 || !paypalButtonRef.current) return;
 
     const loadPayPalScript = () => {
-      if (document.querySelector('script[src*="paypal.com/sdk/js"]')) {
-        setScriptLoaded(true);
+      // Don't load script if it's already loading or loaded
+      if (document.querySelector('script[src*="paypal.com/sdk/js"]') || paypalScriptLoaded.current) {
         return;
       }
-      
+
+      paypalScriptLoaded.current = true;
       const script = document.createElement('script');
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
       script.async = true;
+      script.dataset.namespace = "paypalSdkButtons";
+      
       script.onload = () => {
-        console.log('PayPal script loaded');
-        setScriptLoaded(true);
+        if (window.paypal && paypalButtonRef.current) {
+          paypalButtonRef.current.innerHTML = '';
+          window.paypal.Buttons({
+            style: {
+              layout: 'vertical',
+              color: 'blue',
+              shape: 'rect',
+              label: 'pay'
+            },
+            createOrder: async () => {
+              try {
+                // Create the order through our server-side endpoint
+                const response = await fetch(`${window.location.origin}/.netlify/functions/paypal-create-order`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                  },
+                  body: JSON.stringify({
+                    amount: amount.toString(),
+                    walletId: walletId
+                  })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                  throw new Error(data.error || 'Failed to create PayPal order');
+                }
+                
+                return data.order.id;
+              } catch (error) {
+                console.error('Error creating PayPal order:', error);
+                onError(error instanceof Error ? error.message : 'Failed to create PayPal order');
+                throw error;
+              }
+            },
+            onApprove: async (data: any, actions: any) => {
+              try {
+                // Capture the order through our server-side endpoint
+                const response = await fetch(`${window.location.origin}/.netlify/functions/paypal-capture-order`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                  },
+                  body: JSON.stringify({
+                    orderId: data.orderID,
+                    walletId: walletId
+                  })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                  throw new Error(result.error || 'Failed to capture PayPal order');
+                }
+                
+                // Call the success callback with the captured order details
+                onSuccess(data.orderID, amount);
+                
+                return result;
+              } catch (error) {
+                console.error('Error capturing PayPal order:', error);
+                onError(error instanceof Error ? error.message : 'Failed to capture PayPal order');
+              }
+            },
+            onCancel: () => {
+              toast({
+                title: "Payment cancelled",
+                description: "You cancelled the PayPal payment.",
+              });
+            },
+            onError: (err: any) => {
+              console.error('PayPal error:', err);
+              onError(err instanceof Error ? err.message : 'Error with PayPal transaction');
+            }
+          }).render(paypalButtonRef.current);
+        }
       };
+      
       script.onerror = () => {
-        console.error('Failed to load PayPal script');
-        toast({
-          title: 'PayPal Error',
-          description: 'Failed to load PayPal checkout. Please try again.',
-          variant: 'destructive'
-        });
+        paypalScriptLoaded.current = false;
+        console.error('PayPal script failed to load');
+        onError('PayPal services are currently unavailable. Please try again later.');
       };
+      
       document.body.appendChild(script);
     };
 
     loadPayPalScript();
-  }, [clientId, scriptLoaded, toast]);
 
-  // Render PayPal buttons
-  useEffect(() => {
-    if (!scriptLoaded || !paypalButtonRef.current || !window.paypal) return;
-
-    const renderButtons = async () => {
-      if (!paypalButtonRef.current) return;
-      
-      // Clear any existing buttons
-      paypalButtonRef.current.innerHTML = '';
-      
-      try {
-        window.paypal.Buttons({
-          style: {
-            layout: 'vertical',
-            color: 'blue',
-            shape: 'rect',
-            label: 'pay'
-          },
-          createOrder: async () => {
-            setIsLoading(true);
-            try {
-              // Use our backend to create the order
-              const result = await createPayPalOrder(amount, walletId);
-              
-              if (!result.success) {
-                throw new Error(result.error || 'Failed to create order');
-              }
-              
-              return result.orderId as string;
-            } catch (error) {
-              console.error('Error in createOrder:', error);
-              onError(error);
-              throw error;
-            } finally {
-              setIsLoading(false);
-            }
-          },
-          onApprove: async (data: any) => {
-            setIsLoading(true);
-            try {
-              // Use our backend to capture the order
-              const captureResult = await capturePayPalOrder(data.orderID);
-              
-              if (!captureResult.success) {
-                throw new Error(captureResult.error || 'Failed to capture order');
-              }
-              
-              onSuccess(captureResult);
-              return captureResult;
-            } catch (error) {
-              console.error('Error in onApprove:', error);
-              onError(error);
-              throw error;
-            } finally {
-              setIsLoading(false);
-            }
-          },
-          onCancel: () => {
-            console.log('PayPal transaction cancelled');
-            onCancel?.();
-          },
-          onError: (err: any) => {
-            console.error('PayPal error:', err);
-            onError(err);
-          }
-        }).render(paypalButtonRef.current);
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error rendering PayPal buttons:', error);
-        onError(error);
-        setIsLoading(false);
+    return () => {
+      // Cleanup is handled by not removing the script to avoid issues with reloading
+      if (paypalButtonRef.current) {
+        paypalButtonRef.current.innerHTML = '';
       }
     };
-
-    renderButtons();
-  }, [amount, walletId, scriptLoaded, onSuccess, onError, onCancel]);
+  }, [amount, clientId, onError, onSuccess, toast, walletId]);
 
   return (
     <div className="paypal-button-container">
-      {isLoading && (
-        <div className="flex justify-center items-center h-12 mb-4">
+      <div ref={paypalButtonRef} className="min-h-[45px]">
+        <div className="flex justify-center items-center h-12">
           <Loader2 className="h-5 w-5 animate-spin mr-2 text-blue-600" />
           <span>Loading PayPal...</span>
         </div>
-      )}
-      <div ref={paypalButtonRef} className="paypal-button-container"></div>
+      </div>
     </div>
   );
 };
