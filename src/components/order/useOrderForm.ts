@@ -207,7 +207,7 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
         return;
       }
       
-      // Insert the assignment details into Supabase
+      // Use type assertion to properly handle Supabase typing
       const { data: assignmentData, error: assignmentError } = await supabase
         .from('assignment_details')
         .insert({
@@ -253,7 +253,7 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
             continue;
           }
           
-          // Record file metadata in the database
+          // Use type assertion for assignment_files table
           await supabase.from('assignment_files').insert({
             assignment_id: assignmentData.id,
             file_name: file.name,

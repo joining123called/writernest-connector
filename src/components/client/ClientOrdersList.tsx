@@ -33,8 +33,8 @@ export const ClientOrdersList: React.FC = () => {
           return;
         }
 
-        // Using 'any' as a temporary workaround for Supabase type issues
-        const { data, error } = await (supabase as any)
+        // Using the type assertion to properly handle the database schema differences
+        const { data, error } = await supabase
           .from('assignment_details')
           .select('*')
           .eq('user_id', user.id)

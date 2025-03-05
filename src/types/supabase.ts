@@ -143,6 +143,113 @@ export interface Database {
         }
         Relationships: []
       }
+      assignment_details: {
+        Row: {
+          id: string
+          user_id: string
+          paper_type: string
+          subject: string
+          pages: number
+          deadline: string
+          topic: string | null
+          instructions: string | null
+          citation_style: string | null
+          sources: number | null
+          price_per_page: number
+          total_price: number
+          discount: number | null
+          final_price: number
+          status: string
+          assignment_code: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          paper_type: string
+          subject: string
+          pages: number
+          deadline: string
+          topic?: string | null
+          instructions?: string | null
+          citation_style?: string | null
+          sources?: number | null
+          price_per_page: number
+          total_price: number
+          discount?: number | null
+          final_price: number
+          status?: string
+          assignment_code?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          paper_type?: string
+          subject?: string
+          pages?: number
+          deadline?: string
+          topic?: string | null
+          instructions?: string | null
+          citation_style?: string | null
+          sources?: number | null
+          price_per_page?: number
+          total_price?: number
+          discount?: number | null
+          final_price?: number
+          status?: string
+          assignment_code?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_details_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      assignment_files: {
+        Row: {
+          id: string
+          assignment_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          assignment_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          assignment_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          file_size?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_files_assignment_id_fkey"
+            columns: ["assignment_id"]
+            referencedRelation: "assignment_details"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

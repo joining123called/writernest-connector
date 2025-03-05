@@ -43,7 +43,7 @@ const ClientDashboard = () => {
       if (!user) return;
 
       try {
-        // Fetch recent orders
+        // Fetch recent orders using type assertion to handle Supabase types
         const { data: orders, error: ordersError } = await supabase
           .from('assignment_details')
           .select('id, assignment_code, topic, paper_type, deadline, final_price, status')
@@ -54,42 +54,44 @@ const ClientDashboard = () => {
         if (ordersError) {
           console.error("Error fetching recent orders:", ordersError);
         } else {
-          setRecentOrders(orders);
+          setRecentOrders(orders || []);
         }
 
-        // Fetch order statistics
-        const { data: activeOrdersData } = await supabase
+        // Fetch active orders count
+        const { data: activeOrdersData, error: activeOrdersError } = await supabase
           .from('assignment_details')
           .select('count')
           .eq('user_id', user.id)
-          .in('status', ['pending', 'in_progress'])
-          .single();
+          .in('status', ['pending', 'in_progress']);
 
-        const { data: completedOrdersData } = await supabase
+        // Fetch completed orders count
+        const { data: completedOrdersData, error: completedOrdersError } = await supabase
           .from('assignment_details')
           .select('count')
           .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .single();
+          .eq('status', 'completed');
 
-        const { data: pendingRevisionsData } = await supabase
+        // Fetch pending revisions count
+        const { data: pendingRevisionsData, error: pendingRevisionsError } = await supabase
           .from('assignment_details')
           .select('count')
           .eq('user_id', user.id)
-          .eq('status', 'revision')
-          .single();
+          .eq('status', 'revision');
 
-        const { data: totalSpentData } = await supabase
+        // Fetch total spent
+        const { data: totalSpentData, error: totalSpentError } = await supabase
           .from('assignment_details')
           .select('final_price')
           .eq('user_id', user.id);
 
-        const totalSpent = totalSpentData?.reduce((sum, order) => sum + order.final_price, 0) || 0;
+        // Calculate total spent from all orders
+        const totalSpent = totalSpentData?.reduce((sum, order) => sum + Number(order.final_price), 0) || 0;
 
+        // Update order statistics
         setOrderStats({
-          activeOrders: activeOrdersData?.count || 0,
-          completedOrders: completedOrdersData?.count || 0,
-          pendingRevisions: pendingRevisionsData?.count || 0,
+          activeOrders: activeOrdersData?.[0]?.count || 0,
+          completedOrders: completedOrdersData?.[0]?.count || 0,
+          pendingRevisions: pendingRevisionsData?.[0]?.count || 0,
           totalSpent
         });
       } catch (error) {
@@ -126,6 +128,7 @@ const ClientDashboard = () => {
           </Button>
         </div>
         
+        {/* Order statistics cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -176,6 +179,7 @@ const ClientDashboard = () => {
           </motion.div>
         </div>
         
+        {/* Recent orders card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
