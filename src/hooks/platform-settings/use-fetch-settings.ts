@@ -26,20 +26,25 @@ export const useFetchSettings = (user: any | null) => {
 
         // Convert the array of settings to an object
         const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
-          // Convert JSON value to the appropriate type based on the expected property type
+          // Get the key from the setting
           const key = setting.key as keyof PlatformSettings;
           
+          // Only process keys that exist in defaultSettings
           if (key in defaultSettings) {
             const settingValue = setting.value as Json;
             const typedKey = key as keyof typeof defaultSettings;
             
             if (settingValue === null) {
+              // Handle null values explicitly
               acc[typedKey] = null as any;
             } else if (typeof defaultSettings[typedKey] === 'string') {
               // For string properties, ensure we convert to string
               acc[typedKey] = String(settingValue) as any;
+            } else if (typeof defaultSettings[typedKey] === 'boolean') {
+              // For boolean properties, ensure we convert to boolean
+              acc[typedKey] = Boolean(settingValue) as any;
             } else {
-              // For other types (like boolean values), use as is
+              // For other types, use as is with proper typing
               acc[typedKey] = settingValue as any;
             }
           }
@@ -47,7 +52,7 @@ export const useFetchSettings = (user: any | null) => {
           return acc;
         }, {} as Partial<PlatformSettings>);
 
-        // Merge with default settings
+        // Merge with default settings and return
         return {
           ...defaultSettings,
           ...settingsObject
