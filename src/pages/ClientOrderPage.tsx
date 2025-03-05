@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { OrderForm } from '@/components/order/OrderForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/auth';
@@ -8,12 +8,15 @@ import { UserRole } from '@/types';
 import { motion } from 'framer-motion';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { useToast } from '@/hooks/use-toast';
+import { usePaymentMethods } from '@/hooks/use-payment-methods';
 
 const ClientOrderPage = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
+  const { hasEnabledPaymentMethods } = usePaymentMethods();
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   // Redirect if not a client
   React.useEffect(() => {
@@ -40,10 +43,26 @@ const ClientOrderPage = () => {
       );
     }
     
-    toast({
-      title: "Order Submitted",
-      description: `Your order has been successfully submitted with ${data.files?.length || 0} attached files.`,
-    });
+    // Process payment if enabled, otherwise just confirm order
+    if (hasEnabledPaymentMethods && data.paymentData) {
+      setPaymentProcessing(true);
+      
+      // Simulate payment processing
+      setTimeout(() => {
+        setPaymentProcessing(false);
+        toast({
+          title: "Payment Successful",
+          description: `Your payment was processed and your order has been submitted.`,
+        });
+      }, 1500);
+      
+      console.log("Payment data:", data.paymentData);
+    } else {
+      toast({
+        title: "Order Submitted",
+        description: `Your order has been successfully submitted with ${data.files?.length || 0} attached files.`,
+      });
+    }
   };
 
   return (
@@ -62,6 +81,7 @@ const ClientOrderPage = () => {
         
         <OrderForm 
           onOrderSubmit={handleOrderSubmit}
+          isProcessingPayment={paymentProcessing}
         />
       </motion.div>
     </DashboardLayout>

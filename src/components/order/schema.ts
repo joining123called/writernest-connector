@@ -1,4 +1,3 @@
-
 import * as z from 'zod';
 
 export const orderFormSchema = z.object({
@@ -64,3 +63,8 @@ export const timeSlots = [
   { label: "9:00 PM", hours: 21, minutes: 0 },
   { label: "11:59 PM", hours: 23, minutes: 59 },
 ];
+
+export interface OrderFormProps {
+  onOrderSubmit: (data: OrderFormValues & { files: File[], paymentData?: any }) => void;
+  isProcessingPayment?: boolean;
+}

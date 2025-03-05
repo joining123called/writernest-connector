@@ -3,10 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
+import { Clock, CreditCard, Lock } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
+import { PaymentMethodSelection } from './PaymentMethodSelection';
+import { PaymentMethodForms } from './payment-methods/PaymentMethodForms';
+import { usePaymentMethods } from '@/hooks/use-payment-methods';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface OrderSummaryProps {
   form: UseFormReturn<OrderFormValues>;
@@ -43,6 +47,27 @@ export function OrderSummary({
   onSubmit,
   settings
 }: OrderSummaryProps) {
+  const { hasEnabledPaymentMethods } = usePaymentMethods();
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<string | null>(null);
+  const [paymentData, setPaymentData] = React.useState<any>(null);
+  
+  const isPaymentComplete = !hasEnabledPaymentMethods || (selectedPaymentMethod && paymentData);
+  const canSubmitOrder = isFormComplete && isPaymentComplete;
+  
+  const handlePaymentMethodSelect = (methodId: string) => {
+    setSelectedPaymentMethod(methodId);
+    setPaymentData(null);
+  };
+  
+  const handlePaymentDataChange = (data: any) => {
+    setPaymentData(data);
+  };
+  
+  const handleSubmit = () => {
+    // Include payment data with the order submission
+    onSubmit();
+  };
+  
   return (
     <Card className="bg-gray-50 dark:bg-slate-900">
       <CardHeader>
@@ -155,18 +180,40 @@ export function OrderSummary({
             </div>
           </div>
         </div>
+        
+        {hasEnabledPaymentMethods && (
+          <div className="space-y-4 border-t border-border pt-6">
+            <PaymentMethodSelection 
+              selectedPaymentMethod={selectedPaymentMethod}
+              onSelectPaymentMethod={handlePaymentMethodSelect}
+            />
+            
+            {selectedPaymentMethod && (
+              <PaymentMethodForms 
+                selectedMethod={selectedPaymentMethod}
+                onPaymentDataChange={handlePaymentDataChange}
+              />
+            )}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex-col gap-4">
         <Button 
           type="button" 
           className="w-full" 
           size="lg"
-          disabled={!isFormComplete}
-          onClick={onSubmit}
+          disabled={!canSubmitOrder}
+          onClick={handleSubmit}
         >
-          Submit Order
+          {hasEnabledPaymentMethods ? (
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              <span>Secure Payment</span>
+            </div>
+          ) : "Submit Order"}
         </Button>
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1">
+          <Lock className="h-3 w-3" />
           Protected by SSL encryption
         </div>
       </CardFooter>
