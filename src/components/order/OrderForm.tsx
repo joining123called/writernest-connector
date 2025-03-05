@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Check, Clock } from 'lucide-react';
@@ -9,17 +9,13 @@ import { SizeAndDeadlineFields } from './SizeAndDeadlineFields';
 import { CitationAndSourcesFields } from './CitationAndSourcesFields';
 import { FileUploadSection } from './FileUploadSection';
 import { OrderSummary } from './OrderSummary';
-import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
-import { usePaymentMethods } from '@/hooks/use-payment-methods';
 import { useToast } from '@/hooks/use-toast';
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { toast } = useToast();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
-  const { paymentMethods, isLoading: isLoadingPaymentMethods, error: paymentMethodsError } = usePaymentMethods();
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   
   const {
     form,
@@ -32,18 +28,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     handleSubmit
   } = useOrderForm(onOrderSubmit);
   
-  // Show toast if there's an error fetching payment methods
-  React.useEffect(() => {
-    if (paymentMethodsError) {
-      toast({
-        title: "Payment Methods Error",
-        description: "There was an error loading payment methods. You may proceed with the order, but payment options may be limited.",
-        variant: "destructive",
-      });
-    }
-  }, [paymentMethodsError, toast]);
-  
-  if (isLoading || isLoadingSettings || isLoadingPaymentMethods) {
+  if (isLoading || isLoadingSettings) {
     return (
       <div className="flex items-center justify-center py-8">
         <Clock className="h-8 w-8 animate-spin text-primary" />
@@ -52,23 +37,9 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     );
   }
   
-  const handlePaymentMethodSelect = (methodId: string) => {
-    setSelectedPaymentMethod(methodId);
-  };
-
   const handleCompleteOrder = () => {
-    // If payment methods exist but none selected, don't proceed
-    if (paymentMethods.length > 0 && !selectedPaymentMethod) {
-      toast({
-        title: "Payment Method Required",
-        description: "Please select a payment method to complete your order.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     form.handleSubmit(() => {
-      handleSubmit(selectedPaymentMethod);
+      handleSubmit();
     })();
   };
   
@@ -110,14 +81,6 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                     setUploadedFiles={setUploadedFiles}
                     onFileUpload={handleFileUpload}
                   />
-                  
-                  {paymentMethods.length > 0 && (
-                    <PaymentMethodSelector
-                      paymentMethods={paymentMethods}
-                      selectedMethod={selectedPaymentMethod}
-                      onSelectMethod={handlePaymentMethodSelect}
-                    />
-                  )}
                 </form>
               </Form>
             </CardContent>
@@ -130,7 +93,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
               form={form}
               orderSummary={orderSummary}
               uploadedFiles={uploadedFiles}
-              isFormComplete={isFormComplete && (paymentMethods.length === 0 || !!selectedPaymentMethod)}
+              isFormComplete={isFormComplete}
               onSubmit={handleCompleteOrder}
               settings={settings}
             />

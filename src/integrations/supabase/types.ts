@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      payment_gateways: {
-        Row: {
-          config: Json
-          created_at: string | null
-          gateway_name: string
-          id: string
-          is_enabled: boolean | null
-          is_test_mode: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          config?: Json
-          created_at?: string | null
-          gateway_name: string
-          id?: string
-          is_enabled?: boolean | null
-          is_test_mode?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          config?: Json
-          created_at?: string | null
-          gateway_name?: string
-          id?: string
-          is_enabled?: boolean | null
-          is_test_mode?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       platform_settings: {
         Row: {
           id: string
@@ -90,48 +60,6 @@ export type Database = {
           phone?: string
           reference_number?: string | null
           role?: string
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          currency: string
-          gateway: string
-          gateway_response: Json | null
-          gateway_transaction_id: string | null
-          id: string
-          order_id: string
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          currency?: string
-          gateway: string
-          gateway_response?: Json | null
-          gateway_transaction_id?: string | null
-          id?: string
-          order_id: string
-          status: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          currency?: string
-          gateway?: string
-          gateway_response?: Json | null
-          gateway_transaction_id?: string | null
-          id?: string
-          order_id?: string
-          status?: string
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }

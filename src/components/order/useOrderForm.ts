@@ -7,7 +7,6 @@ import { addHours, isToday, isTomorrow } from "date-fns";
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { OrderFormValues, orderFormSchema } from './schema';
 import { supabase } from '@/lib/supabase';
-import { processPayment } from '@/lib/payment';
 
 // Maximum file size: 2GB in bytes
 export const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
@@ -187,7 +186,7 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
     }
   };
   
-  const handleSubmit = async (paymentMethodId?: string | null) => {
+  const handleSubmit = async () => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
@@ -216,38 +215,6 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
       if (uploadedFiles.length > 0) {
         // Upload files to storage (this would be implemented in a real app)
         fileUrls = uploadedFiles.map(file => URL.createObjectURL(file));
-      }
-      
-      // Process payment if a payment method is selected
-      if (paymentMethodId) {
-        const paymentResult = await processPayment(paymentMethodId, {
-          amount: orderSummary.finalPrice,
-          currency: 'USD',
-          orderId,
-          userId: user.id,
-          description: `Order for ${values.paperType} - ${values.topic}`,
-          metadata: {
-            paperType: values.paperType,
-            subject: values.subject,
-            pages: values.pages,
-            deadline: values.deadline.toISOString(),
-            fileCount: uploadedFiles.length
-          }
-        });
-        
-        if (!paymentResult.success) {
-          toast({
-            title: "Payment failed",
-            description: paymentResult.errorMessage || "There was an error processing your payment",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        toast({
-          title: "Payment successful",
-          description: "Your payment has been processed successfully",
-        });
       }
       
       // Create the order in the database (this would be implemented in a real app)
