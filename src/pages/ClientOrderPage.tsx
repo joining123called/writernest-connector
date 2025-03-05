@@ -32,9 +32,17 @@ const ClientOrderPage = () => {
 
   const handleOrderSubmit = (data) => {
     console.log("Order submitted:", data);
+    
+    // Log uploaded files if any
+    if (data.files && data.files.length > 0) {
+      console.log(`${data.files.length} files uploaded:`, 
+        data.files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      );
+    }
+    
     toast({
       title: "Order Submitted",
-      description: "Your order has been successfully submitted.",
+      description: `Your order has been successfully submitted with ${data.files?.length || 0} attached files.`,
     });
   };
 

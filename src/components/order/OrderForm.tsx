@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -10,11 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Clock, Upload, Calendar } from 'lucide-react';
+import { Check, Clock, Upload, Calendar, X, FileText, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, addHours, isToday, isTomorrow, addDays } from "date-fns";
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+
+// Maximum file size: 2GB in bytes
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -79,12 +83,13 @@ const citationStyles = [
 ];
 
 type OrderFormProps = {
-  onOrderSubmit?: (data: z.infer<typeof orderFormSchema>) => void;
+  onOrderSubmit?: (data: z.infer<typeof orderFormSchema> & { files: File[] }) => void;
 };
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { toast } = useToast();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [orderSummary, setOrderSummary] = useState({
     basePrice: 15.99,
@@ -97,6 +102,9 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     discount: 0,
     finalPrice: 15.99,
   });
+
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isFormComplete, setIsFormComplete] = useState(false);
   
   const form = useForm<z.infer<typeof orderFormSchema>>({
     resolver: zodResolver(orderFormSchema),
@@ -123,6 +131,13 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
 
   const watchPages = form.watch('pages');
   const watchDeadline = form.watch('deadline');
+  
+  // Check if all required fields are filled
+  useEffect(() => {
+    const requiredFields = ['paperType', 'subject', 'pages', 'deadline'];
+    const isComplete = requiredFields.every(field => !!form.getValues(field as any));
+    setIsFormComplete(isComplete);
+  }, [form.watch()]);
   
   const timeSlots = [
     { label: "9:00 AM", hours: 9, minutes: 0 },
@@ -200,8 +215,60 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     });
   }, [watchPages, watchDeadline, settings, isLoadingSettings]);
   
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+    
+    const newFiles: File[] = [];
+    const errors: string[] = [];
+    
+    Array.from(files).forEach(file => {
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name} exceeds the 2GB limit`);
+        return;
+      }
+      
+      newFiles.push(file);
+    });
+    
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast({
+          title: "File upload error",
+          description: error,
+          variant: "destructive",
+        });
+      });
+    }
+    
+    if (newFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      toast({
+        title: "Files uploaded",
+        description: `${newFiles.length} file(s) ready to be submitted with your order`,
+      });
+    }
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  };
+  
   const onSubmit = (data: z.infer<typeof orderFormSchema>) => {
-    console.log("Order submitted:", data, orderSummary);
+    console.log("Order submitted:", data, orderSummary, uploadedFiles);
     
     toast({
       title: "Order submitted successfully",
@@ -209,7 +276,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     });
     
     if (onOrderSubmit) {
-      onOrderSubmit(data);
+      onOrderSubmit({...data, files: uploadedFiles});
     }
   };
   
@@ -549,15 +616,56 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                   </div>
                   
                   <div className="border-t pt-4">
-                    <Button type="button" variant="outline" className="flex gap-2 mb-4">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      multiple
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex gap-2 mb-4"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <Upload size={16} />
                       Upload Additional Files
                     </Button>
+                    
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-sm font-medium">Uploaded Files:</p>
+                        <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-2">
+                          {uploadedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+                              <div className="flex items-center gap-2">
+                                <FileText size={16} className="text-primary" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium truncate max-w-[200px]">
+                                    {file.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatFileSize(file.size)}
+                                  </span>
+                                </div>
+                              </div>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => removeFile(index)}
+                              >
+                                <Trash2 size={16} className="text-red-500" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  <Button type="submit" className="w-full" size="lg">
-                    Submit Order
-                  </Button>
+                  {/* Submit button moved to the order summary section */}
                 </form>
               </Form>
             </CardContent>
@@ -617,6 +725,15 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       <span className="font-medium">{form.watch('sources')}</span>
                     </div>
                   )}
+                  
+                  {uploadedFiles.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Files:</span>
+                      <Badge variant="outline" className="font-medium">
+                        {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t border-border pt-4">
@@ -670,6 +787,15 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                 </div>
               </CardContent>
               <CardFooter className="flex-col gap-4">
+                <Button 
+                  type="button" 
+                  className="w-full" 
+                  size="lg"
+                  disabled={!isFormComplete}
+                  onClick={form.handleSubmit(onSubmit)}
+                >
+                  Submit Order
+                </Button>
                 <div className="text-center text-sm text-muted-foreground">
                   Protected by SSL encryption
                 </div>
