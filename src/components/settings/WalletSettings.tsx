@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -9,21 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminWalletTransactions } from './AdminWalletTransactions';
-import { Loader2 } from 'lucide-react';
-
-interface WalletSettings {
-  id: string;
-  min_deposit_amount: number;
-  max_deposit_amount: number;
-  allow_withdrawals: boolean;
-  withdrawal_fee_percentage: number;
-  enable_wallet_system: boolean;
-}
+import { Loader2, Paypal, CreditCard, AlertCircle } from 'lucide-react';
+import { defaultWalletSettings, WalletSettings as WalletSettingsType } from '@/hooks/platform-settings/types';
+import { Json } from '@/types/supabase';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const WalletSettings = () => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
-  const [settings, setSettings] = useState<WalletSettings | null>(null);
+  const [settings, setSettings] = useState<WalletSettingsType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -42,28 +37,19 @@ export const WalletSettings = () => {
         if (error) throw error;
 
         if (data && data.value) {
-          setSettings(data.value as unknown as WalletSettings);
+          setSettings(data.value as WalletSettingsType);
         } else {
           // Create default wallet settings if they don't exist
-          const defaultSettings: WalletSettings = {
-            id: 'wallet_settings',
-            min_deposit_amount: 5,
-            max_deposit_amount: 1000,
-            allow_withdrawals: true,
-            withdrawal_fee_percentage: 2.5,
-            enable_wallet_system: true
-          };
-          
           const { error: createError } = await supabase
             .from('platform_settings')
             .insert({ 
               key: 'wallet_settings',
-              value: defaultSettings
+              value: defaultWalletSettings as unknown as Json
             });
 
           if (createError) throw createError;
           
-          setSettings(defaultSettings);
+          setSettings(defaultWalletSettings);
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
@@ -114,12 +100,27 @@ export const WalletSettings = () => {
     }
   };
 
-  const handleInputChange = (field: keyof WalletSettings, value: any) => {
+  const handleInputChange = (field: keyof WalletSettingsType, value: any) => {
     if (!settings) return;
     
     setSettings({
       ...settings,
       [field]: value
+    });
+  };
+
+  const handlePayPalChange = (field: string, value: any) => {
+    if (!settings) return;
+    
+    setSettings({
+      ...settings,
+      payment_methods: {
+        ...settings.payment_methods,
+        paypal: {
+          ...settings.payment_methods.paypal,
+          [field]: value
+        }
+      }
     });
   };
 
@@ -141,8 +142,9 @@ export const WalletSettings = () => {
 
   return (
     <Tabs defaultValue="general" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="general">General Settings</TabsTrigger>
+        <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
         <TabsTrigger value="transactions">Transaction Management</TabsTrigger>
       </TabsList>
       
@@ -231,6 +233,78 @@ export const WalletSettings = () => {
                   Fee charged when clients withdraw funds from their wallet
                 </p>
               </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleSaveSettings} 
+                disabled={isSaving}
+              >
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? 'Saving...' : 'Save Settings'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="payment-methods" className="space-y-4 py-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Method Configuration</CardTitle>
+            <CardDescription>
+              Configure payment gateways for deposits and withdrawals
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Paypal className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-medium">PayPal Integration</h3>
+                </div>
+                <Switch
+                  id="enable-paypal"
+                  checked={settings.payment_methods.paypal.enabled}
+                  onCheckedChange={(checked) => handlePayPalChange('enabled', checked)}
+                />
+              </div>
+              
+              {settings.payment_methods.paypal.enabled && (
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="paypal-client-id">PayPal Client ID</Label>
+                    <Input
+                      id="paypal-client-id"
+                      type="text"
+                      placeholder="Enter your PayPal Client ID"
+                      value={settings.payment_methods.paypal.client_id || ''}
+                      onChange={(e) => handlePayPalChange('client_id', e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      You can find your Client ID in the PayPal Developer Dashboard
+                    </p>
+                  </div>
+                  
+                  <Alert variant="info" className="bg-blue-50">
+                    <AlertCircle className="h-4 w-4 text-blue-500" />
+                    <AlertDescription>
+                      To use PayPal integration, you need to create a PayPal Developer account and set up an app to get your Client ID.
+                      For complete integration, a server-side component would also be needed in a production environment.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+            </div>
+            
+            <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-medium text-gray-500">Credit Card Integration</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Credit card integration coming soon. This will allow direct credit card payments for wallet deposits.
+              </p>
             </div>
             
             <div className="flex justify-end">

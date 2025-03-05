@@ -32,4 +32,25 @@ export interface WalletSettings {
   allow_withdrawals: boolean;
   withdrawal_fee_percentage: number;
   enable_wallet_system: boolean;
+  payment_methods: {
+    paypal: {
+      enabled: boolean;
+      client_id?: string;
+    };
+  };
 }
+
+export const defaultWalletSettings: WalletSettings = {
+  id: 'wallet_settings',
+  min_deposit_amount: 5,
+  max_deposit_amount: 1000,
+  allow_withdrawals: true,
+  withdrawal_fee_percentage: 2.5,
+  enable_wallet_system: true,
+  payment_methods: {
+    paypal: {
+      enabled: true,
+      client_id: ''
+    }
+  }
+};
