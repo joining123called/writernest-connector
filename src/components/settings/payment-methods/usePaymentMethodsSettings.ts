@@ -16,7 +16,6 @@ const defaultPaymentSettings: PaymentMethodsSchema = {
   enable2Checkout: false,
   enablePaystack: false,
   enableAuthorizeNet: false,
-  testModeEnabled: true,
   paypalEnvironment: "sandbox",
   authorizeNetEnvironment: "sandbox"
 };
@@ -94,16 +93,9 @@ export const usePaymentMethodsSettings = () => {
     }
   };
   
-  // Helper function to get the current key based on test mode
-  const getApiKey = (liveKey: string | undefined, testKey: string | undefined): string | undefined => {
-    const isTestMode = form.watch("testModeEnabled");
-    return isTestMode ? testKey : liveKey;
-  };
-  
   return {
     form,
     onSubmit,
-    isAdmin,
-    getApiKey
+    isAdmin
   };
 };

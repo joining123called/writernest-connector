@@ -7,11 +7,10 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, CreditCard, Info, Wallet, Globe, DollarSign, ShieldCheck, Beaker } from 'lucide-react';
+import { AlertCircle, CreditCard, Info, Wallet, Globe, DollarSign, ShieldCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 
+// Payment method logo components
 const PaymentMethodLogo = ({ method }: { method: string }) => {
   const logos: Record<string, { src: string, alt: string }> = {
     stripe: { 
@@ -80,6 +79,7 @@ const PaymentMethodLogo = ({ method }: { method: string }) => {
   );
 };
 
+// Component for payment gateway integration status
 const GatewayStatus = ({ enabled }: { enabled: boolean }) => (
   <div className={`px-2 py-1 rounded-full text-xs font-medium ${
     enabled ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
@@ -90,7 +90,7 @@ const GatewayStatus = ({ enabled }: { enabled: boolean }) => (
 );
 
 export const PaymentMethodsTab = () => {
-  const { form, onSubmit, isAdmin, getApiKey } = usePaymentMethodsSettings();
+  const { form, onSubmit, isAdmin } = usePaymentMethodsSettings();
   
   if (!isAdmin) {
     return (
@@ -103,8 +103,6 @@ export const PaymentMethodsTab = () => {
       </Alert>
     );
   }
-  
-  const isTestMode = form.watch("testModeEnabled");
   
   return (
     <div className="space-y-6">
@@ -125,53 +123,6 @@ export const PaymentMethodsTab = () => {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Test Mode Toggle */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <Beaker className="h-5 w-5" />
-                  Test Environment
-                </CardTitle>
-                <CardDescription>
-                  Toggle between test and live environments for payment processing.
-                </CardDescription>
-              </div>
-              <div className="flex items-center">
-                <Badge 
-                  className={isTestMode ? 
-                    "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400" : 
-                    "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
-                  }
-                >
-                  {isTestMode ? "Test Mode Active" : "Live Mode Active"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <FormField
-                control={form.control}
-                name="testModeEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>Enable Test Mode</FormLabel>
-                      <FormDescription>
-                        When enabled, all payment transactions will use test credentials and won't process real payments.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-          
           {/* Stripe Section */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -213,78 +164,37 @@ export const PaymentMethodsTab = () => {
               
               {form.watch("enableStripe") && (
                 <div className="space-y-4 pt-2">
-                  <Tabs defaultValue="live" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="live" disabled={isTestMode}>Live Credentials</TabsTrigger>
-                      <TabsTrigger value="test" disabled={!isTestMode}>Test Credentials</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="live" className="space-y-4 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="stripePublishableKey"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Live Publishable Key</FormLabel>
-                            <FormControl>
-                              <Input placeholder="pk_live_..." {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormDescription>
-                              Your Stripe live publishable key found in your Stripe dashboard.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="stripeWebhookSecret"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Live Webhook Secret</FormLabel>
-                            <FormControl>
-                              <Input placeholder="whsec_..." {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormDescription>
-                              Used to verify webhook events from Stripe for live transactions.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                    <TabsContent value="test" className="space-y-4 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="stripeTestPublishableKey"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Test Publishable Key</FormLabel>
-                            <FormControl>
-                              <Input placeholder="pk_test_..." {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormDescription>
-                              Your Stripe test publishable key for test transactions.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="stripeTestWebhookSecret"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Test Webhook Secret</FormLabel>
-                            <FormControl>
-                              <Input placeholder="whsec_..." {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormDescription>
-                              Used to verify webhook events from Stripe for test transactions.
-                            </FormDescription>
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                  </Tabs>
+                  <FormField
+                    control={form.control}
+                    name="stripePublishableKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Publishable Key</FormLabel>
+                        <FormControl>
+                          <Input placeholder="pk_live_..." {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormDescription>
+                          Your Stripe publishable key found in your Stripe dashboard.
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="stripeWebhookSecret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Webhook Secret</FormLabel>
+                        <FormControl>
+                          <Input placeholder="whsec_..." {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormDescription>
+                          Used to verify webhook events from Stripe.
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
                   
                   <Alert className="border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
                     <Info className="h-4 w-4" />
@@ -339,66 +249,31 @@ export const PaymentMethodsTab = () => {
               
               {form.watch("enablePayPal") && (
                 <div className="space-y-4 pt-2">
-                  <Tabs defaultValue="live" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="live" disabled={isTestMode}>Live Credentials</TabsTrigger>
-                      <TabsTrigger value="test" disabled={!isTestMode}>Test Credentials</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="live" className="space-y-4 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="paypalClientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Live Client ID</FormLabel>
-                            <FormControl>
-                              <Input placeholder="ARfXY123..." {...field} value={field.value || ''} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="paypalSecret"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Live Secret</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="EHLx2J..." {...field} value={field.value || ''} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                    <TabsContent value="test" className="space-y-4 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="paypalTestClientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Test Client ID</FormLabel>
-                            <FormControl>
-                              <Input placeholder="ARfXY123..." {...field} value={field.value || ''} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="paypalTestSecret"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Test Secret</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="EHLx2J..." {...field} value={field.value || ''} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                  </Tabs>
+                  <FormField
+                    control={form.control}
+                    name="paypalClientId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ARfXY123..." {...field} value={field.value || ''} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="paypalSecret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Secret</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="EHLx2J..." {...field} value={field.value || ''} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -469,64 +344,30 @@ export const PaymentMethodsTab = () => {
                 
                 {form.watch("enableSkrill") && (
                   <div className="space-y-4 pt-4">
-                    <Tabs defaultValue="live" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="live" disabled={isTestMode}>Live Credentials</TabsTrigger>
-                        <TabsTrigger value="test" disabled={!isTestMode}>Test Credentials</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="live" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="skrillMerchantId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live Merchant ID</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="skrillSecretWord"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live Secret Word</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                      <TabsContent value="test" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="skrillTestMerchantId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test Merchant ID</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="skrillTestSecretWord"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test Secret Word</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                    </Tabs>
+                    <FormField
+                      control={form.control}
+                      name="skrillMerchantId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Merchant ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="skrillSecretWord"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secret Word</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -568,71 +409,229 @@ export const PaymentMethodsTab = () => {
                 
                 {form.watch("enableMpesa") && (
                   <div className="space-y-4 pt-4">
-                    <Tabs defaultValue="live" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="live" disabled={isTestMode}>Live Credentials</TabsTrigger>
-                        <TabsTrigger value="test" disabled={!isTestMode}>Test Credentials</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="live" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="mpesaConsumerKey"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live Consumer Key</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="mpesaConsumerSecret"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live Consumer Secret</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                      <TabsContent value="test" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="mpesaTestConsumerKey"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test Consumer Key</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="mpesaTestConsumerSecret"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test Consumer Secret</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                    </Tabs>
+                    <FormField
+                      control={form.control}
+                      name="mpesaConsumerKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Consumer Key</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mpesaConsumerSecret"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Consumer Secret</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 )}
               </CardContent>
             </Card>
             
-            {/* Add similar test/live credential tabs for other payment gateways... */}
-            {/* For brevity, I'm not including all of them but the pattern is the same */}
+            {/* Flutterwave */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Flutterwave
+                  </CardTitle>
+                  <CardDescription>
+                    Payment solution for Africa and global markets.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="flutterwave" />
+                  <GatewayStatus enabled={form.watch("enableFlutterwave")} />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="enableFlutterwave"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <FormLabel>Enable Flutterwave</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch("enableFlutterwave") && (
+                  <div className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="flutterwavePublicKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Public Key</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="flutterwaveSecretKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secret Key</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* 2Checkout */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    2Checkout
+                  </CardTitle>
+                  <CardDescription>
+                    Global payment processor for digital products.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="twoCheckout" />
+                  <GatewayStatus enabled={form.watch("enable2Checkout")} />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="enable2Checkout"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <FormLabel>Enable 2Checkout</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch("enable2Checkout") && (
+                  <div className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="twoCheckoutSellerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="twoCheckoutPrivateKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Private Key</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Paystack */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Paystack
+                  </CardTitle>
+                  <CardDescription>
+                    Payment solution for businesses in Africa.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="paystack" />
+                  <GatewayStatus enabled={form.watch("enablePaystack")} />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="enablePaystack"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <FormLabel>Enable Paystack</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch("enablePaystack") && (
+                  <div className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="paystackPublicKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Public Key</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="paystackSecretKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secret Key</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             
             {/* Authorize.net */}
             <Card>
@@ -670,65 +669,30 @@ export const PaymentMethodsTab = () => {
                 
                 {form.watch("enableAuthorizeNet") && (
                   <div className="space-y-4 pt-4">
-                    <Tabs defaultValue="live" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="live" disabled={isTestMode}>Live Credentials</TabsTrigger>
-                        <TabsTrigger value="test" disabled={!isTestMode}>Test Credentials</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="live" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="authorizeNetApiLoginId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live API Login ID</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="authorizeNetTransactionKey"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Live Transaction Key</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                      <TabsContent value="test" className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="authorizeNetTestApiLoginId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test API Login ID</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="authorizeNetTestTransactionKey"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Test Transaction Key</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} value={field.value || ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                    </Tabs>
-                    
+                    <FormField
+                      control={form.control}
+                      name="authorizeNetApiLoginId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>API Login ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="authorizeNetTransactionKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Transaction Key</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} value={field.value || ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="authorizeNetEnvironment"
@@ -757,17 +721,6 @@ export const PaymentMethodsTab = () => {
               </CardContent>
             </Card>
           </div>
-          
-          <Alert 
-            className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400"
-          >
-            <Info className="h-4 w-4" />
-            <AlertTitle>Test Mode Information</AlertTitle>
-            <AlertDescription>
-              When test mode is enabled, all payment gateways will use your test credentials. You can use test card numbers and accounts 
-              to verify your integration without processing real payments. Make sure to disable test mode when you're ready to accept live payments.
-            </AlertDescription>
-          </Alert>
           
           <Separator />
           
