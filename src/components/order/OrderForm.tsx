@@ -9,14 +9,10 @@ import { SizeAndDeadlineFields } from './SizeAndDeadlineFields';
 import { CitationAndSourcesFields } from './CitationAndSourcesFields';
 import { FileUploadSection } from './FileUploadSection';
 import { OrderSummary } from './OrderSummary';
-import { OrderFormValues } from './schema';
+import { OrderFormValues, OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 
-type OrderFormProps = {
-  onOrderSubmit?: (data: OrderFormValues & { files: File[] }) => void;
-};
-
-export function OrderForm({ onOrderSubmit }: OrderFormProps) {
+export function OrderForm({ onOrderSubmit, isProcessingPayment }: OrderFormProps) {
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
   
   const {
@@ -92,6 +88,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
               isFormComplete={isFormComplete}
               onSubmit={() => form.handleSubmit(handleSubmit)()}
               settings={settings}
+              isProcessingPayment={isProcessingPayment}
             />
           </div>
         </div>

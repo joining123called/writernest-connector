@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CreditCard, Lock } from 'lucide-react';
+import { Clock, CreditCard, Lock, Loader2 } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
@@ -37,6 +37,7 @@ interface OrderSummaryProps {
     showSources: boolean;
     priceDisplayMode: "perPage" | "total";
   };
+  isProcessingPayment?: boolean;
 }
 
 export function OrderSummary({ 
@@ -45,14 +46,15 @@ export function OrderSummary({
   uploadedFiles, 
   isFormComplete, 
   onSubmit,
-  settings
+  settings,
+  isProcessingPayment = false
 }: OrderSummaryProps) {
   const { hasEnabledPaymentMethods } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<string | null>(null);
   const [paymentData, setPaymentData] = React.useState<any>(null);
   
   const isPaymentComplete = !hasEnabledPaymentMethods || (selectedPaymentMethod && paymentData);
-  const canSubmitOrder = isFormComplete && isPaymentComplete;
+  const canSubmitOrder = isFormComplete && isPaymentComplete && !isProcessingPayment;
   
   const handlePaymentMethodSelect = (methodId: string) => {
     setSelectedPaymentMethod(methodId);
@@ -192,6 +194,7 @@ export function OrderSummary({
               <PaymentMethodForms 
                 selectedMethod={selectedPaymentMethod}
                 onPaymentDataChange={handlePaymentDataChange}
+                isProcessing={isProcessingPayment}
               />
             )}
           </div>
@@ -205,7 +208,12 @@ export function OrderSummary({
           disabled={!canSubmitOrder}
           onClick={handleSubmit}
         >
-          {hasEnabledPaymentMethods ? (
+          {isProcessingPayment ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Processing Payment...</span>
+            </div>
+          ) : hasEnabledPaymentMethods ? (
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
               <span>Secure Payment</span>
