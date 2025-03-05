@@ -137,7 +137,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-2/3">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
