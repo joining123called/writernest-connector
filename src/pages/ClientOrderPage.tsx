@@ -29,7 +29,7 @@ const ClientOrderPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -37,7 +37,7 @@ const ClientOrderPage = () => {
           className="mb-10"
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="bg-primary/10 p-3 rounded-full">
+            <div className="bg-primary/10 p-2.5 rounded-full">
               <PenLine className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Place Your Order</h1>

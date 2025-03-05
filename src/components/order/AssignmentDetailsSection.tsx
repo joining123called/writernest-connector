@@ -14,33 +14,33 @@ type AssignmentDetailsSectionProps = {
 
 export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps) {
   return (
-    <Card className="border border-border/10 shadow-sm overflow-hidden bg-gradient-to-br from-background to-background/90 dark:from-background/90 dark:to-background/70">
-      <CardHeader className="pb-2 border-b border-border/10">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="bg-primary/10 p-2.5 rounded-full">
+    <Card className="border-none shadow-none bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5">
+      <CardHeader className="pb-2">
+        <div className="flex items-center mb-2">
+          <div className="bg-primary/10 p-2 rounded-full mr-3">
             <FileType className="h-5 w-5 text-primary" />
           </div>
           <CardTitle className="text-2xl font-semibold">Assignment Details</CardTitle>
         </div>
-        <CardDescription className="text-base text-muted-foreground/80">
+        <CardDescription className="text-base">
           Tell us what you need help with
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-6">
+      <CardContent className="pt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="paperType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                  <FileText className="h-4 w-4 mr-2 text-primary/70" />
+                <FormLabel className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
                   Paper Type
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 bg-background border-input/40">
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select paper type" />
                     </SelectTrigger>
                   </FormControl>
@@ -62,13 +62,13 @@ export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps
             name="subject"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                  <GraduationCap className="h-4 w-4 mr-2 text-primary/70" />
+                <FormLabel className="flex items-center">
+                  <GraduationCap className="h-4 w-4 mr-2 text-muted-foreground" />
                   Subject Area
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 bg-background border-input/40">
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
                   </FormControl>
@@ -92,13 +92,13 @@ export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps
             name="pages"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                  <BookText className="h-4 w-4 mr-2 text-primary/70" />
+                <FormLabel className="flex items-center">
+                  <BookText className="h-4 w-4 mr-2 text-muted-foreground" />
                   Number of Pages
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 bg-background border-input/40">
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select number of pages" />
                     </SelectTrigger>
                   </FormControl>
@@ -120,8 +120,8 @@ export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps
             name="deadlineDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                  <Clock className="h-4 w-4 mr-2 text-primary/70" />
+                <FormLabel className="flex items-center">
+                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                   Deadline
                 </FormLabel>
                 <FormControl>
@@ -132,7 +132,7 @@ export function AssignmentDetailsSection({ form }: AssignmentDetailsSectionProps
                     onTimeChange={(time) => form.setValue('deadlineTime', time)}
                   />
                 </FormControl>
-                <FormDescription className="text-xs text-muted-foreground/80">
+                <FormDescription className="text-xs">
                   Select when you need your paper delivered
                 </FormDescription>
                 <FormMessage />
