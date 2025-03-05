@@ -16,3 +16,10 @@ auto_apply = true # Apply migrations on deployment
 # API settings
 [api]
 # Add API-specific settings here
+
+[functions]
+[functions.process-payment]
+verify_jwt = true
+
+[functions.get-transactions]
+verify_jwt = true
