@@ -33,57 +33,73 @@ const defaultSettings: PlatformSettings = {
 export const usePlatformSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [initialLoad, setInitialLoad] = useState(true);
 
   // Fetch settings from Supabase
   const { data: settings, isLoading: isLoadingSettings, error: settingsError } = useQuery({
     queryKey: ['platform-settings'],
     queryFn: async (): Promise<PlatformSettings> => {
-      // Get all settings from the platform_settings table
-      const { data, error } = await supabase
-        .from('platform_settings')
-        .select('*');
-
-      if (error) {
-        throw error;
+      if (!user) {
+        // If not authenticated, return default settings
+        return defaultSettings;
       }
 
-      // Convert the array of settings to an object
-      const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
-        // Convert JSON value to the appropriate type based on the expected property type
-        const key = setting.key as keyof PlatformSettings;
-        
-        if (key in defaultSettings) {
-          const expectedType = typeof defaultSettings[key];
-          const value = setting.value;
-          
-          if (value === null) {
-            acc[key] = null as any;
-          } else if (expectedType === 'string') {
-            // For string properties, ensure we convert to string
-            acc[key] = String(value) as any;
-          } else {
-            // For other types (like null values), use as is
-            acc[key] = value as any;
-          }
-        }
-        
-        return acc;
-      }, {});
+      try {
+        // Get all settings from the platform_settings table
+        const { data, error } = await supabase
+          .from('platform_settings')
+          .select('*');
 
-      // Merge with default settings
-      return {
-        ...defaultSettings,
-        ...settingsObject
-      };
+        if (error) {
+          console.error('Error fetching platform settings:', error.message);
+          throw error;
+        }
+
+        // Convert the array of settings to an object
+        const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
+          // Convert JSON value to the appropriate type based on the expected property type
+          const key = setting.key as keyof PlatformSettings;
+          
+          if (key in defaultSettings) {
+            const expectedType = typeof defaultSettings[key];
+            const value = setting.value;
+            
+            if (value === null) {
+              acc[key] = null as any;
+            } else if (expectedType === 'string') {
+              // For string properties, ensure we convert to string
+              acc[key] = String(value) as any;
+            } else {
+              // For other types (like null values), use as is
+              acc[key] = value as any;
+            }
+          }
+          
+          return acc;
+        }, {});
+
+        // Merge with default settings
+        return {
+          ...defaultSettings,
+          ...settingsObject
+        };
+      } catch (error) {
+        console.error('Error processing settings:', error);
+        return defaultSettings;
+      }
     },
     retry: 1,
+    enabled: !!user, // Only run query when user is authenticated
   });
 
   // Update a setting in Supabase
   const updateSettingMutation = useMutation({
     mutationFn: async ({ key, value }: PlatformSetting) => {
+      if (!isAdmin) {
+        throw new Error('Only administrators can update platform settings');
+      }
+
       // Check if setting exists
       const { data: existingData } = await supabase
         .from('platform_settings')
@@ -131,6 +147,15 @@ export const usePlatformSettings = () => {
 
   // Update multiple settings at once
   const updateSettings = async (newSettings: Partial<PlatformSettings>) => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission denied",
+        description: "Only administrators can update platform settings.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       // Update each setting in sequence
       for (const [key, value] of Object.entries(newSettings)) {
@@ -145,6 +170,15 @@ export const usePlatformSettings = () => {
 
   // Upload a file to Supabase storage
   const uploadFile = async (file: File, type: 'logo' | 'favicon'): Promise<string | null> => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission denied",
+        description: "Only administrators can update platform assets.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     try {
       if (!file) return null;
 
