@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -8,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Clock, Upload, CreditCard, DollarSign } from 'lucide-react';
+import { FileUpload, Check, Clock, FileText, Upload, CreditCard, DollarSign } from 'lucide-react';
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -28,6 +30,9 @@ const orderFormSchema = z.object({
   instructions: z.string().optional(),
   citationStyle: z.string().optional(),
   sources: z.string().optional(),
+  termsAgreed: z.boolean().refine(val => val === true, {
+    message: "You must agree to the terms and conditions",
+  }),
 });
 
 const paperTypes = [
@@ -102,6 +107,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       instructions: "",
       citationStyle: "apa",
       sources: "0",
+      termsAgreed: false,
     },
   });
   
@@ -109,13 +115,15 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const watchDeadline = form.watch('deadline');
   
   React.useEffect(() => {
+    // Update price calculation whenever pages or deadline changes
     const pages = parseInt(watchPages || "1");
-    const deadlineOption = deadlines.find(d => d.value === watchDeadline) || deadlines[5];
+    const deadlineOption = deadlines.find(d => d.value === watchDeadline) || deadlines[5]; // Default to 7 days
     
     const basePrice = 15.99;
     const pricePerPage = basePrice * deadlineOption.multiplier;
     const totalPrice = pricePerPage * pages;
     
+    // Apply discount (15% for orders with 3+ pages)
     let discount = 0;
     if (pages >= 3) {
       discount = totalPrice * 0.15;
@@ -126,7 +134,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     setOrderSummary({
       basePrice,
       pages,
-      words: pages * 275,
+      words: pages * 275, // Assuming 275 words per page
       deadline: deadlineOption.value,
       deadlineText: deadlineOption.label,
       pricePerPage,
@@ -152,6 +160,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Order Form */}
         <div className="w-full md:w-2/3">
           <Card className="border-t-4 border-t-primary">
             <CardHeader className="pb-2">
@@ -371,13 +380,81 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       <Upload size={16} />
                       Upload Additional Files
                     </Button>
+                    
+                    <FormField
+                      control={form.control}
+                      name="termsAgreed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              I agree to the Terms of Service, Privacy Policy, and Money-Back Guarantee
+                            </FormLabel>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
+                  
+                  <Button type="submit" className="w-full" size="lg">
+                    Complete Your Order
+                  </Button>
                 </form>
               </Form>
             </CardContent>
           </Card>
+          
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">With Each Order, You Get:</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-center">
+                    <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    <span>100% plagiarism-free content</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    <span>Well-researched papers with quality sources</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    <span>Free revisions within 14 days</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                    <span>24/7 customer support</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Secure Payment Methods</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4 items-center justify-center">
+                  <div className="w-20 h-12 bg-gray-100 rounded flex items-center justify-center">Visa</div>
+                  <div className="w-20 h-12 bg-gray-100 rounded flex items-center justify-center">Mastercard</div>
+                  <div className="w-20 h-12 bg-gray-100 rounded flex items-center justify-center">PayPal</div>
+                  <div className="w-20 h-12 bg-gray-100 rounded flex items-center justify-center">Apple Pay</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
         
+        {/* Order Summary */}
         <div className="w-full md:w-1/3">
           <div className="sticky top-6">
             <Card className="bg-gray-50 dark:bg-slate-900">
@@ -469,12 +546,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                 </div>
               </CardContent>
               <CardFooter className="flex-col gap-4">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  variant="premium"
-                  onClick={form.handleSubmit(onSubmit)}
-                >
+                <Button className="w-full" size="lg" variant="premium">
                   Complete Your Order
                 </Button>
                 
