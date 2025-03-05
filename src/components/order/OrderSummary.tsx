@@ -48,7 +48,7 @@ export function OrderSummary({
   settings,
   isProcessingPayment = false
 }: OrderSummaryProps) {
-  const { hasEnabledPaymentMethods } = usePaymentMethods();
+  const { hasEnabledPaymentMethods, enabledPaymentMethods } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<string | null>(null);
   const [paymentData, setPaymentData] = React.useState<any>(null);
   
