@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -106,7 +105,15 @@ export const usePlatformSettings = () => {
             } else if (expectedType === 'boolean') {
               acc[key] = Boolean(value);
             } else {
-              acc[key] = value;
+              if (typeof value === 'number') {
+                acc[key] = String(value);
+              } else if (Array.isArray(value)) {
+                acc[key] = value;
+              } else if (typeof value === 'object' && value !== null) {
+                acc[key] = value;
+              } else {
+                acc[key] = String(value);
+              }
             }
           }
           
@@ -308,4 +315,3 @@ export const usePlatformSettings = () => {
     updateSettingMutation
   };
 };
-

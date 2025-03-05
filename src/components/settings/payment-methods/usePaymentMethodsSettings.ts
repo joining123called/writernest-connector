@@ -27,7 +27,27 @@ export const usePaymentMethodsSettings = () => {
   // Extract payment settings from platform settings
   const paymentSettings: PaymentMethodsSchema = {
     ...defaultPaymentSettings,
-    ...(settings || {}) as Partial<PaymentMethodsSchema>
+    ...(settings ? 
+      Object.entries(settings)
+        .filter(([key]) => key in defaultPaymentSettings)
+        .reduce((acc, [key, value]) => {
+          // Safely cast key to a valid key of PaymentMethodsSchema
+          const paymentKey = key as keyof PaymentMethodsSchema;
+          
+          // Only include if the key is valid for PaymentMethodsSchema
+          if (paymentKey in defaultPaymentSettings) {
+            // Ensure proper type casting based on the default values
+            if (typeof defaultPaymentSettings[paymentKey] === 'boolean') {
+              acc[paymentKey] = Boolean(value);
+            } else if (typeof defaultPaymentSettings[paymentKey] === 'string') {
+              acc[paymentKey] = String(value);
+            }
+            // Add more conditions if there are other types in PaymentMethodsSchema
+          }
+          
+          return acc;
+        }, {} as Partial<PaymentMethodsSchema>) 
+      : {})
   };
   
   const form = useForm<PaymentMethodsSchema>({
@@ -71,11 +91,17 @@ export const usePaymentMethodsSettings = () => {
         
         // Convert undefined to default values for boolean fields
         if (typeof defaultPaymentSettings[fieldKey] === 'boolean') {
-          acc[fieldKey] = value === undefined ? false : value;
+          // Type-safe boolean casting
+          acc[fieldKey] = value === undefined ? false : Boolean(value);
         } else {
           // Handle non-boolean fields
-          acc[fieldKey] = value === undefined || value === null ? 
-            defaultPaymentSettings[fieldKey] : value;
+          if (value === undefined || value === null) {
+            acc[fieldKey] = defaultPaymentSettings[fieldKey];
+          } else if (typeof defaultPaymentSettings[fieldKey] === 'string') {
+            acc[fieldKey] = String(value);
+          } else {
+            acc[fieldKey] = value;
+          }
         }
         
         return acc;
