@@ -13,11 +13,9 @@ export interface WalletSettingsProps {
 export interface PayPalConfigProps {
   clientId: string;
   clientSecret: string;
-  webhookId: string;
   isSandbox: boolean;
   setClientId: (value: string) => void;
   setClientSecret: (value: string) => void;
-  setWebhookId: (value: string) => void;
   setIsSandbox: (value: boolean) => void;
   enabled: boolean;
   onEnabledChange: (checked: boolean) => void;

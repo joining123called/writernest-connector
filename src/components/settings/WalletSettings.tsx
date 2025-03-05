@@ -94,7 +94,7 @@ export const WalletSettings = () => {
           setClientSecret(config.config.client_secret || '');
           setIsSandbox(config.is_sandbox || config.is_test_mode || true);
         } else {
-          console.log('No PayPal config found');
+          console.log('No PayPal config found, will create one when saving');
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
@@ -130,27 +130,51 @@ export const WalletSettings = () => {
         })
         .eq('key', 'wallet_settings');
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating platform settings:', error);
+        throw error;
+      }
       
-      // Also update payment gateway configuration via the edge function
-      const response = await fetch(`${window.location.origin}/.netlify/functions/admin-paypal-config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
-          clientId,
-          clientSecret,
-          isSandbox,
-          isActive: settings.payment_methods?.paypal?.enabled || false
-        })
-      });
+      // Check if PayPal configuration exists
+      const { data: existingConfig, error: checkError } = await supabase
+        .from('payment_gateways')
+        .select('*')
+        .eq('gateway_name', 'paypal')
+        .maybeSingle();
       
-      const result = await response.json();
+      if (checkError) {
+        console.error('Error checking for existing PayPal config:', checkError);
+        throw checkError;
+      }
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update PayPal configuration');
+      // Prepare PayPal config data
+      const paypalConfigData = {
+        gateway_name: 'paypal',
+        is_enabled: settings.payment_methods?.paypal?.enabled || false,
+        is_test_mode: isSandbox,
+        config: {
+          client_id: clientId,
+          client_secret: clientSecret
+        }
+      };
+      
+      let saveConfigResult;
+      
+      // Either update or insert the PayPal config
+      if (existingConfig) {
+        saveConfigResult = await supabase
+          .from('payment_gateways')
+          .update(paypalConfigData)
+          .eq('gateway_name', 'paypal');
+      } else {
+        saveConfigResult = await supabase
+          .from('payment_gateways')
+          .insert(paypalConfigData);
+      }
+      
+      if (saveConfigResult.error) {
+        console.error('Error saving PayPal configuration:', saveConfigResult.error);
+        throw saveConfigResult.error;
       }
       
       toast({
