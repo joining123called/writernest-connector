@@ -9,11 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Check, Upload, Calendar, Clock, BookText, GraduationCap, AlignLeft, FileText, Book, FileType } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { TimePicker } from './TimePicker';
+import { DateTimePicker } from './TimePicker';
 import { Separator } from '@/components/ui/separator';
 
 type OrderFormFieldsProps = {
@@ -124,7 +120,7 @@ export function OrderFormFields({ form }: OrderFormFieldsProps) {
               )}
             />
             
-            {/* Deadline picker with merged date and time */}
+            {/* Integrated DateTime picker */}
             <FormField
               control={form.control}
               name="deadlineDate"
@@ -134,63 +130,14 @@ export function OrderFormFields({ form }: OrderFormFieldsProps) {
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     Deadline
                   </FormLabel>
-                  <div className="grid grid-cols-12 gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "col-span-8 h-11 pl-3 text-left font-normal flex justify-between items-center",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "MMM d, yyyy")
-                            ) : (
-                              <span>Select date</span>
-                            )}
-                            <Calendar className="h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    
-                    <FormField
-                      control={form.control}
-                      name="deadlineTime"
-                      render={({ field: timeField }) => (
-                        <FormControl>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "col-span-4 h-11 font-normal flex justify-between items-center",
-                                  !timeField.value && "text-muted-foreground"
-                                )}
-                              >
-                                {timeField.value || <span>Time</span>}
-                                <Clock className="h-4 w-4 opacity-50 ml-2" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-3" align="start">
-                              <TimePicker value={timeField.value} onChange={timeField.onChange} />
-                            </PopoverContent>
-                          </Popover>
-                        </FormControl>
-                      )}
+                  <FormControl>
+                    <DateTimePicker 
+                      date={field.value} 
+                      onDateChange={field.onChange}
+                      time={form.watch('deadlineTime') || '11:59 PM'}
+                      onTimeChange={(time) => form.setValue('deadlineTime', time)}
                     />
-                  </div>
+                  </FormControl>
                   <FormDescription className="text-xs">
                     Select when you need your paper delivered
                   </FormDescription>
