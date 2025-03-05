@@ -14,6 +14,7 @@ import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import { defaultWalletSettings, WalletSettings as WalletSettingsType } from '@/hooks/platform-settings/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PayPalGatewayConfig } from '@/types/paypal';
+import { Json } from '@/types/supabase';
 
 export const WalletSettings = () => {
   const { isAdmin } = useAuth();
@@ -41,15 +42,15 @@ export const WalletSettings = () => {
         if (error) throw error;
 
         if (data && data.value) {
-          // Cast the data to WalletSettingsType to fix type issue
-          setSettings(data.value as unknown as WalletSettingsType);
+          // Cast the data to WalletSettingsType
+          setSettings(data.value as WalletSettingsType);
         } else {
           // Create default wallet settings if they don't exist
           const { error: createError } = await supabase
             .from('platform_settings')
             .insert({ 
               key: 'wallet_settings',
-              value: defaultWalletSettings
+              value: defaultWalletSettings as unknown as Json
             });
 
           if (createError) throw createError;
@@ -65,7 +66,7 @@ export const WalletSettings = () => {
           .maybeSingle();
 
         if (!configError && paypalConfig) {
-          const config = paypalConfig as unknown as PayPalGatewayConfig;
+          const config = paypalConfig as PayPalGatewayConfig;
           setClientId(config.config.client_id || '');
           setClientSecret(config.config.client_secret || '');
           setWebhookId(config.config.webhook_id || '');
@@ -98,7 +99,7 @@ export const WalletSettings = () => {
       const { error } = await supabase
         .from('platform_settings')
         .update({ 
-          value: settings,
+          value: settings as unknown as Json,
           updated_at: new Date().toISOString()
         })
         .eq('key', 'wallet_settings');

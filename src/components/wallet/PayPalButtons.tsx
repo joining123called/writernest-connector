@@ -70,7 +70,7 @@ export const PayPalButtons = ({
                   throw new Error(data.error || 'Failed to create PayPal order');
                 }
                 
-                return data.order.id;
+                return data.orderId;
               } catch (error) {
                 console.error('Error creating PayPal order:', error);
                 onError(error instanceof Error ? error.message : 'Failed to create PayPal order');
@@ -100,8 +100,6 @@ export const PayPalButtons = ({
                 
                 // Call the success callback with the captured order details
                 onSuccess(data.orderID, amount);
-                
-                return result;
               } catch (error) {
                 console.error('Error capturing PayPal order:', error);
                 onError(error instanceof Error ? error.message : 'Failed to capture PayPal order');

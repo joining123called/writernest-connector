@@ -40,6 +40,7 @@ export interface WalletSettings {
       webhook_id?: string;
     };
   };
+  [key: string]: string | number | boolean | { [key: string]: any } | undefined;
 }
 
 export const defaultWalletSettings: WalletSettings = {
