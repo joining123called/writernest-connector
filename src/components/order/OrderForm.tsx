@@ -13,10 +13,12 @@ import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { usePaymentMethods } from '@/hooks/use-payment-methods';
+import { useToast } from '@/hooks/use-toast';
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
+  const { toast } = useToast();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
-  const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods();
+  const { paymentMethods, isLoading: isLoadingPaymentMethods, error: paymentMethodsError } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   
   const {
@@ -29,6 +31,17 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     handleFileUpload,
     handleSubmit
   } = useOrderForm(onOrderSubmit);
+  
+  // Show toast if there's an error fetching payment methods
+  React.useEffect(() => {
+    if (paymentMethodsError) {
+      toast({
+        title: "Payment Methods Error",
+        description: "There was an error loading payment methods. You may proceed with the order, but payment options may be limited.",
+        variant: "destructive",
+      });
+    }
+  }, [paymentMethodsError, toast]);
   
   if (isLoading || isLoadingSettings || isLoadingPaymentMethods) {
     return (
@@ -44,13 +57,18 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   };
 
   const handleCompleteOrder = () => {
-    if (!selectedPaymentMethod && paymentMethods.length > 0) {
-      // If payment methods are available but none selected, don't proceed
+    // If payment methods exist but none selected, don't proceed
+    if (paymentMethods.length > 0 && !selectedPaymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method to complete your order.",
+        variant: "destructive",
+      });
       return;
     }
     
     form.handleSubmit(() => {
-      handleSubmit();
+      handleSubmit(selectedPaymentMethod);
     })();
   };
   

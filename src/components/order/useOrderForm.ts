@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { addHours, isToday, isTomorrow } from "date-fns";
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { OrderFormValues, orderFormSchema } from './schema';
+import { supabase } from '@/lib/supabase';
+import { processPayment } from '@/lib/payment';
 
 // Maximum file size: 2GB in bytes
 export const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
@@ -16,6 +18,7 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
   
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isFormComplete, setIsFormComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [orderSummary, setOrderSummary] = useState({
     basePrice: 15.99,
@@ -184,17 +187,89 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
     }
   };
   
-  const handleSubmit = () => {
-    const values = form.getValues();
-    console.log("Order submitted:", values, orderSummary, uploadedFiles);
+  const handleSubmit = async (paymentMethodId?: string | null) => {
+    if (isSubmitting) return;
     
-    toast({
-      title: "Order submitted successfully",
-      description: "Your order has been received and is being processed.",
-    });
+    setIsSubmitting(true);
     
-    if (onOrderSubmit) {
-      onOrderSubmit({...values, files: uploadedFiles});
+    try {
+      const values = form.getValues();
+      console.log("Order submitted:", values, orderSummary, uploadedFiles);
+      
+      // Generate a unique order ID
+      const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+      // Get current user information
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication error",
+          description: "You must be logged in to submit an order",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Upload files if any
+      let fileUrls: string[] = [];
+      if (uploadedFiles.length > 0) {
+        // Upload files to storage (this would be implemented in a real app)
+        fileUrls = uploadedFiles.map(file => URL.createObjectURL(file));
+      }
+      
+      // Process payment if a payment method is selected
+      if (paymentMethodId) {
+        const paymentResult = await processPayment(paymentMethodId, {
+          amount: orderSummary.finalPrice,
+          currency: 'USD',
+          orderId,
+          userId: user.id,
+          description: `Order for ${values.paperType} - ${values.topic}`,
+          metadata: {
+            paperType: values.paperType,
+            subject: values.subject,
+            pages: values.pages,
+            deadline: values.deadline.toISOString(),
+            fileCount: uploadedFiles.length
+          }
+        });
+        
+        if (!paymentResult.success) {
+          toast({
+            title: "Payment failed",
+            description: paymentResult.errorMessage || "There was an error processing your payment",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        toast({
+          title: "Payment successful",
+          description: "Your payment has been processed successfully",
+        });
+      }
+      
+      // Create the order in the database (this would be implemented in a real app)
+      // const { data, error } = await supabase.from('orders').insert({...})
+      
+      toast({
+        title: "Order submitted successfully",
+        description: "Your order has been received and is being processed.",
+      });
+      
+      if (onOrderSubmit) {
+        onOrderSubmit({...values, files: uploadedFiles});
+      }
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      toast({
+        title: "Order submission failed",
+        description: "There was an error submitting your order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -204,7 +279,7 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
     uploadedFiles,
     setUploadedFiles,
     isFormComplete,
-    isLoading: isLoadingSettings,
+    isLoading: isLoadingSettings || isSubmitting,
     handleFileUpload,
     handleSubmit
   };

@@ -1,4 +1,12 @@
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  isEnabled: boolean;
+}
+
 export interface PaymentGateway {
   id: string;
   gateway_name: string;
@@ -29,18 +37,33 @@ export interface Transaction {
   updated_at: string;
 }
 
-export enum PaymentStatus {
-  PENDING = "pending",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  REFUNDED = "refunded",
-  CANCELLED = "cancelled"
+export type TransactionStatus = 
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'refunded'
+  | 'canceled';
+
+// Payment processor integration types
+export interface PaymentProcessorConfig {
+  gatewayName: string;
+  apiCredentials: Record<string, string>;
+  isTestMode: boolean;
 }
 
-export interface PaymentMethod {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  isEnabled: boolean;
+export interface PaymentRequest {
+  amount: number;
+  currency: string;
+  orderId: string;
+  userId: string;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentResponse {
+  success: boolean;
+  transactionId?: string;
+  errorMessage?: string;
+  gatewayResponse?: Record<string, any>;
 }
