@@ -25,6 +25,7 @@ export const defaultSettings: PlatformSettings = {
   metaDescription: "Lovable Generated Project"
 };
 
+// Fixed the recursive type issue by explicitly listing allowed keys
 export interface WalletSettings {
   id: string;
   min_deposit_amount: number;
@@ -40,7 +41,8 @@ export interface WalletSettings {
       webhook_id?: string;
     };
   };
-  [key: string]: string | number | boolean | { [key: string]: any } | undefined;
+  // Instead of recursive index signature, define specific known fields
+  [key: string]: string | number | boolean | object;
 }
 
 export const defaultWalletSettings: WalletSettings = {

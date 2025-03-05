@@ -57,7 +57,7 @@ serve(async (req) => {
       const { data: paypalConfig, error: configError } = await supabase
         .from('payment_gateways')
         .select('*')
-        .eq('name', 'paypal')
+        .eq('gateway_name', 'paypal')
         .maybeSingle()
 
       if (configError) {
@@ -91,7 +91,7 @@ serve(async (req) => {
       const { data: existingConfig, error: existingError } = await supabase
         .from('payment_gateways')
         .select('id')
-        .eq('name', 'paypal')
+        .eq('gateway_name', 'paypal')
         .maybeSingle()
 
       if (existingError) {
@@ -108,13 +108,13 @@ serve(async (req) => {
       let result
       
       if (existingConfig) {
-        // Update existing config
+        // Update existing config - use database field names
         const { data, error: updateError } = await supabase
           .from('payment_gateways')
           .update({ 
             config,
-            is_active: isActive !== undefined ? isActive : true,
-            is_sandbox: isSandbox !== undefined ? isSandbox : true,
+            is_enabled: isActive !== undefined ? isActive : true,
+            is_test_mode: isSandbox !== undefined ? isSandbox : true,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingConfig.id)
@@ -128,14 +128,14 @@ serve(async (req) => {
         
         result = data
       } else {
-        // Create new config
+        // Create new config - use database field names
         const { data, error: insertError } = await supabase
           .from('payment_gateways')
           .insert({
-            name: 'paypal',
+            gateway_name: 'paypal',
             config,
-            is_active: isActive !== undefined ? isActive : true,
-            is_sandbox: isSandbox !== undefined ? isSandbox : true
+            is_enabled: isActive !== undefined ? isActive : true,
+            is_test_mode: isSandbox !== undefined ? isSandbox : true
           })
           .select()
           .single()

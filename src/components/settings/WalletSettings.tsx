@@ -50,7 +50,7 @@ export const WalletSettings = () => {
             .from('platform_settings')
             .insert({ 
               key: 'wallet_settings',
-              value: defaultWalletSettings as unknown as Json
+              value: defaultWalletSettings as Json
             });
 
           if (createError) throw createError;
@@ -62,15 +62,22 @@ export const WalletSettings = () => {
         const { data: paypalConfig, error: configError } = await supabase
           .from('payment_gateways')
           .select('*')
-          .eq('name', 'paypal')
+          .eq('gateway_name', 'paypal')
           .maybeSingle();
 
         if (!configError && paypalConfig) {
-          const config = paypalConfig as PayPalGatewayConfig;
+          // Map the database fields to our interface
+          const config = {
+            ...paypalConfig,
+            is_active: paypalConfig.is_enabled,
+            is_sandbox: paypalConfig.is_test_mode,
+            name: paypalConfig.gateway_name
+          } as unknown as PayPalGatewayConfig;
+          
           setClientId(config.config.client_id || '');
           setClientSecret(config.config.client_secret || '');
           setWebhookId(config.config.webhook_id || '');
-          setIsSandbox(config.is_sandbox);
+          setIsSandbox(config.is_sandbox || config.is_test_mode || true);
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);

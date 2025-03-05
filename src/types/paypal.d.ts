@@ -24,9 +24,12 @@ export interface CreateOrderResponse {
 
 export interface PayPalGatewayConfig {
   id?: string;
-  name: string;
-  is_active: boolean;
-  is_sandbox: boolean;
+  name?: string;
+  gateway_name?: string;
+  is_active?: boolean;
+  is_enabled?: boolean;
+  is_sandbox?: boolean;
+  is_test_mode?: boolean;
   config: {
     client_id: string;
     client_secret: string;
