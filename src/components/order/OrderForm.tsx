@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -10,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Clock, FileText, Upload, Calendar } from 'lucide-react';
+import { Check, Clock, Upload, Calendar } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, addHours, isToday, isTomorrow, addDays } from "date-fns";
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -22,7 +24,7 @@ const orderFormSchema = z.object({
   pages: z.string({
     required_error: "Please select number of pages",
   }),
-  deadline: z.string({
+  deadline: z.date({
     required_error: "Please select a deadline",
   }),
   topic: z.string().optional(),
@@ -84,7 +86,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     basePrice: 15.99,
     pages: 1,
     words: 275,
-    deadline: '7d',
+    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     deadlineText: '7 days',
     pricePerPage: 15.99,
     totalPrice: 15.99,
@@ -98,7 +100,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       paperType: "",
       subject: "",
       pages: "1",
-      deadline: "7d",
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       topic: "",
       instructions: "",
       citationStyle: "apa",
@@ -109,12 +111,63 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const watchPages = form.watch('pages');
   const watchDeadline = form.watch('deadline');
   
+  // Time slots for the popover
+  const timeSlots = [
+    { label: "9:00 AM", hours: 9, minutes: 0 },
+    { label: "12:00 PM", hours: 12, minutes: 0 },
+    { label: "3:00 PM", hours: 15, minutes: 0 },
+    { label: "6:00 PM", hours: 18, minutes: 0 },
+    { label: "9:00 PM", hours: 21, minutes: 0 },
+    { label: "11:59 PM", hours: 23, minutes: 59 },
+  ];
+  
   React.useEffect(() => {
     const pages = parseInt(watchPages || "1");
-    const deadlineOption = deadlines.find(d => d.value === watchDeadline) || deadlines[5];
+    const now = new Date();
+    const selectedDate = watchDeadline || now;
+    
+    // Calculate hours difference
+    const diffTime = Math.abs(selectedDate.getTime() - now.getTime());
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Calculate price multiplier based on urgency
+    let multiplier = 1.0;
+    if (diffHours <= 6) {
+      multiplier = 2.0;
+    } else if (diffHours <= 12) {
+      multiplier = 1.8;
+    } else if (diffHours <= 24) {
+      multiplier = 1.6;
+    } else if (diffHours <= 48) {
+      multiplier = 1.4;
+    } else if (diffHours <= 72) {
+      multiplier = 1.2;
+    } else if (diffDays <= 7) {
+      multiplier = 1.0;
+    } else {
+      multiplier = 0.9;
+    }
+    
+    // Generate deadline text
+    let deadlineText = '';
+    if (isToday(selectedDate)) {
+      deadlineText = `Today at ${format(selectedDate, 'h:mm a')}`;
+    } else if (isTomorrow(selectedDate)) {
+      deadlineText = `Tomorrow at ${format(selectedDate, 'h:mm a')}`;
+    } else if (diffDays <= 7) {
+      deadlineText = `${format(selectedDate, 'EEEE')} at ${format(selectedDate, 'h:mm a')}`;
+    } else {
+      deadlineText = format(selectedDate, 'MMMM d, yyyy') + ` at ${format(selectedDate, 'h:mm a')}`;
+    }
+    
+    // If hours are very low, show urgency indicator
+    if (diffHours <= 24) {
+      deadlineText += " (Urgent)";
+    }
     
     const basePrice = 15.99;
-    const pricePerPage = basePrice * deadlineOption.multiplier;
+    const pricePerPage = basePrice * multiplier;
     const totalPrice = pricePerPage * pages;
     
     let discount = 0;
@@ -128,8 +181,8 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       basePrice,
       pages,
       words: pages * 275,
-      deadline: deadlineOption.value,
-      deadlineText: deadlineOption.label,
+      deadline: selectedDate,
+      deadlineText,
       pricePerPage,
       totalPrice,
       discount,
@@ -250,30 +303,121 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       control={form.control}
                       name="deadline"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                           <FormLabel>Deadline</FormLabel>
-                          <div className="relative">
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Popover>
+                            <PopoverTrigger asChild>
                               <FormControl>
-                                <SelectTrigger className="pl-10">
-                                  <Calendar className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                                  <SelectValue placeholder="Select deadline" />
-                                </SelectTrigger>
+                                <Button
+                                  variant="outline"
+                                  className="w-full h-11 px-3 flex justify-between items-center text-left font-normal text-muted-foreground border border-input/40 bg-background/80 hover:bg-accent/30 hover:text-accent-foreground transition-all duration-200"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-primary/70" />
+                                    {field.value ? (
+                                      <span className="text-foreground">
+                                        {format(field.value, "PPP")} at {format(field.value, "h:mm a")}
+                                      </span>
+                                    ) : (
+                                      <span>Select deadline date and time</span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                                    {field.value && isToday(field.value) ? "Today" : 
+                                     field.value && isTomorrow(field.value) ? "Tomorrow" : ""}
+                                  </span>
+                                </Button>
                               </FormControl>
-                              <SelectContent>
-                                {deadlines.map((deadline) => (
-                                  <SelectItem 
-                                    key={deadline.value} 
-                                    value={deadline.value}
-                                    className={deadline.isUrgent ? "text-orange-600 font-medium" : ""}
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <div className="border-b p-3">
+                                <div className="text-sm font-medium mb-2">Select date</div>
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={(date) => {
+                                    // If date is selected, keep time from current value
+                                    if (date) {
+                                      const newDate = new Date(date);
+                                      if (field.value) {
+                                        newDate.setHours(field.value.getHours());
+                                        newDate.setMinutes(field.value.getMinutes());
+                                      } else {
+                                        newDate.setHours(23);
+                                        newDate.setMinutes(59);
+                                      }
+                                      field.onChange(newDate);
+                                    }
+                                  }}
+                                  disabled={(date) => 
+                                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                                  }
+                                  initialFocus
+                                />
+                              </div>
+                              <div className="p-3 border-t">
+                                <div className="text-sm font-medium mb-3">Select time</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {timeSlots.map((time, i) => {
+                                    const isSelected = field.value && 
+                                      field.value.getHours() === time.hours && 
+                                      field.value.getMinutes() === time.minutes;
+                                    
+                                    return (
+                                      <Button
+                                        key={i}
+                                        type="button"
+                                        variant={isSelected ? "default" : "outline"}
+                                        size="sm"
+                                        className={`h-9 ${isSelected ? 'bg-primary text-white' : 'bg-background'}`}
+                                        onClick={() => {
+                                          const newDate = new Date(field.value || new Date());
+                                          newDate.setHours(time.hours);
+                                          newDate.setMinutes(time.minutes);
+                                          field.onChange(newDate);
+                                        }}
+                                      >
+                                        <Clock className="mr-2 h-3.5 w-3.5" />
+                                        {time.label}
+                                      </Button>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                              
+                              <div className="p-3 border-t">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const tomorrow = addDays(new Date(), 1);
+                                      tomorrow.setHours(23, 59, 0, 0);
+                                      field.onChange(tomorrow);
+                                    }}
                                   >
-                                    {deadline.label}
-                                    {deadline.isUrgent && " (Urgent)"}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                                    Tomorrow EOD
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const nextWeek = addDays(new Date(), 7);
+                                      nextWeek.setHours(23, 59, 0, 0);
+                                      field.onChange(nextWeek);
+                                    }}
+                                  >
+                                    Next Week
+                                  </Button>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <FormDescription>
+                            Choose when you need your paper delivered
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -468,9 +612,11 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                     <div>
                       <p className="font-medium text-blue-800 dark:text-blue-300">Estimated delivery time</p>
                       <p className="text-blue-600 dark:text-blue-400">
-                        {orderSummary.deadline === "6h" || orderSummary.deadline === "12h" ? 
-                          "Your order will be completed today" : 
-                          `Your order will be delivered by ${new Date(Date.now() + parseInt(orderSummary.deadline) * 24 * 60 * 60 * 1000).toLocaleDateString()}`}
+                        {isToday(orderSummary.deadline) ? 
+                          `Today at ${format(orderSummary.deadline, "h:mm a")}` : 
+                          isTomorrow(orderSummary.deadline) ?
+                          `Tomorrow at ${format(orderSummary.deadline, "h:mm a")}` :
+                          `${format(orderSummary.deadline, "MMMM d, yyyy")} at ${format(orderSummary.deadline, "h:mm a")}`}
                       </p>
                     </div>
                   </div>
