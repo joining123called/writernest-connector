@@ -107,36 +107,53 @@ serve(async (req) => {
     }
 
     // Get request data
-    const { orderId } = await req.json()
+    const { orderId, walletId } = await req.json()
     
     if (!orderId) {
       throw new Error('Missing order ID')
     }
 
+    if (!walletId) {
+      throw new Error('Missing wallet ID')
+    }
+
     // Find the transaction for this order
     const { data: transaction, error: transactionError } = await supabase
       .from('wallet_transactions')
-      .select('*, wallet:wallet_id(*)')
+      .select('*')
       .eq('payment_id', orderId)
       .eq('payment_gateway', 'paypal')
-      .single()
+      .maybeSingle()
 
-    if (transactionError || !transaction) {
+    if (transactionError) {
       console.error('Transaction error:', transactionError)
+      throw new Error('Failed to retrieve transaction')
+    }
+
+    if (!transaction) {
+      console.error('Transaction not found for order ID:', orderId)
       throw new Error('Transaction not found')
     }
 
     // Verify wallet belongs to user
-    if (transaction.wallet.user_id !== user.id) {
-      throw new Error('Unauthorized - wallet does not belong to user')
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('id', walletId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (walletError || !wallet) {
+      console.error('Wallet verification error:', walletError)
+      throw new Error('Wallet not found or does not belong to user')
     }
 
     // Get payment gateway configuration
     const { data: paypalConfig, error: configError } = await supabase
       .from('payment_gateways')
       .select('*')
-      .eq('name', 'paypal')
-      .eq('is_active', true)
+      .eq('gateway_name', 'paypal')
+      .eq('is_enabled', true)
       .maybeSingle()
 
     if (configError) {
@@ -145,14 +162,14 @@ serve(async (req) => {
     }
 
     if (!paypalConfig) {
-      throw new Error('PayPal is not configured')
+      throw new Error('PayPal is not configured or is disabled')
     }
 
     // Capture the PayPal order
     const config: PayPalConfig = {
       clientId: paypalConfig.config.client_id,
       clientSecret: paypalConfig.config.client_secret,
-      isSandbox: paypalConfig.is_sandbox
+      isSandbox: paypalConfig.is_test_mode
     }
 
     const captureResult = await capturePayPalOrder(config, orderId)
@@ -179,19 +196,7 @@ serve(async (req) => {
 
     // If completed, update wallet balance
     if (newStatus === 'completed') {
-      // Get current wallet balance
-      const { data: wallet, error: walletError } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('id', transaction.wallet_id)
-        .single()
-
-      if (walletError || !wallet) {
-        console.error('Wallet fetch error:', walletError)
-        throw new Error('Failed to retrieve wallet')
-      }
-
-      // Update wallet balance
+      // Update wallet balance with the transaction amount
       const newBalance = Number(wallet.balance) + Number(transaction.amount)
       const { error: updateWalletError } = await supabase
         .from('wallets')
@@ -199,7 +204,7 @@ serve(async (req) => {
           balance: newBalance,
           updated_at: new Date().toISOString()
         })
-        .eq('id', transaction.wallet_id)
+        .eq('id', walletId)
 
       if (updateWalletError) {
         console.error('Wallet update error:', updateWalletError)

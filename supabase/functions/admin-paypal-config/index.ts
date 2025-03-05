@@ -76,8 +76,7 @@ serve(async (req) => {
       // Update PayPal config
       const { 
         clientId, 
-        clientSecret, 
-        webhookId, 
+        clientSecret,  
         isSandbox, 
         isActive 
       } = await req.json()
@@ -101,8 +100,7 @@ serve(async (req) => {
 
       const config = {
         client_id: clientId,
-        client_secret: clientSecret || '',
-        webhook_id: webhookId || ''
+        client_secret: clientSecret || ''
       }
 
       let result

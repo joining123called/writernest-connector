@@ -157,8 +157,8 @@ serve(async (req) => {
     const { data: paypalConfig, error: configError } = await supabase
       .from('payment_gateways')
       .select('*')
-      .eq('name', 'paypal')
-      .eq('is_active', true)
+      .eq('gateway_name', 'paypal')
+      .eq('is_enabled', true)
       .maybeSingle()
 
     if (configError) {
@@ -167,14 +167,14 @@ serve(async (req) => {
     }
 
     if (!paypalConfig) {
-      throw new Error('PayPal is not configured')
+      throw new Error('PayPal is not configured or is disabled')
     }
 
     // Create PayPal order
     const config: PayPalConfig = {
       clientId: paypalConfig.config.client_id,
       clientSecret: paypalConfig.config.client_secret,
-      isSandbox: paypalConfig.is_sandbox
+      isSandbox: paypalConfig.is_test_mode
     }
 
     const order = await createPayPalOrder(config, amount, user.id, walletId)

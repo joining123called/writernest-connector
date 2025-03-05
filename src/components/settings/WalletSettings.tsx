@@ -21,7 +21,6 @@ export const WalletSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
-  const [webhookId, setWebhookId] = useState('');
   const [isSandbox, setIsSandbox] = useState(true);
 
   useEffect(() => {
@@ -93,7 +92,6 @@ export const WalletSettings = () => {
           
           setClientId(config.config.client_id || '');
           setClientSecret(config.config.client_secret || '');
-          setWebhookId(config.config.webhook_id || '');
           setIsSandbox(config.is_sandbox || config.is_test_mode || true);
         } else {
           console.log('No PayPal config found');
@@ -144,7 +142,6 @@ export const WalletSettings = () => {
         body: JSON.stringify({
           clientId,
           clientSecret,
-          webhookId,
           isSandbox,
           isActive: settings.payment_methods?.paypal?.enabled || false
         })
@@ -243,11 +240,9 @@ export const WalletSettings = () => {
           handleSaveSettings={handleSaveSettings}
           clientId={clientId}
           clientSecret={clientSecret}
-          webhookId={webhookId}
           isSandbox={isSandbox}
           setClientId={setClientId}
           setClientSecret={setClientSecret}
-          setWebhookId={setWebhookId}
           setIsSandbox={setIsSandbox}
         />
       </TabsContent>

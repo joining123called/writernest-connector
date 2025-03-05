@@ -81,7 +81,7 @@ export const PayPalButtons = ({
                 throw error;
               }
             },
-            onApprove: async (data: any, actions: any) => {
+            onApprove: async (data: any) => {
               try {
                 // Capture the order through our server-side endpoint
                 const response = await fetch(`${window.location.origin}/.netlify/functions/paypal-capture-order`, {

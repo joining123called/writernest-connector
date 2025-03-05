@@ -10,11 +10,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 export const PayPalConfiguration: React.FC<PayPalConfigProps> = ({
   clientId,
   clientSecret,
-  webhookId,
   isSandbox,
   setClientId,
   setClientSecret,
-  setWebhookId,
   setIsSandbox,
   enabled,
   onEnabledChange
@@ -63,20 +61,6 @@ export const PayPalConfiguration: React.FC<PayPalConfigProps> = ({
             </p>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="paypal-webhook-id">PayPal Webhook ID</Label>
-            <Input
-              id="paypal-webhook-id"
-              type="text"
-              placeholder="Enter your PayPal Webhook ID"
-              value={webhookId}
-              onChange={(e) => setWebhookId(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              Webhook ID is required for receiving notifications about payment status changes
-            </p>
-          </div>
-          
           <div className="flex items-center space-x-2 pt-2">
             <Switch
               id="paypal-sandbox"
@@ -94,8 +78,8 @@ export const PayPalConfiguration: React.FC<PayPalConfigProps> = ({
           <Alert className="mt-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              For webhook integration, create a webhook in your PayPal Developer Dashboard 
-              pointing to: {window.location.origin}/.netlify/functions/paypal-webhook
+              This integration uses direct PayPal API calls for payment processing without requiring webhooks.
+              All payment status updates will be handled in real-time during the payment flow.
             </AlertDescription>
           </Alert>
         </div>

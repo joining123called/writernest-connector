@@ -10,11 +10,9 @@ import { CreditCardConfiguration } from './CreditCardConfiguration';
 interface PaymentMethodsTabProps extends WalletSettingsProps {
   clientId: string;
   clientSecret: string;
-  webhookId: string;
   isSandbox: boolean;
   setClientId: (value: string) => void;
   setClientSecret: (value: string) => void;
-  setWebhookId: (value: string) => void;
   setIsSandbox: (value: boolean) => void;
 }
 
@@ -25,11 +23,9 @@ export const PaymentMethodsTab: React.FC<PaymentMethodsTabProps> = ({
   handleSaveSettings,
   clientId,
   clientSecret,
-  webhookId,
   isSandbox,
   setClientId,
   setClientSecret,
-  setWebhookId,
   setIsSandbox
 }) => {
   if (!settings) return null;
@@ -49,11 +45,9 @@ export const PaymentMethodsTab: React.FC<PaymentMethodsTabProps> = ({
         <PayPalConfiguration
           clientId={clientId}
           clientSecret={clientSecret}
-          webhookId={webhookId}
           isSandbox={isSandbox}
           setClientId={setClientId}
           setClientSecret={setClientSecret}
-          setWebhookId={setWebhookId}
           setIsSandbox={setIsSandbox}
           enabled={paypalEnabled}
           onEnabledChange={(checked) => handlePayPalChange('enabled', checked)}
