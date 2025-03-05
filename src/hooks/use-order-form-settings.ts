@@ -14,6 +14,8 @@ export interface OrderFormSettingsType {
   showDeadlineOptions: boolean;
   showCitationStyles: boolean;
   showInstructions: boolean;
+  showPaperType: boolean;  // New setting for Paper Type field
+  showSources: boolean;    // New setting for Number of Sources field
   
   // Pricing settings
   basePricePerPage: number;
@@ -36,6 +38,8 @@ const defaultSettings: OrderFormSettingsType = {
   showDeadlineOptions: true,
   showCitationStyles: true,
   showInstructions: true,
+  showPaperType: true,     // Default to show Paper Type
+  showSources: true,       // Default to show Number of Sources
   basePricePerPage: 15.99,
   urgentDeliveryMultiplier: 1.5,
   minimumHours: 6,

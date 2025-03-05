@@ -240,30 +240,32 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="paperType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Paper Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select paper type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {paperTypes.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {settings.showPaperType && (
+                      <FormField
+                        control={form.control}
+                        name="paperType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Paper Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select paper type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {paperTypes.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     
                     {settings.showSubjectFields && (
                       <FormField
@@ -517,30 +519,32 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                       />
                     )}
                     
-                    <FormField
-                      control={form.control}
-                      name="sources"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number of Sources</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select number of sources" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {[...Array(21)].map((_, i) => (
-                                <SelectItem key={i} value={i.toString()}>
-                                  {i === 0 ? "No sources required" : `${i} source${i > 1 ? 's' : ''}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {settings.showSources && (
+                      <FormField
+                        control={form.control}
+                        name="sources"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Sources</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select number of sources" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {[...Array(21)].map((_, i) => (
+                                  <SelectItem key={i} value={i.toString()}>
+                                    {i === 0 ? "No sources required" : `${i} source${i > 1 ? 's' : ''}`}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                   
                   <div className="border-t pt-4">

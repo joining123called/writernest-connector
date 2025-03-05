@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -30,6 +29,8 @@ const formSettingsSchema = z.object({
   showDeadlineOptions: z.boolean().default(true),
   showCitationStyles: z.boolean().default(true),
   showInstructions: z.boolean().default(true),
+  showPaperType: z.boolean().default(true),
+  showSources: z.boolean().default(true),
   
   // Pricing settings
   basePricePerPage: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid price" }),
@@ -92,6 +93,8 @@ export function OrderFormSettings() {
       showDeadlineOptions: settings.showDeadlineOptions,
       showCitationStyles: settings.showCitationStyles,
       showInstructions: settings.showInstructions,
+      showPaperType: settings.showPaperType,
+      showSources: settings.showSources,
       basePricePerPage: settings.basePricePerPage.toString(),
       urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
       minimumHours: settings.minimumHours.toString(),
@@ -101,7 +104,6 @@ export function OrderFormSettings() {
     }
   });
   
-  // Update form values when settings are loaded
   React.useEffect(() => {
     if (!isLoading) {
       form.reset({
@@ -113,6 +115,8 @@ export function OrderFormSettings() {
         showDeadlineOptions: settings.showDeadlineOptions,
         showCitationStyles: settings.showCitationStyles,
         showInstructions: settings.showInstructions,
+        showPaperType: settings.showPaperType,
+        showSources: settings.showSources,
         basePricePerPage: settings.basePricePerPage.toString(),
         urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
         minimumHours: settings.minimumHours.toString(),
@@ -325,6 +329,48 @@ export function OrderFormSettings() {
                           <FormLabel>Instructions Field</FormLabel>
                           <FormDescription>
                             Allow clients to provide detailed instructions
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="showPaperType"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Paper Type</FormLabel>
+                          <FormDescription>
+                            Allow clients to select document type (essay, research paper, etc.)
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="showSources"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Number of Sources</FormLabel>
+                          <FormDescription>
+                            Allow clients to specify how many sources are required
                           </FormDescription>
                         </div>
                         <FormControl>
