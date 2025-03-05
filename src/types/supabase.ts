@@ -71,6 +71,78 @@ export interface Database {
         }
         Relationships: []
       }
+      payment_gateways: {
+        Row: {
+          id: string
+          gateway_name: string
+          is_enabled: boolean
+          is_test_mode: boolean
+          config: Record<string, string>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          gateway_name: string
+          is_enabled?: boolean
+          is_test_mode?: boolean
+          config?: Record<string, string>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          gateway_name?: string
+          is_enabled?: boolean
+          is_test_mode?: boolean
+          config?: Record<string, string>
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          id: string
+          order_id: string
+          user_id: string
+          gateway: string
+          amount: number
+          currency: string
+          status: string
+          gateway_transaction_id?: string
+          gateway_response?: Record<string, any>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          user_id: string
+          gateway: string
+          amount: number
+          currency?: string
+          status: string
+          gateway_transaction_id?: string
+          gateway_response?: Record<string, any>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          user_id?: string
+          gateway?: string
+          amount?: number
+          currency?: string
+          status?: string
+          gateway_transaction_id?: string
+          gateway_response?: Record<string, any>
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
