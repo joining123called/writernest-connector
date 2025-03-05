@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { usePlatformSettings } from '@/hooks/use-platform-settings';
+import { usePlatformSettings } from '@/hooks/platform-settings';
 
 interface SidebarHeaderProps {
   collapsed: boolean;

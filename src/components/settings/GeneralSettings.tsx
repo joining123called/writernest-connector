@@ -14,7 +14,7 @@ import { Upload, ImageIcon, Loader2, Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import timezones from '@/lib/timezones';
 import languages from '@/lib/languages';
-import { usePlatformSettings } from '@/hooks/use-platform-settings';
+import { usePlatformSettings } from '@/hooks/platform-settings';
 import { Textarea } from "@/components/ui/textarea";
 
 const generalSettingsSchema = z.object({
