@@ -64,17 +64,17 @@ export const usePlatformSettings = () => {
           const key = setting.key as keyof PlatformSettings;
           
           if (key in defaultSettings) {
-            const expectedType = typeof defaultSettings[key as keyof typeof defaultSettings];
-            const value = setting.value as Json;
+            const settingValue = setting.value as Json;
+            const typedKey = key as keyof typeof defaultSettings;
             
-            if (value === null) {
-              acc[key] = null as any;
-            } else if (expectedType === 'string') {
+            if (settingValue === null) {
+              acc[typedKey] = null as any;
+            } else if (typeof defaultSettings[typedKey] === 'string') {
               // For string properties, ensure we convert to string
-              acc[key] = String(value) as any;
+              acc[typedKey] = String(settingValue) as any;
             } else {
-              // For other types (like null values), use as is
-              acc[key] = value as any;
+              // For other types (like boolean values), use as is
+              acc[typedKey] = settingValue as any;
             }
           }
           
