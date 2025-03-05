@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { usePaymentMethodsSettings } from './usePaymentMethodsSettings';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -7,8 +8,72 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, CreditCard, DollarSign, Info } from 'lucide-react';
+import { AlertCircle, CreditCard, Info, Wallet, Globe, DollarSign, ShieldCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+// Payment method logo components
+const PaymentMethodLogo = ({ method }: { method: string }) => {
+  const logos: Record<string, { src: string, alt: string }> = {
+    stripe: { 
+      src: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg", 
+      alt: "Stripe Logo" 
+    },
+    paypal: { 
+      src: "https://upload.wikimedia.org/wikipedia/commons/a/a4/Paypal_2014_logo.svg", 
+      alt: "PayPal Logo" 
+    },
+    skrill: { 
+      src: "https://upload.wikimedia.org/wikipedia/en/8/88/Skrill_logo.svg", 
+      alt: "Skrill Logo" 
+    },
+    mpesa: { 
+      src: "https://upload.wikimedia.org/wikipedia/commons/b/b5/M-PESA_LOGO-01.svg", 
+      alt: "M-Pesa Logo" 
+    },
+    flutterwave: { 
+      src: "https://cdn.worldvectorlogo.com/logos/flutterwave-1.svg", 
+      alt: "Flutterwave Logo" 
+    },
+    twoCheckout: { 
+      src: "https://www.2checkout.com/images/2co-new-logo.png", 
+      alt: "2Checkout Logo" 
+    },
+    paystack: { 
+      src: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Paystack_Logo.png/1200px-Paystack_Logo.png", 
+      alt: "Paystack Logo" 
+    },
+    authorizeNet: { 
+      src: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Authorize.net_logo.svg", 
+      alt: "Authorize.Net Logo" 
+    }
+  };
+
+  const logo = logos[method];
+
+  return (
+    <div className="h-8 w-16 flex items-center">
+      {logo ? (
+        <img 
+          src={logo.src} 
+          alt={logo.alt} 
+          className="h-6 object-contain" 
+        />
+      ) : (
+        <div className="bg-muted rounded h-6 w-12"></div>
+      )}
+    </div>
+  );
+};
+
+// Component for payment gateway integration status
+const GatewayStatus = ({ enabled }: { enabled: boolean }) => (
+  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+    enabled ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+    'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+  }`}>
+    {enabled ? 'Active' : 'Inactive'}
+  </div>
+);
 
 export const PaymentMethodsTab = () => {
   const { form, onSubmit, isAdmin } = usePaymentMethodsSettings();
@@ -34,20 +99,34 @@ export const PaymentMethodsTab = () => {
         </p>
       </div>
       
+      <Alert className="bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Integration Information</AlertTitle>
+        <AlertDescription>
+          You need to set up accounts with these payment providers separately and obtain API keys before enabling them here.
+        </AlertDescription>
+      </Alert>
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           {/* Stripe Section */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Stripe
-              </CardTitle>
-              <CardDescription>
-                Accept credit card payments globally with Stripe's payment processing.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Stripe
+                </CardTitle>
+                <CardDescription>
+                  Accept credit card payments globally with Stripe's payment processing.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <PaymentMethodLogo method="stripe" />
+                <GatewayStatus enabled={form.watch("enableStripe")} />
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <FormField
                 control={form.control}
                 name="enableStripe"
@@ -103,7 +182,7 @@ export const PaymentMethodsTab = () => {
                     )}
                   />
                   
-                  <Alert variant="outline" className="border-blue-200 bg-blue-50 text-blue-800">
+                  <Alert className="border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400">
                     <Info className="h-4 w-4" />
                     <AlertTitle>Webhook Setup Required</AlertTitle>
                     <AlertDescription>
@@ -117,16 +196,22 @@ export const PaymentMethodsTab = () => {
           
           {/* PayPal Section */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                PayPal
-              </CardTitle>
-              <CardDescription>
-                Allow customers to pay via PayPal accounts and credit cards.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  PayPal
+                </CardTitle>
+                <CardDescription>
+                  Allow customers to pay via PayPal accounts and credit cards.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <PaymentMethodLogo method="paypal" />
+                <GatewayStatus enabled={form.watch("enablePayPal")} />
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <FormField
                 control={form.control}
                 name="enablePayPal"
@@ -170,7 +255,7 @@ export const PaymentMethodsTab = () => {
                       <FormItem>
                         <FormLabel>Secret</FormLabel>
                         <FormControl>
-                          <Input placeholder="EHLx2J..." {...field} value={field.value || ''} />
+                          <Input type="password" placeholder="EHLx2J..." {...field} value={field.value || ''} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -211,10 +296,22 @@ export const PaymentMethodsTab = () => {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Skrill */}
             <Card>
-              <CardHeader>
-                <CardTitle>Skrill</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5" />
+                    Skrill
+                  </CardTitle>
+                  <CardDescription>
+                    Digital wallet for online payments globally.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="skrill" />
+                  <GatewayStatus enabled={form.watch("enableSkrill")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enableSkrill"
@@ -264,10 +361,22 @@ export const PaymentMethodsTab = () => {
             
             {/* M-Pesa */}
             <Card>
-              <CardHeader>
-                <CardTitle>M-Pesa</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    M-Pesa
+                  </CardTitle>
+                  <CardDescription>
+                    Mobile payment solution popular in Africa.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="mpesa" />
+                  <GatewayStatus enabled={form.watch("enableMpesa")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enableMpesa"
@@ -317,10 +426,22 @@ export const PaymentMethodsTab = () => {
             
             {/* Flutterwave */}
             <Card>
-              <CardHeader>
-                <CardTitle>Flutterwave</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Flutterwave
+                  </CardTitle>
+                  <CardDescription>
+                    Payment solution for Africa and global markets.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="flutterwave" />
+                  <GatewayStatus enabled={form.watch("enableFlutterwave")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enableFlutterwave"
@@ -370,10 +491,22 @@ export const PaymentMethodsTab = () => {
             
             {/* 2Checkout */}
             <Card>
-              <CardHeader>
-                <CardTitle>2Checkout</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    2Checkout
+                  </CardTitle>
+                  <CardDescription>
+                    Global payment processor for digital products.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="twoCheckout" />
+                  <GatewayStatus enabled={form.watch("enable2Checkout")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enable2Checkout"
@@ -423,10 +556,22 @@ export const PaymentMethodsTab = () => {
             
             {/* Paystack */}
             <Card>
-              <CardHeader>
-                <CardTitle>Paystack</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Paystack
+                  </CardTitle>
+                  <CardDescription>
+                    Payment solution for businesses in Africa.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="paystack" />
+                  <GatewayStatus enabled={form.watch("enablePaystack")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enablePaystack"
@@ -476,10 +621,22 @@ export const PaymentMethodsTab = () => {
             
             {/* Authorize.net */}
             <Card>
-              <CardHeader>
-                <CardTitle>Authorize.net</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5" />
+                    Authorize.net
+                  </CardTitle>
+                  <CardDescription>
+                    Secure payment gateway for online businesses.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PaymentMethodLogo method="authorizeNet" />
+                  <GatewayStatus enabled={form.watch("enableAuthorizeNet")} />
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="enableAuthorizeNet"

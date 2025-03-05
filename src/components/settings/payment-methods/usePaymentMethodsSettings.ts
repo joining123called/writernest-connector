@@ -27,7 +27,7 @@ export const usePaymentMethodsSettings = () => {
   // Extract payment settings from platform settings
   const paymentSettings: PaymentMethodsSchema = {
     ...defaultPaymentSettings,
-    ...(settings as any)
+    ...(settings || {})
   };
   
   const form = useForm<PaymentMethodsSchema>({
@@ -58,7 +58,8 @@ export const usePaymentMethodsSettings = () => {
     }
     
     try {
-      const success = await updateSettings(data);
+      // Cast the data to any to avoid type errors when passing to updateSettings
+      const success = await updateSettings(data as any);
       
       if (success) {
         toast({
