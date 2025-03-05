@@ -36,6 +36,8 @@ export interface WalletSettings {
     paypal: {
       enabled: boolean;
       client_id?: string;
+      client_secret?: string;
+      webhook_id?: string;
     };
   };
 }
@@ -50,7 +52,24 @@ export const defaultWalletSettings: WalletSettings = {
   payment_methods: {
     paypal: {
       enabled: true,
-      client_id: ''
+      client_id: '',
+      client_secret: '',
+      webhook_id: ''
     }
   }
 };
+
+export interface PaymentGateway {
+  id: string;
+  name: string;
+  is_active: boolean;
+  is_sandbox: boolean;
+  config: {
+    client_id: string;
+    client_secret: string;
+    webhook_id?: string;
+    [key: string]: any;
+  };
+  created_at: string;
+  updated_at: string;
+}

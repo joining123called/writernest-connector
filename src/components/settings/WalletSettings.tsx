@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -20,6 +21,10 @@ export const WalletSettings = () => {
   const [settings, setSettings] = useState<WalletSettingsType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [webhookId, setWebhookId] = useState('');
+  const [isSandbox, setIsSandbox] = useState(true);
 
   useEffect(() => {
     const fetchWalletSettings = async () => {
@@ -51,6 +56,20 @@ export const WalletSettings = () => {
           
           setSettings(defaultWalletSettings);
         }
+
+        // Also fetch the payment gateway configuration
+        const { data: paypalConfig, error: configError } = await supabase
+          .from('payment_gateways')
+          .select('*')
+          .eq('name', 'paypal')
+          .maybeSingle();
+
+        if (!configError && paypalConfig) {
+          setClientId(paypalConfig.config.client_id || '');
+          setClientSecret(paypalConfig.config.client_secret || '');
+          setWebhookId(paypalConfig.config.webhook_id || '');
+          setIsSandbox(paypalConfig.is_sandbox);
+        }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
         toast({
@@ -74,6 +93,7 @@ export const WalletSettings = () => {
     setIsSaving(true);
     
     try {
+      // Update platform settings for wallet
       const { error } = await supabase
         .from('platform_settings')
         .update({ 
@@ -83,6 +103,28 @@ export const WalletSettings = () => {
         .eq('key', 'wallet_settings');
         
       if (error) throw error;
+      
+      // Also update payment gateway configuration via the edge function
+      const response = await fetch(`${window.location.origin}/.netlify/functions/admin-paypal-config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          clientId,
+          clientSecret,
+          webhookId,
+          isSandbox,
+          isActive: settings.payment_methods.paypal.enabled
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update PayPal configuration');
+      }
       
       toast({
         title: 'Settings saved',
@@ -278,19 +320,61 @@ export const WalletSettings = () => {
                       id="paypal-client-id"
                       type="text"
                       placeholder="Enter your PayPal Client ID"
-                      value={settings.payment_methods.paypal.client_id || ''}
-                      onChange={(e) => handlePayPalChange('client_id', e.target.value)}
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
                     />
                     <p className="text-sm text-muted-foreground">
                       You can find your Client ID in the PayPal Developer Dashboard
                     </p>
                   </div>
                   
-                  <Alert variant="default" className="bg-blue-50">
-                    <AlertCircle className="h-4 w-4 text-blue-500" />
+                  <div className="space-y-2">
+                    <Label htmlFor="paypal-client-secret">PayPal Client Secret</Label>
+                    <Input
+                      id="paypal-client-secret"
+                      type="password"
+                      placeholder="Enter your PayPal Client Secret"
+                      value={clientSecret}
+                      onChange={(e) => setClientSecret(e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Your Client Secret is used server-side to authenticate with PayPal
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="paypal-webhook-id">PayPal Webhook ID</Label>
+                    <Input
+                      id="paypal-webhook-id"
+                      type="text"
+                      placeholder="Enter your PayPal Webhook ID"
+                      value={webhookId}
+                      onChange={(e) => setWebhookId(e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Webhook ID is required for receiving notifications about payment status changes
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch
+                      id="paypal-sandbox"
+                      checked={isSandbox}
+                      onCheckedChange={setIsSandbox}
+                    />
+                    <Label htmlFor="paypal-sandbox" className="flex flex-col">
+                      <span>Use Sandbox Mode</span>
+                      <span className="font-normal text-sm text-muted-foreground">
+                        Enable for testing with PayPal sandbox accounts
+                      </span>
+                    </Label>
+                  </div>
+                  
+                  <Alert variant="info" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      To use PayPal integration, you need to create a PayPal Developer account and set up an app to get your Client ID.
-                      For complete integration, a server-side component would also be needed in a production environment.
+                      For webhook integration, create a webhook in your PayPal Developer Dashboard 
+                      pointing to: {window.location.origin}/.netlify/functions/paypal-webhook
                     </AlertDescription>
                   </Alert>
                 </div>
