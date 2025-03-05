@@ -63,16 +63,8 @@ const Login = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error('Login error details:', error);
         throw error;
-      } else if (user && user.role === UserRole.ADMIN) {
-        // If somehow an admin logs in through the client login form
-        toast({
-          title: "Access denied",
-          description: "Please use the admin login page to sign in as an administrator.",
-          variant: "destructive",
-        });
-        // Sign out the admin user immediately
-        await signOut();
       }
     } catch (error: any) {
       console.error('Login error:', error);

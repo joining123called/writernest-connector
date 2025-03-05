@@ -41,7 +41,7 @@ export const signIn = async (
       
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Invalid login credentials",
         variant: "destructive",
       });
       return { error };
@@ -86,6 +86,8 @@ export const signIn = async (
       phone: profile.phone,
       role: profile.role as UserRole,
       createdAt: profile.created_at,
+      referenceNumber: profile.reference_number || undefined,
+      avatarUrl: profile.avatar_url || undefined
     };
 
     setState({
