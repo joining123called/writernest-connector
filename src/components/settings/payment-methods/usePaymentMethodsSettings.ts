@@ -59,7 +59,7 @@ export const usePaymentMethodsSettings = () => {
     
     try {
       // Convert any undefined or null values to their default values to prevent null value errors
-      const sanitizedData = Object.keys(data).reduce<Partial<PaymentMethodsSchema>>((acc, key) => {
+      const sanitizedData = Object.keys(data).reduce((acc, key) => {
         const fieldKey = key as keyof PaymentMethodsSchema;
         const value = data[fieldKey];
         
@@ -72,7 +72,7 @@ export const usePaymentMethodsSettings = () => {
         }
         
         return acc;
-      }, {});
+      }, {} as Record<keyof PaymentMethodsSchema, string | boolean>);
       
       // Cast the sanitized data to any to avoid type errors when passing to updateSettings
       const success = await updateSettings(sanitizedData as any);
