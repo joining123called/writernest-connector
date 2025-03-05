@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -63,8 +64,8 @@ export const usePlatformSettings = () => {
           const key = setting.key as keyof PlatformSettings;
           
           if (key in defaultSettings) {
-            const expectedType = typeof defaultSettings[key];
-            const value = setting.value;
+            const expectedType = typeof defaultSettings[key as keyof typeof defaultSettings];
+            const value = setting.value as Json;
             
             if (value === null) {
               acc[key] = null as any;
