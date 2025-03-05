@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -46,6 +47,7 @@ export interface PlatformSettings {
   authorizeNetApiLoginId?: string;
   authorizeNetTransactionKey?: string;
   authorizeNetEnvironment?: "sandbox" | "production";
+  [key: string]: string | boolean | null | undefined;
 }
 
 const defaultSettings: PlatformSettings = {
@@ -93,18 +95,18 @@ export const usePlatformSettings = () => {
         const settingsObject = data.reduce((acc: Partial<PlatformSettings>, setting) => {
           const key = setting.key as keyof PlatformSettings;
           
-          if (key in defaultSettings) {
+          if (key in defaultSettings || typeof key === 'string') {
             const expectedType = typeof defaultSettings[key as keyof typeof defaultSettings];
             const value = setting.value;
             
             if (value === null) {
-              acc[key] = null as any;
+              acc[key] = null;
             } else if (expectedType === 'string') {
-              acc[key] = String(value) as any;
+              acc[key] = String(value);
             } else if (expectedType === 'boolean') {
-              acc[key] = Boolean(value) as any;
+              acc[key] = Boolean(value);
             } else {
-              acc[key] = value as any;
+              acc[key] = value;
             }
           }
           
@@ -306,3 +308,4 @@ export const usePlatformSettings = () => {
     updateSettingMutation
   };
 };
+

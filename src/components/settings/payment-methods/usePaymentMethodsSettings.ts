@@ -27,7 +27,7 @@ export const usePaymentMethodsSettings = () => {
   // Extract payment settings from platform settings
   const paymentSettings: PaymentMethodsSchema = {
     ...defaultPaymentSettings,
-    ...(settings || {})
+    ...(settings || {}) as Partial<PaymentMethodsSchema>
   };
   
   const form = useForm<PaymentMethodsSchema>({
