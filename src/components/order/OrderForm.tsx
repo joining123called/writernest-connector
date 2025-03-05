@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -11,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { FileUpload, Check, Clock, FileText, Upload, CreditCard, DollarSign } from 'lucide-react';
+import { Check, Clock, FileText, Upload, CreditCard, DollarSign } from 'lucide-react';
 
 const orderFormSchema = z.object({
   paperType: z.string({
@@ -115,15 +114,13 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const watchDeadline = form.watch('deadline');
   
   React.useEffect(() => {
-    // Update price calculation whenever pages or deadline changes
     const pages = parseInt(watchPages || "1");
-    const deadlineOption = deadlines.find(d => d.value === watchDeadline) || deadlines[5]; // Default to 7 days
+    const deadlineOption = deadlines.find(d => d.value === watchDeadline) || deadlines[5];
     
     const basePrice = 15.99;
     const pricePerPage = basePrice * deadlineOption.multiplier;
     const totalPrice = pricePerPage * pages;
     
-    // Apply discount (15% for orders with 3+ pages)
     let discount = 0;
     if (pages >= 3) {
       discount = totalPrice * 0.15;
@@ -134,7 +131,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     setOrderSummary({
       basePrice,
       pages,
-      words: pages * 275, // Assuming 275 words per page
+      words: pages * 275,
       deadline: deadlineOption.value,
       deadlineText: deadlineOption.label,
       pricePerPage,
@@ -160,7 +157,6 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Order Form */}
         <div className="w-full md:w-2/3">
           <Card className="border-t-4 border-t-primary">
             <CardHeader className="pb-2">
@@ -454,7 +450,6 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
           </div>
         </div>
         
-        {/* Order Summary */}
         <div className="w-full md:w-1/3">
           <div className="sticky top-6">
             <Card className="bg-gray-50 dark:bg-slate-900">
