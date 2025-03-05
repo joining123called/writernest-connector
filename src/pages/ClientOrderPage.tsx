@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
 import { motion } from 'framer-motion';
-import { PenLine } from 'lucide-react';
 
 const ClientOrderPage = () => {
   const { user, isLoading } = useAuth();
@@ -29,23 +28,17 @@ const ClientOrderPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-primary/10 p-2.5 rounded-full">
-              <PenLine className="h-6 w-6 text-primary" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">Place Your Order</h1>
-          </div>
-          <p className="text-muted-foreground text-lg max-w-3xl">
-            Complete the form below to submit your writing request. Our experienced writers will start working on your paper as soon as the order is confirmed.
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Place Your Order</h1>
+          <p className="text-muted-foreground">
+            Fill out the form below to submit your writing request.
           </p>
-        </motion.div>
+        </div>
         
         <OrderForm 
           onOrderSubmit={(data) => {
@@ -54,7 +47,7 @@ const ClientOrderPage = () => {
             // For now, we'll just log it
           }}
         />
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 };

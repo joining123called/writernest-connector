@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -12,8 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { usePlatformSettings } from '@/hooks/use-platform-settings';
-import { paperTypes, subjects, deadlines, citationStyles } from '../order/PriceCalculator';
 
 const formSettingsSchema = z.object({
   // General settings
@@ -39,102 +38,33 @@ const formSettingsSchema = z.object({
   // Display settings
   priceDisplayMode: z.enum(["perPage", "total"]),
   orderSummaryPosition: z.enum(["right", "bottom"]),
-  
-  // Paper types and subjects customization
-  enabledPaperTypes: z.array(z.string()).default([]),
-  enabledSubjects: z.array(z.string()).default([]),
-  
-  // Custom words per page
-  wordsPerPage: z.string().regex(/^\d+$/, { message: "Must be a valid number" }),
 });
 
 export function OrderFormSettings() {
   const { toast } = useToast();
-  const { settings, updateSettings } = usePlatformSettings();
   
   const form = useForm<z.infer<typeof formSettingsSchema>>({
     resolver: zodResolver(formSettingsSchema),
     defaultValues: {
-      serviceName: settings.orderForm.serviceName,
-      serviceDescription: settings.orderForm.serviceDescription,
-      showSubjectFields: settings.orderForm.showSubjectFields,
-      showPageCount: settings.orderForm.showPageCount,
-      showWordCount: settings.orderForm.showWordCount,
-      showDeadlineOptions: settings.orderForm.showDeadlineOptions,
-      showCitationStyles: settings.orderForm.showCitationStyles,
-      showInstructions: settings.orderForm.showInstructions,
-      basePricePerPage: settings.orderForm.basePricePerPage,
-      urgentDeliveryMultiplier: settings.orderForm.urgentDeliveryMultiplier,
-      minimumHours: settings.orderForm.minimumHours,
-      standardDeliveryDays: settings.orderForm.standardDeliveryDays,
-      priceDisplayMode: settings.orderForm.priceDisplayMode,
-      orderSummaryPosition: settings.orderForm.orderSummaryPosition,
-      enabledPaperTypes: settings.orderForm.enabledPaperTypes.length > 0 
-        ? settings.orderForm.enabledPaperTypes 
-        : paperTypes.map(type => type.value),
-      enabledSubjects: settings.orderForm.enabledSubjects.length > 0 
-        ? settings.orderForm.enabledSubjects 
-        : subjects.map(subject => subject.value),
-      wordsPerPage: settings.orderForm.wordsPerPage,
+      serviceName: "Essay Writing Service",
+      serviceDescription: "Professional academic writing assistance for students of all levels",
+      showSubjectFields: true,
+      showPageCount: true,
+      showWordCount: true,
+      showDeadlineOptions: true,
+      showCitationStyles: true,
+      showInstructions: true,
+      basePricePerPage: "15.99",
+      urgentDeliveryMultiplier: "1.5",
+      minimumHours: "6",
+      standardDeliveryDays: "7",
+      priceDisplayMode: "total",
+      orderSummaryPosition: "right"
     }
   });
   
   function onSubmit(data: z.infer<typeof formSettingsSchema>) {
-    console.log("Form settings updated:", data);
-    
-    // Save pricing settings to be used by PriceCalculator
-    const pricingSettings = {
-      basePricePerPage: parseFloat(data.basePricePerPage),
-      urgentDeliveryMultiplier: parseFloat(data.urgentDeliveryMultiplier),
-      wordsPerPage: parseInt(data.wordsPerPage),
-      minimumHours: parseInt(data.minimumHours),
-      standardDeliveryDays: parseInt(data.standardDeliveryDays),
-    };
-    
-    // Save display settings to control OrderForm layout
-    const displaySettings = {
-      orderSummaryPosition: data.orderSummaryPosition,
-      priceDisplayMode: data.priceDisplayMode,
-    };
-    
-    // Save field visibility settings to control OrderFormFields
-    const fieldSettings = {
-      showSubjectFields: data.showSubjectFields,
-      showPageCount: data.showPageCount,
-      showWordCount: data.showWordCount,
-      showDeadlineOptions: data.showDeadlineOptions,
-      showCitationStyles: data.showCitationStyles,
-      showInstructions: data.showInstructions,
-      enabledPaperTypes: data.enabledPaperTypes,
-      enabledSubjects: data.enabledSubjects,
-    };
-    
-    // Update the platform settings
-    updateSettings({
-      orderForm: {
-        serviceName: data.serviceName,
-        serviceDescription: data.serviceDescription,
-        showSubjectFields: data.showSubjectFields,
-        showPageCount: data.showPageCount,
-        showWordCount: data.showWordCount,
-        showDeadlineOptions: data.showDeadlineOptions,
-        showCitationStyles: data.showCitationStyles,
-        showInstructions: data.showInstructions,
-        basePricePerPage: data.basePricePerPage,
-        urgentDeliveryMultiplier: data.urgentDeliveryMultiplier,
-        minimumHours: data.minimumHours,
-        standardDeliveryDays: data.standardDeliveryDays,
-        priceDisplayMode: data.priceDisplayMode,
-        orderSummaryPosition: data.orderSummaryPosition,
-        enabledPaperTypes: data.enabledPaperTypes,
-        enabledSubjects: data.enabledSubjects,
-        wordsPerPage: data.wordsPerPage,
-        pricing: pricingSettings,
-        display: displaySettings,
-        fields: fieldSettings,
-      }
-    });
-    
+    console.log(data);
     toast({
       title: "Settings saved",
       description: "Order form settings have been updated successfully."
@@ -366,22 +296,6 @@ export function OrderFormSettings() {
                         </FormControl>
                         <FormDescription>
                           The standard price per page in USD
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="wordsPerPage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Words Per Page</FormLabel>
-                        <FormControl>
-                          <Input type="text" placeholder="275" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Define how many words count as one page
                         </FormDescription>
                       </FormItem>
                     )}
