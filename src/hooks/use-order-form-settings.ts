@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export interface OrderFormSettings {
+export interface OrderFormSettingsType {
   // General settings
   serviceName: string;
   serviceDescription: string;
@@ -27,7 +27,7 @@ export interface OrderFormSettings {
 }
 
 // Default settings
-const defaultSettings: OrderFormSettings = {
+const defaultSettings: OrderFormSettingsType = {
   serviceName: "Essay Writing Service",
   serviceDescription: "Professional academic writing assistance for students of all levels",
   showSubjectFields: true,
@@ -47,7 +47,7 @@ const defaultSettings: OrderFormSettings = {
 export function useOrderFormSettings() {
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ['order-form-settings'],
-    queryFn: async (): Promise<OrderFormSettings> => {
+    queryFn: async (): Promise<OrderFormSettingsType> => {
       // Try to get settings from the platform_settings table where key starts with "orderForm"
       const { data, error } = await supabase
         .from('platform_settings')
@@ -66,7 +66,7 @@ export function useOrderFormSettings() {
 
       try {
         // Parse the saved settings
-        const savedSettings = data[0].value as OrderFormSettings;
+        const savedSettings = data[0].value as OrderFormSettingsType;
         
         // Ensure all numeric values are actually numbers
         const parsedSettings = {

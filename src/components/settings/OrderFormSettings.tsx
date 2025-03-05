@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/lib/supabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { useOrderFormSettings, OrderFormSettings } from '@/hooks/use-order-form-settings';
+import { useOrderFormSettings, type OrderFormSettingsType } from '@/hooks/use-order-form-settings';
 
 const formSettingsSchema = z.object({
   // General settings
