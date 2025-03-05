@@ -23,22 +23,36 @@ export const useSession = () => {
   const activityListeners = useRef<Array<() => void>>([]);
 
   const loadSession = useCallback(async () => {
-    if (!isMounted.current) return;
+    console.log('Loading session...');
+    if (!isMounted.current) {
+      console.log('Component unmounted, skipping session load');
+      return;
+    }
     
     setIsLoading(true);
     
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session:', error);
+        throw error;
+      }
+      
       const currentSession = data.session;
+      console.log('Session loaded:', currentSession ? 'Session exists' : 'No session');
       
       if (currentSession) {
+        console.log('Validating session...');
         const valid = await validateSession(currentSession);
         
         if (valid) {
+          console.log('Session validated successfully');
           setSession(currentSession);
           setIsValid(true);
           logSessionEvent(currentSession.user.id, 'session_validated', {});
         } else {
+          console.log('Session validation failed, signing out');
           await supabase.auth.signOut({ scope: 'local' });
           setSession(null);
           setIsValid(false);
@@ -52,6 +66,7 @@ export const useSession = () => {
           }
         }
       } else {
+        console.log('No active session');
         setSession(null);
         setIsValid(false);
       }
@@ -69,6 +84,7 @@ export const useSession = () => {
       }
     } finally {
       if (isMounted.current) {
+        console.log('Session loading finished');
         setIsLoading(false);
       }
     }
@@ -102,39 +118,14 @@ export const useSession = () => {
   }, []);
 
   useEffect(() => {
-    if (!session?.user?.id || !isValid) return;
-
-    setupActivityListeners(session.user.id);
-
-    const inactivityCheck = setInterval(() => {
-      if (session?.user?.id && isSessionInactive(session.user.id)) {
-        supabase.auth.signOut({ scope: 'local' }).then(() => {
-          if (isMounted.current) {
-            setSession(null);
-            setIsValid(false);
-            toast({
-              title: "Session expired",
-              description: "Your session has expired due to inactivity.",
-              variant: "destructive",
-            });
-          }
-        });
-      }
-    }, 60000);
-
-    return () => {
-      cleanupActivityListeners();
-      clearInterval(inactivityCheck);
-    };
-  }, [session, isValid, toast, setupActivityListeners, cleanupActivityListeners]);
-
-  useEffect(() => {
+    console.log('useSession hook mounted');
     loadSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`Auth state change: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
+      console.log(`Auth state change in useSession: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
       
       if (event === 'SIGNED_IN' && session) {
+        console.log('SIGNED_IN event: Initializing session');
         await initializeSession(session);
         if (isMounted.current) {
           setSession(session);
@@ -142,6 +133,7 @@ export const useSession = () => {
           setupActivityListeners(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('SIGNED_OUT event: Terminating session');
         if (session?.user?.id) {
           await terminateSession(session.user.id);
           cleanupActivityListeners();
@@ -151,11 +143,13 @@ export const useSession = () => {
           setIsValid(false);
         }
       } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('TOKEN_REFRESHED event: Updating session');
         if (isMounted.current) {
           setSession(session);
           logSessionEvent(session.user.id, 'token_refreshed', {});
         }
       } else if (event === 'USER_UPDATED' && session) {
+        console.log('USER_UPDATED event: Updating session');
         if (isMounted.current) {
           setSession(session);
           logSessionEvent(session.user.id, 'user_updated', {});
@@ -186,6 +180,7 @@ export const useSession = () => {
     applyStoredSettings();
 
     return () => {
+      console.log('useSession hook unmounting');
       isMounted.current = false;
       cleanupActivityListeners();
       authListener.subscription.unsubscribe();

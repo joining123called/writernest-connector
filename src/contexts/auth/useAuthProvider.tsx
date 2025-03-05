@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +30,7 @@ export const useAuthProvider = () => {
   
   // Memoized fetchUser function
   const fetchUser = useCallback(async () => {
+    console.log('Fetching current user...');
     await fetchCurrentUser(setState);
   }, []);
 
@@ -44,22 +44,31 @@ export const useAuthProvider = () => {
 
   // Fetch user on mount and auth state change
   useEffect(() => {
+    console.log('Auth provider mounted, initializing auth...');
+    
     const initAuth = async () => {
+      console.log('Initializing auth...');
       await fetchUser();
+      console.log('Auth initialized, user state updated');
     };
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log(`Auth state changed: ${_event}`, session ? 'Session exists' : 'No session');
+      
       // The session validation is now handled by useSession hook
       if (session && isValid) {
+        console.log('Valid session detected, fetching user data');
         initAuth();
       } else if (!session) {
+        console.log('No session, resetting auth state');
         setState(initialState);
       }
     });
 
     return () => {
+      console.log('Auth provider unmounting, cleaning up');
       subscription.unsubscribe();
       clearRefreshInterval();
     };
@@ -70,10 +79,15 @@ export const useAuthProvider = () => {
     // Clean up any existing interval first
     clearRefreshInterval();
     
-    if (!state.session) return;
+    if (!state.session) {
+      console.log('No session, not setting up refresh interval');
+      return;
+    }
     
+    console.log('Setting up session refresh interval');
     // Refresh the session token every 10 minutes
     refreshIntervalRef.current = setInterval(() => {
+      console.log('Refreshing session token');
       refreshSession();
     }, 10 * 60 * 1000);
     
