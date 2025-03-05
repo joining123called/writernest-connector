@@ -4,9 +4,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SettingsSidebar } from '@/components/settings/SettingsSidebar';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { OrderFormSettings } from '@/components/settings/OrderFormSettings';
+import { PaymentMethodsSettings } from '@/components/settings/PaymentMethodsSettings';
 import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,8 @@ const AdminSettings = () => {
         return <GeneralSettings />;
       case 'order-form':
         return <OrderFormSettings />;
+      case 'payment-methods':
+        return <PaymentMethodsSettings />;
       default:
         return <GeneralSettings />;
     }
