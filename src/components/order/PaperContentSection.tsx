@@ -12,9 +12,10 @@ import { UseFormReturn } from 'react-hook-form';
 
 type PaperContentSectionProps = {
   form: UseFormReturn<any>;
+  settings?: any; // Add settings prop
 };
 
-export function PaperContentSection({ form }: PaperContentSectionProps) {
+export function PaperContentSection({ form, settings }: PaperContentSectionProps) {
   return (
     <Card className="border border-border/10 shadow-sm overflow-hidden bg-gradient-to-br from-background to-background/90 dark:from-background/90 dark:to-background/70">
       <CardHeader className="pb-2 border-b border-border/10">
@@ -48,56 +49,60 @@ export function PaperContentSection({ form }: PaperContentSectionProps) {
             )}
           />
         
-          <FormField
-            control={form.control}
-            name="instructions"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-foreground/90">Paper Instructions</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Enter detailed instructions for your paper..." 
-                    className="min-h-[120px] resize-none bg-background border-input/40"
-                    {...field} 
-                  />
-                </FormControl>
-                <FormDescription className="text-xs text-muted-foreground/80">
-                  Include any specific requirements, grading rubric, or sample material
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {(!settings || settings.showInstructions !== false) && (
+            <FormField
+              control={form.control}
+              name="instructions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-foreground/90">Paper Instructions</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter detailed instructions for your paper..." 
+                      className="min-h-[120px] resize-none bg-background border-input/40"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs text-muted-foreground/80">
+                    Include any specific requirements, grading rubric, or sample material
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <FormField
-            control={form.control}
-            name="citationStyle"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
-                  <Book className="h-4 w-4 mr-2 text-primary/70" />
-                  Citation Style
-                </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-11 bg-background border-input/40">
-                      <SelectValue placeholder="Select citation style" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {citationStyles.map((style) => (
-                      <SelectItem key={style.value} value={style.value}>
-                        {style.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {(!settings || settings.showCitationStyles !== false) && (
+            <FormField
+              control={form.control}
+              name="citationStyle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center text-sm font-medium text-foreground/90">
+                    <Book className="h-4 w-4 mr-2 text-primary/70" />
+                    Citation Style
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11 bg-background border-input/40">
+                        <SelectValue placeholder="Select citation style" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {citationStyles.map((style) => (
+                        <SelectItem key={style.value} value={style.value}>
+                          {style.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           
           <FormField
             control={form.control}
