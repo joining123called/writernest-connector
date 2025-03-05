@@ -4,7 +4,6 @@ import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TimePickerProps {
@@ -13,7 +12,6 @@ interface TimePickerProps {
 }
 
 export function TimePicker({ value, onChange }: TimePickerProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
   const [hours, setHours] = React.useState<string>("12");
   const [minutes, setMinutes] = React.useState<string>("00");
   const [period, setPeriod] = React.useState<"AM" | "PM">("PM");
@@ -82,61 +80,46 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
+    <div className="grid gap-2">
+      <div className="flex items-center space-x-2">
+        <Input
+          className="w-12"
+          value={hours}
+          onChange={handleHoursChange}
+          placeholder="12"
+          maxLength={2}
+        />
+        <span className="text-sm">:</span>
+        <Input
+          className="w-12"
+          value={minutes}
+          onChange={handleMinutesChange}
+          placeholder="00"
+          maxLength={2}
+        />
+        <Select value={period} onValueChange={(val) => handlePeriodChange(val as "AM" | "PM")}>
+          <SelectTrigger className="w-16">
+            <SelectValue placeholder="AM" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="AM">AM</SelectItem>
+            <SelectItem value="PM">PM</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex justify-end">
         <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !value && "text-muted-foreground"
-          )}
+          size="sm"
+          onClick={() => {
+            // Ensure we have values before setting
+            if (!hours) setHours("12");
+            if (!minutes) setMinutes("00");
+            updateTime(hours || "12", minutes || "00", period);
+          }}
         >
-          <Clock className="mr-2 h-4 w-4" />
-          {value || "Select time"}
+          Set Time
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-4" align="start">
-        <div className="flex items-center space-x-2">
-          <div className="grid gap-1">
-            <div className="flex items-center space-x-2">
-              <Input
-                className="w-14"
-                value={hours}
-                onChange={handleHoursChange}
-                placeholder="12"
-                maxLength={2}
-              />
-              <span className="text-sm">:</span>
-              <Input
-                className="w-14"
-                value={minutes}
-                onChange={handleMinutesChange}
-                placeholder="00"
-                maxLength={2}
-              />
-              <Select value={period} onValueChange={(val) => handlePeriodChange(val as "AM" | "PM")}>
-                <SelectTrigger className="w-16">
-                  <SelectValue placeholder="AM" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AM">AM</SelectItem>
-                  <SelectItem value="PM">PM</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end space-x-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              setIsOpen(false);
-            }}
-          >
-            Done
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+    </div>
   );
 }

@@ -3,9 +3,10 @@ import React from 'react';
 import { OrderSummaryData, paperTypes, subjects, citationStyles } from './PriceCalculator';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CreditCard } from 'lucide-react';
+import { Clock, CreditCard, Calendar } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import * as z from 'zod';
+import { format } from 'date-fns';
 
 type OrderSummaryProps = {
   form: UseFormReturn<any>;
@@ -15,6 +16,17 @@ type OrderSummaryProps = {
 };
 
 export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: OrderSummaryProps) {
+  // Format the deadline for display
+  const formatDeadline = () => {
+    const deadlineDate = form.watch('deadlineDate');
+    const deadlineTime = form.watch('deadlineTime');
+    
+    if (!deadlineDate || !deadlineTime) return "Not specified";
+    
+    const formattedDate = format(deadlineDate, 'MMM d, yyyy');
+    return `${formattedDate} at ${deadlineTime}`;
+  };
+  
   return (
     <div className="sticky top-6">
       <Card className="bg-gray-50 dark:bg-slate-900">
@@ -36,12 +48,12 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
                 "Not selected"}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Size:</span>
+              <span className="text-muted-foreground">Length:</span>
               <span className="font-medium">{orderSummary.pages} page{orderSummary.pages > 1 ? 's' : ''} / {orderSummary.words} words</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm items-start">
               <span className="text-muted-foreground">Deadline:</span>
-              <span className="font-medium">{orderSummary.deadlineText}</span>
+              <span className="font-medium text-right">{formatDeadline()}</span>
             </div>
             
             {form.watch('citationStyle') && form.watch('citationStyle') !== "none" && (
@@ -93,13 +105,11 @@ export function OrderSummary({ form, orderSummary, orderFormSchema, onSubmit }: 
           
           <div className="pt-2">
             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex items-start gap-3 text-sm">
-              <Clock className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <Calendar className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-blue-800 dark:text-blue-300">Estimated delivery time</p>
+                <p className="font-medium text-blue-800 dark:text-blue-300">Delivery Information</p>
                 <p className="text-blue-600 dark:text-blue-400">
-                  {orderSummary.deadline === "6h" || orderSummary.deadline === "12h" ? 
-                    "Your order will be completed today" : 
-                    `Your order will be delivered by ${new Date(Date.now() + parseInt(orderSummary.deadline) * 24 * 60 * 60 * 1000).toLocaleDateString()}`}
+                  {formatDeadline()}
                 </p>
               </div>
             </div>
