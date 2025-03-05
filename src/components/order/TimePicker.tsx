@@ -80,23 +80,25 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
   };
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3">
       <div className="flex items-center space-x-2">
-        <Input
-          className="w-12"
-          value={hours}
-          onChange={handleHoursChange}
-          placeholder="12"
-          maxLength={2}
-        />
-        <span className="text-sm">:</span>
-        <Input
-          className="w-12"
-          value={minutes}
-          onChange={handleMinutesChange}
-          placeholder="00"
-          maxLength={2}
-        />
+        <div className="flex items-center bg-background rounded-md border border-input overflow-hidden">
+          <Input
+            className="w-12 text-center border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            value={hours}
+            onChange={handleHoursChange}
+            placeholder="12"
+            maxLength={2}
+          />
+          <span className="text-sm text-muted-foreground px-1">:</span>
+          <Input
+            className="w-12 text-center border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            value={minutes}
+            onChange={handleMinutesChange}
+            placeholder="00"
+            maxLength={2}
+          />
+        </div>
         <Select value={period} onValueChange={(val) => handlePeriodChange(val as "AM" | "PM")}>
           <SelectTrigger className="w-16">
             <SelectValue placeholder="AM" />
@@ -107,19 +109,20 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          onClick={() => {
-            // Ensure we have values before setting
-            if (!hours) setHours("12");
-            if (!minutes) setMinutes("00");
-            updateTime(hours || "12", minutes || "00", period);
-          }}
-        >
-          Set Time
-        </Button>
-      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full"
+        onClick={() => {
+          // Ensure we have values before setting
+          if (!hours) setHours("12");
+          if (!minutes) setMinutes("00");
+          updateTime(hours || "12", minutes || "00", period);
+        }}
+      >
+        <Clock className="h-3.5 w-3.5 mr-2" />
+        Set Time
+      </Button>
     </div>
   );
 }
