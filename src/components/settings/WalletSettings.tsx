@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminWalletTransactions } from './AdminWalletTransactions';
-import { Loader2, Paypal, CreditCard, AlertCircle } from 'lucide-react';
+import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
 import { defaultWalletSettings, WalletSettings as WalletSettingsType } from '@/hooks/platform-settings/types';
 import { Json } from '@/types/supabase';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,7 +36,8 @@ export const WalletSettings = () => {
         if (error) throw error;
 
         if (data && data.value) {
-          setSettings(data.value as WalletSettingsType);
+          // Cast the data to WalletSettingsType to fix type issue
+          setSettings(data.value as unknown as WalletSettingsType);
         } else {
           // Create default wallet settings if they don't exist
           const { error: createError } = await supabase
@@ -260,7 +260,7 @@ export const WalletSettings = () => {
             <div className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Paypal className="h-5 w-5 text-blue-600" />
+                  <CreditCard className="h-5 w-5 text-blue-600" />
                   <h3 className="text-lg font-medium">PayPal Integration</h3>
                 </div>
                 <Switch
@@ -286,7 +286,7 @@ export const WalletSettings = () => {
                     </p>
                   </div>
                   
-                  <Alert variant="info" className="bg-blue-50">
+                  <Alert variant="default" className="bg-blue-50">
                     <AlertCircle className="h-4 w-4 text-blue-500" />
                     <AlertDescription>
                       To use PayPal integration, you need to create a PayPal Developer account and set up an app to get your Client ID.

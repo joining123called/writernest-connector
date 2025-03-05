@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +14,6 @@ import {
   CreditCard, 
   RefreshCw, 
   ArrowDownLeft,
-  Paypal,
   AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -85,7 +83,7 @@ export const WalletDashboard = () => {
         if (settingsError) throw settingsError;
         
         if (settingsData && settingsData.value) {
-          setWalletSettings(settingsData.value as WalletSettings);
+          setWalletSettings(settingsData.value as unknown as WalletSettings);
         }
       } catch (error) {
         console.error('Error fetching wallet data:', error);
@@ -447,7 +445,7 @@ export const WalletDashboard = () => {
                 {walletSettings?.payment_methods.paypal.enabled && (
                   <div className="border rounded-lg p-4 mt-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <Paypal className="h-5 w-5 text-blue-600" />
+                      <CreditCard className="h-5 w-5 text-blue-600" />
                       <h3 className="font-medium">Pay with PayPal</h3>
                     </div>
                     
@@ -460,7 +458,7 @@ export const WalletDashboard = () => {
                         </div>
                       </div>
                     ) : (
-                      <Alert variant="info" className="bg-blue-50">
+                      <Alert variant="default" className="bg-blue-50">
                         <AlertCircle className="h-4 w-4 text-blue-600" />
                         <AlertDescription>
                           Please enter a valid amount between ${walletSettings?.min_deposit_amount || 5} and ${walletSettings?.max_deposit_amount || 1000} to enable PayPal payment.
@@ -518,7 +516,7 @@ export const WalletDashboard = () => {
                   </div>
                   
                   {walletSettings.withdrawal_fee_percentage > 0 && (
-                    <Alert variant="info" className="bg-amber-50 mt-4">
+                    <Alert variant="default" className="bg-amber-50 mt-4">
                       <AlertCircle className="h-4 w-4 text-amber-600" />
                       <AlertDescription>
                         A {walletSettings.withdrawal_fee_percentage}% fee will be applied to your withdrawal. 
@@ -530,7 +528,7 @@ export const WalletDashboard = () => {
                   
                   <div className="bg-muted/50 p-4 rounded-lg mt-6">
                     <h4 className="font-medium mb-2 flex items-center">
-                      <Paypal className="h-4 w-4 mr-2 text-blue-600" />
+                      <CreditCard className="h-4 w-4 mr-2 text-blue-600" />
                       Withdrawal Methods
                     </h4>
                     <p className="text-sm text-muted-foreground">
