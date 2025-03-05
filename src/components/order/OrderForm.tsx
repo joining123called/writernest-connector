@@ -12,7 +12,7 @@ import { OrderSummary } from './OrderSummary';
 import { OrderFormValues, OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 
-export function OrderForm({ onOrderSubmit, isProcessingPayment }: OrderFormProps) {
+export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
   
   const {
@@ -88,7 +88,6 @@ export function OrderForm({ onOrderSubmit, isProcessingPayment }: OrderFormProps
               isFormComplete={isFormComplete}
               onSubmit={() => form.handleSubmit(handleSubmit)()}
               settings={settings}
-              isProcessingPayment={isProcessingPayment}
             />
           </div>
         </div>

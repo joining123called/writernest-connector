@@ -1,15 +1,12 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CreditCard, Lock, Loader2, Check } from 'lucide-react';
+import { Clock, Lock } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
-import { PaymentMethodSelection } from './PaymentMethodSelection';
-import { PaymentMethodForms } from './payment-methods/PaymentMethodForms';
-import { usePaymentMethods } from '@/hooks/use-payment-methods';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface OrderSummaryProps {
   form: UseFormReturn<OrderFormValues>;
@@ -36,7 +33,6 @@ interface OrderSummaryProps {
     showSources: boolean;
     priceDisplayMode: "perPage" | "total";
   };
-  isProcessingPayment?: boolean;
 }
 
 export function OrderSummary({ 
@@ -45,25 +41,8 @@ export function OrderSummary({
   uploadedFiles, 
   isFormComplete, 
   onSubmit,
-  settings,
-  isProcessingPayment = false
+  settings
 }: OrderSummaryProps) {
-  const { hasEnabledPaymentMethods, enabledPaymentMethods } = usePaymentMethods();
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<string | null>(null);
-  const [paymentData, setPaymentData] = React.useState<any>(null);
-  
-  const isPaymentComplete = !hasEnabledPaymentMethods || (selectedPaymentMethod && paymentData);
-  const canSubmitOrder = isFormComplete && isPaymentComplete && !isProcessingPayment;
-  
-  const handlePaymentMethodSelect = (methodId: string) => {
-    setSelectedPaymentMethod(methodId);
-    setPaymentData(null);
-  };
-  
-  const handlePaymentDataChange = (data: any) => {
-    setPaymentData(data);
-  };
-  
   const handleSubmit = () => {
     onSubmit();
   };
@@ -180,52 +159,17 @@ export function OrderSummary({
             </div>
           </div>
         </div>
-        
-        {hasEnabledPaymentMethods && (
-          <div className="space-y-4 border-t border-border pt-6">
-            <PaymentMethodSelection 
-              selectedPaymentMethod={selectedPaymentMethod}
-              onSelectPaymentMethod={handlePaymentMethodSelect}
-            />
-            
-            {selectedPaymentMethod && (
-              <PaymentMethodForms 
-                selectedMethod={selectedPaymentMethod}
-                onPaymentDataChange={handlePaymentDataChange}
-                isProcessing={isProcessingPayment}
-              />
-            )}
-          </div>
-        )}
       </CardContent>
       <CardFooter className="flex-col gap-4">
         <Button 
           type="button" 
           className="w-full" 
           size="lg"
-          disabled={!canSubmitOrder}
+          disabled={!isFormComplete}
           onClick={handleSubmit}
         >
-          {isProcessingPayment ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Processing Payment...</span>
-            </div>
-          ) : hasEnabledPaymentMethods ? (
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4" />
-              <span>Secure Payment</span>
-            </div>
-          ) : "Submit Order"}
+          Submit Order
         </Button>
-        {selectedPaymentMethod && isPaymentComplete && !isProcessingPayment && (
-          <div className="text-sm text-green-600 dark:text-green-400 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <Check className="h-4 w-4" />
-              <span>{enabledPaymentMethods.find(m => m.id === selectedPaymentMethod)?.name} selected</span>
-            </div>
-          </div>
-        )}
         <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1">
           <Lock className="h-3 w-3" />
           Protected by SSL encryption
