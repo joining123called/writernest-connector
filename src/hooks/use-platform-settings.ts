@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +17,7 @@ export interface PlatformSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   metaDescription: string;
+  testModeEnabled?: boolean;
 }
 
 // Default settings
@@ -27,7 +27,8 @@ const defaultSettings: PlatformSettings = {
   timezone: "UTC",
   logoUrl: null,
   faviconUrl: null,
-  metaDescription: "Lovable Generated Project"
+  metaDescription: "Lovable Generated Project",
+  testModeEnabled: true
 };
 
 export const usePlatformSettings = () => {

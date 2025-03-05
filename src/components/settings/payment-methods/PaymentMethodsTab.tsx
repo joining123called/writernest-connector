@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePaymentMethodsSettings } from './usePaymentMethodsSettings';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -13,7 +12,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
-// Payment method logo components
 const PaymentMethodLogo = ({ method }: { method: string }) => {
   const logos: Record<string, { src: string, alt: string }> = {
     stripe: { 
@@ -82,7 +80,6 @@ const PaymentMethodLogo = ({ method }: { method: string }) => {
   );
 };
 
-// Component for payment gateway integration status
 const GatewayStatus = ({ enabled }: { enabled: boolean }) => (
   <div className={`px-2 py-1 rounded-full text-xs font-medium ${
     enabled ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
@@ -761,7 +758,9 @@ export const PaymentMethodsTab = () => {
             </Card>
           </div>
           
-          <Alert variant="outline" className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400">
+          <Alert 
+            className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-400"
+          >
             <Info className="h-4 w-4" />
             <AlertTitle>Test Mode Information</AlertTitle>
             <AlertDescription>
