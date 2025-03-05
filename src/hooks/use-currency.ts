@@ -20,6 +20,13 @@ export function useCurrency() {
     setCurrencyData(currency);
   }, [selectedCurrency]);
 
+  // Update selected currency when defaultCurrency setting changes
+  useEffect(() => {
+    if (settings.defaultCurrency && !localStorage.getItem('selectedCurrency')) {
+      setSelectedCurrency(settings.defaultCurrency);
+    }
+  }, [settings.defaultCurrency, setSelectedCurrency]);
+
   const convertPrice = (amountInUSD: number): number => {
     const rate = exchangeRates[selectedCurrency] || 1;
     return amountInUSD * rate;
