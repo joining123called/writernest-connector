@@ -143,6 +143,77 @@ export interface Database {
         }
         Relationships: []
       }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          wallet_id: string
+          amount: number
+          type: string
+          status: string
+          description: string
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_id: string
+          amount: number
+          type: string
+          status: string
+          description: string
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_id?: string
+          amount?: number
+          type?: string
+          status?: string
+          description?: string
+          reference_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       assignment_details: {
         Row: {
           id: string
@@ -264,6 +335,10 @@ export interface Database {
           role_prefix: string
         }
         Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

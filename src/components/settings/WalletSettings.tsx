@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -42,8 +41,8 @@ export const WalletSettings = () => {
 
         if (error) throw error;
 
-        if (data) {
-          setSettings(data.value as WalletSettings);
+        if (data && data.value) {
+          setSettings(data.value as unknown as WalletSettings);
         } else {
           // Create default wallet settings if they don't exist
           const defaultSettings: WalletSettings = {
@@ -57,10 +56,10 @@ export const WalletSettings = () => {
           
           const { error: createError } = await supabase
             .from('platform_settings')
-            .insert([{ 
+            .insert({ 
               key: 'wallet_settings',
               value: defaultSettings
-            }]);
+            });
 
           if (createError) throw createError;
           
@@ -92,7 +91,7 @@ export const WalletSettings = () => {
       const { error } = await supabase
         .from('platform_settings')
         .update({ 
-          value: settings,
+          value: settings as unknown as Json,
           updated_at: new Date().toISOString()
         })
         .eq('key', 'wallet_settings');

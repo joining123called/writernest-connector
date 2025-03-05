@@ -24,3 +24,12 @@ export const defaultSettings: PlatformSettings = {
   faviconUrl: null,
   metaDescription: "Lovable Generated Project"
 };
+
+export interface WalletSettings {
+  id: string;
+  min_deposit_amount: number;
+  max_deposit_amount: number;
+  allow_withdrawals: boolean;
+  withdrawal_fee_percentage: number;
+  enable_wallet_system: boolean;
+}

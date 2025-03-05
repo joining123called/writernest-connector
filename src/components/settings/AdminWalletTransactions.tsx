@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Loader2, Search, Filter, RefreshCw } from 'lucide-react';
+import { Loader2, Search, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WalletTransaction {
@@ -37,42 +35,47 @@ export const AdminWalletTransactions = () => {
       setIsLoading(true);
       
       try {
-        // In a real app, we'd join with profiles to get user details
-        const { data, error } = await supabase
+        // Fetch transactions with wallet info
+        const { data: transactionsData, error } = await supabase
           .from('wallet_transactions')
           .select(`
             *,
-            wallets:wallet_id (
+            wallet:wallet_id (
               user_id
             )
           `)
           .order('created_at', { ascending: false });
           
         if (error) throw error;
-        
-        // In a real app, we would fetch user details here
-        // For now, let's simulate having user data
-        const transactionsWithUserInfo = await Promise.all((data || []).map(async (transaction) => {
-          if (transaction.wallets && transaction.wallets.user_id) {
-            const { data: userData, error: userError } = await supabase
+
+        // Process the results to get user information
+        const enhancedTransactions = await Promise.all((transactionsData || []).map(async (transaction: any) => {
+          let userInfo = { user_id: null, user_email: 'Unknown', user_full_name: 'Unknown User' };
+          
+          if (transaction.wallet && transaction.wallet.user_id) {
+            // Fetch user profile for each transaction
+            const { data: profileData } = await supabase
               .from('profiles')
               .select('email, full_name')
-              .eq('id', transaction.wallets.user_id)
-              .single();
+              .eq('id', transaction.wallet.user_id)
+              .maybeSingle();
               
-            if (!userError && userData) {
-              return {
-                ...transaction,
-                user_id: transaction.wallets.user_id,
-                user_email: userData.email,
-                user_full_name: userData.full_name
+            if (profileData) {
+              userInfo = {
+                user_id: transaction.wallet.user_id,
+                user_email: profileData.email,
+                user_full_name: profileData.full_name
               };
             }
           }
-          return transaction;
+          
+          return {
+            ...transaction,
+            ...userInfo
+          };
         }));
         
-        setTransactions(transactionsWithUserInfo as WalletTransaction[]);
+        setTransactions(enhancedTransactions as WalletTransaction[]);
       } catch (error) {
         console.error('Error fetching wallet transactions:', error);
       } finally {
