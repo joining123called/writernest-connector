@@ -7,7 +7,6 @@ import { Clock, Lock } from 'lucide-react';
 import { format, isToday, isTomorrow } from "date-fns";
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormValues, paperTypes, subjects, citationStyles } from './schema';
-import { CurrencySelector } from './CurrencySelector';
 import { useCurrency } from '@/hooks/use-currency';
 
 interface OrderSummaryProps {
@@ -34,7 +33,6 @@ interface OrderSummaryProps {
     showCitationStyles: boolean;
     showSources: boolean;
     priceDisplayMode: "perPage" | "total";
-    showCurrencySelector?: boolean;
   };
 }
 
@@ -54,9 +52,8 @@ export function OrderSummary({
   
   return (
     <Card className="bg-gray-50 dark:bg-slate-900">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Order Summary</CardTitle>
-        {settings.showCurrencySelector && <CurrencySelector />}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

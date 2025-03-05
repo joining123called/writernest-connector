@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
@@ -29,10 +28,6 @@ export interface OrderFormSettingsType {
   // Display settings
   priceDisplayMode: "perPage" | "total";
   orderSummaryPosition: "right" | "bottom";
-  
-  // Currency settings
-  defaultCurrency: string;
-  showCurrencySelector: boolean;
 }
 
 // Default settings
@@ -55,9 +50,7 @@ const defaultSettings: OrderFormSettingsType = {
   minimumHours: 6,
   standardDeliveryDays: 7,
   priceDisplayMode: "total",
-  orderSummaryPosition: "right",
-  defaultCurrency: "USD",
-  showCurrencySelector: true
+  orderSummaryPosition: "right"
 };
 
 export function useOrderFormSettings() {

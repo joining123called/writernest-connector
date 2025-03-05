@@ -2,12 +2,9 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { OrderFormSettingsSchema } from './schema';
-import { currencies } from '@/types/currency';
 
 interface DisplaySettingsTabProps {
   form: UseFormReturn<OrderFormSettingsSchema>;
@@ -90,61 +87,6 @@ export function DisplaySettingsTab({ form }: DisplaySettingsTabProps) {
             </FormItem>
           )}
         />
-        
-        <div className="border-t pt-4 mt-4">
-          <h3 className="text-sm font-medium mb-2">Currency Settings</h3>
-          
-          <FormField
-            control={form.control}
-            name="defaultCurrency"
-            render={({ field }) => (
-              <FormItem className="mb-4">
-                <FormLabel>Default Currency</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select default currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {currencies.map(currency => (
-                      <SelectItem key={currency.code} value={currency.code}>
-                        {currency.symbol} {currency.code} - {currency.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  This is the default currency shown to new clients
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="showCurrencySelector"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <FormLabel>Allow Currency Selection</FormLabel>
-                  <FormDescription>
-                    When enabled, clients can choose their preferred currency
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
       </CardContent>
     </Card>
   );
