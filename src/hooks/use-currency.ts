@@ -33,12 +33,37 @@ export function useCurrency() {
   };
 
   const formatPrice = (amount: number): string => {
-    // If JPY or similar currencies without decimals
-    if (selectedCurrency === 'JPY' || selectedCurrency === 'KRW') {
-      return `${currencyData.symbol}${Math.round(amount)}`;
+    // Currency-specific formatting
+    switch (selectedCurrency) {
+      // Currencies with no decimal places
+      case 'JPY':
+      case 'KRW':
+      case 'IDR':
+        return `${currencyData.symbol}${Math.round(amount)}`;
+      
+      // Currencies where symbol follows the amount
+      case 'SEK':
+      case 'NOK':
+      case 'DKK':
+        return `${amount.toFixed(2)} ${currencyData.symbol}`;
+      
+      // Currencies with special spacing
+      case 'EUR':
+        return `${currencyData.symbol} ${amount.toFixed(2)}`;
+      
+      // High-value currencies that might need different formatting
+      case 'IDR':
+      case 'INR':
+        // Format with thousands separators
+        return `${currencyData.symbol}${amount.toLocaleString('en-US', { 
+          minimumFractionDigits: 0, 
+          maximumFractionDigits: 0 
+        })}`;
+      
+      // Default formatting (symbol followed by amount with 2 decimal places)
+      default:
+        return `${currencyData.symbol}${amount.toFixed(2)}`;
     }
-    
-    return `${currencyData.symbol}${amount.toFixed(2)}`;
   };
   
   return {

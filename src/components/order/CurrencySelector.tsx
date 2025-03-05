@@ -24,10 +24,10 @@ export function CurrencySelector() {
         <SelectTrigger className="w-[120px]">
           <SelectValue placeholder="Currency" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-[300px]">
           {currencies.map((currency) => (
             <SelectItem key={currency.code} value={currency.code}>
-              {currency.symbol} {currency.code}
+              {currency.symbol} {currency.code} - {currency.name}
             </SelectItem>
           ))}
         </SelectContent>
