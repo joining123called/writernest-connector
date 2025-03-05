@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -162,14 +163,15 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     let multiplier = 1.0;
     const minHours = settings.minimumHours;
     
+    // Apply the appropriate multiplier based on the deadline
     if (diffHours <= minHours) {
       multiplier = settings.urgentDeliveryMultiplier;
+    } else if (diffHours <= 12) {
+      multiplier = settings.urgent12HoursMultiplier;
     } else if (diffHours <= 24) {
-      multiplier = settings.urgentDeliveryMultiplier * 0.8;
+      multiplier = settings.urgent24HoursMultiplier;
     } else if (diffHours <= 48) {
-      multiplier = settings.urgentDeliveryMultiplier * 0.7;
-    } else if (diffHours <= 72) {
-      multiplier = settings.urgentDeliveryMultiplier * 0.6;
+      multiplier = settings.urgent48HoursMultiplier;
     } else if (diffDays <= settings.standardDeliveryDays) {
       multiplier = 1.0;
     } else {
@@ -187,8 +189,12 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
       deadlineText = format(selectedDate, 'MMMM d, yyyy') + ` at ${format(selectedDate, 'h:mm a')}`;
     }
     
-    if (diffHours <= 24) {
+    if (diffHours <= 12) {
+      deadlineText += " (Very Urgent)";
+    } else if (diffHours <= 24) {
       deadlineText += " (Urgent)";
+    } else if (diffHours <= 48) {
+      deadlineText += " (Express)";
     }
     
     const basePrice = settings.basePricePerPage;

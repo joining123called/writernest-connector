@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -35,6 +36,9 @@ const formSettingsSchema = z.object({
   // Pricing settings
   basePricePerPage: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid price" }),
   urgentDeliveryMultiplier: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid multiplier" }),
+  urgent12HoursMultiplier: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid multiplier" }),
+  urgent24HoursMultiplier: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid multiplier" }),
+  urgent48HoursMultiplier: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: "Must be a valid multiplier" }),
   
   // Deadline options
   minimumHours: z.string().min(1, { message: "Required" }),
@@ -97,6 +101,9 @@ export function OrderFormSettings() {
       showSources: settings.showSources,
       basePricePerPage: settings.basePricePerPage.toString(),
       urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
+      urgent12HoursMultiplier: settings.urgent12HoursMultiplier.toString(),
+      urgent24HoursMultiplier: settings.urgent24HoursMultiplier.toString(),
+      urgent48HoursMultiplier: settings.urgent48HoursMultiplier.toString(),
       minimumHours: settings.minimumHours.toString(),
       standardDeliveryDays: settings.standardDeliveryDays.toString(),
       priceDisplayMode: settings.priceDisplayMode,
@@ -119,6 +126,9 @@ export function OrderFormSettings() {
         showSources: settings.showSources,
         basePricePerPage: settings.basePricePerPage.toString(),
         urgentDeliveryMultiplier: settings.urgentDeliveryMultiplier.toString(),
+        urgent12HoursMultiplier: settings.urgent12HoursMultiplier.toString(),
+        urgent24HoursMultiplier: settings.urgent24HoursMultiplier.toString(),
+        urgent48HoursMultiplier: settings.urgent48HoursMultiplier.toString(),
         minimumHours: settings.minimumHours.toString(),
         standardDeliveryDays: settings.standardDeliveryDays.toString(),
         priceDisplayMode: settings.priceDisplayMode,
@@ -411,21 +421,78 @@ export function OrderFormSettings() {
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="urgentDeliveryMultiplier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Urgent Delivery Price Multiplier</FormLabel>
-                        <FormControl>
-                          <Input type="text" placeholder="1.5" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Price multiplier for urgent deliveries (e.g. 1.5 = 50% increase)
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-sm font-medium mb-2">Urgent Delivery Pricing</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Set different price multipliers for various urgent delivery timeframes
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="urgent12HoursMultiplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>12 Hours or Less</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder="2.0" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Price multiplier for orders due within 12 hours (e.g. 2.0 = 100% increase)
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="urgent24HoursMultiplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>24 Hours or Less</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder="1.8" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Price multiplier for orders due within 24 hours (e.g. 1.8 = 80% increase)
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="urgent48HoursMultiplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>48 Hours or Less</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder="1.5" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Price multiplier for orders due within 48 hours (e.g. 1.5 = 50% increase)
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="urgentDeliveryMultiplier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Minimum Hours Multiplier</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder="1.5" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Fallback multiplier for orders at minimum delivery time
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                   
                   <FormField
                     control={form.control}

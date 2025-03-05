@@ -20,6 +20,9 @@ export interface OrderFormSettingsType {
   // Pricing settings
   basePricePerPage: number;
   urgentDeliveryMultiplier: number;
+  urgent12HoursMultiplier: number; // New multiplier for 12 hours
+  urgent24HoursMultiplier: number; // New multiplier for 24 hours
+  urgent48HoursMultiplier: number; // New multiplier for 48 hours
   minimumHours: number;
   standardDeliveryDays: number;
   
@@ -42,6 +45,9 @@ const defaultSettings: OrderFormSettingsType = {
   showSources: true,       // Default to show Number of Sources
   basePricePerPage: 15.99,
   urgentDeliveryMultiplier: 1.5,
+  urgent12HoursMultiplier: 2.0, // Default 2.0x for 12 hours
+  urgent24HoursMultiplier: 1.8, // Default 1.8x for 24 hours
+  urgent48HoursMultiplier: 1.5, // Default 1.5x for 48 hours
   minimumHours: 6,
   standardDeliveryDays: 7,
   priceDisplayMode: "total",
@@ -111,6 +117,15 @@ export function useOrderFormSettings() {
           urgentDeliveryMultiplier: typeof savedSettings.urgentDeliveryMultiplier === 'string' 
             ? parseFloat(savedSettings.urgentDeliveryMultiplier) 
             : savedSettings.urgentDeliveryMultiplier || defaultSettings.urgentDeliveryMultiplier,
+          urgent12HoursMultiplier: typeof savedSettings.urgent12HoursMultiplier === 'string'
+            ? parseFloat(savedSettings.urgent12HoursMultiplier)
+            : savedSettings.urgent12HoursMultiplier || defaultSettings.urgent12HoursMultiplier,
+          urgent24HoursMultiplier: typeof savedSettings.urgent24HoursMultiplier === 'string'
+            ? parseFloat(savedSettings.urgent24HoursMultiplier)
+            : savedSettings.urgent24HoursMultiplier || defaultSettings.urgent24HoursMultiplier,
+          urgent48HoursMultiplier: typeof savedSettings.urgent48HoursMultiplier === 'string'
+            ? parseFloat(savedSettings.urgent48HoursMultiplier)
+            : savedSettings.urgent48HoursMultiplier || defaultSettings.urgent48HoursMultiplier,
           minimumHours: typeof savedSettings.minimumHours === 'string' 
             ? parseInt(savedSettings.minimumHours) 
             : savedSettings.minimumHours || defaultSettings.minimumHours,
