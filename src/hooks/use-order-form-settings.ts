@@ -65,24 +65,26 @@ export function useOrderFormSettings() {
       }
 
       try {
-        // Parse the saved settings
-        const savedSettings = data[0].value as OrderFormSettingsType;
+        // Parse the saved settings - handle type casting safely
+        const rawValue = data[0].value;
+        // Cast to unknown first to avoid TypeScript error
+        const savedSettings = rawValue as unknown as Partial<OrderFormSettingsType>;
         
         // Ensure all numeric values are actually numbers
         const parsedSettings = {
           ...savedSettings,
           basePricePerPage: typeof savedSettings.basePricePerPage === 'string' 
             ? parseFloat(savedSettings.basePricePerPage) 
-            : savedSettings.basePricePerPage,
+            : savedSettings.basePricePerPage || defaultSettings.basePricePerPage,
           urgentDeliveryMultiplier: typeof savedSettings.urgentDeliveryMultiplier === 'string' 
             ? parseFloat(savedSettings.urgentDeliveryMultiplier) 
-            : savedSettings.urgentDeliveryMultiplier,
+            : savedSettings.urgentDeliveryMultiplier || defaultSettings.urgentDeliveryMultiplier,
           minimumHours: typeof savedSettings.minimumHours === 'string' 
             ? parseInt(savedSettings.minimumHours) 
-            : savedSettings.minimumHours,
+            : savedSettings.minimumHours || defaultSettings.minimumHours,
           standardDeliveryDays: typeof savedSettings.standardDeliveryDays === 'string' 
             ? parseInt(savedSettings.standardDeliveryDays) 
-            : savedSettings.standardDeliveryDays,
+            : savedSettings.standardDeliveryDays || defaultSettings.standardDeliveryDays,
         };
         
         // Merge with defaults to ensure all fields exist
