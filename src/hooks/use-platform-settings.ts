@@ -18,35 +18,6 @@ export interface PlatformSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   metaDescription: string;
-  enableStripe?: boolean;
-  enablePayPal?: boolean;
-  enableSkrill?: boolean;
-  enableMpesa?: boolean;
-  enableFlutterwave?: boolean;
-  enable2Checkout?: boolean;
-  enablePaystack?: boolean;
-  enableAuthorizeNet?: boolean;
-  stripePublishableKey?: string;
-  stripeWebhookSecret?: string;
-  paypalClientId?: string;
-  paypalSecret?: string;
-  paypalEnvironment?: "sandbox" | "production";
-  skrillMerchantId?: string;
-  skrillSecretWord?: string;
-  mpesaConsumerKey?: string;
-  mpesaConsumerSecret?: string;
-  mpesaPasskey?: string;
-  mpesaShortcode?: string;
-  flutterwavePublicKey?: string;
-  flutterwaveSecretKey?: string;
-  twoCheckoutSellerId?: string;
-  twoCheckoutPublishableKey?: string;
-  twoCheckoutPrivateKey?: string;
-  paystackPublicKey?: string;
-  paystackSecretKey?: string;
-  authorizeNetApiLoginId?: string;
-  authorizeNetTransactionKey?: string;
-  authorizeNetEnvironment?: "sandbox" | "production";
   [key: string]: string | boolean | null | undefined;
 }
 
@@ -56,17 +27,7 @@ const defaultSettings: PlatformSettings = {
   timezone: "UTC",
   logoUrl: null,
   faviconUrl: null,
-  metaDescription: "Lovable Generated Project",
-  enableStripe: false,
-  enablePayPal: false,
-  enableSkrill: false,
-  enableMpesa: false,
-  enableFlutterwave: false,
-  enable2Checkout: false,
-  enablePaystack: false,
-  enableAuthorizeNet: false,
-  paypalEnvironment: "sandbox",
-  authorizeNetEnvironment: "sandbox"
+  metaDescription: "Lovable Generated Project"
 };
 
 export const usePlatformSettings = () => {
@@ -244,7 +205,7 @@ export const usePlatformSettings = () => {
       console.error("Failed to update settings:", error);
       toast({
         title: "Update failed",
-        description: "There was an error updating your payment settings.",
+        description: "There was an error updating your settings.",
         variant: "destructive",
       });
       return false;
