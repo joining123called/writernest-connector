@@ -16,3 +16,16 @@ export interface PayPalGatewayConfig {
   created_at: string;
   updated_at: string;
 }
+
+// Add PayPal button types
+declare global {
+  interface Window {
+    paypal: {
+      Buttons: (config: any) => {
+        render: (container: HTMLElement) => void;
+      };
+    };
+  }
+}
+
+// No need for CaptureOrderResponse, removing it

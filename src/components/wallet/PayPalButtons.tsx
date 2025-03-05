@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { CaptureOrderResponse } from '@/types/paypal';
 import { Loader2 } from 'lucide-react';
 
 interface PayPalButtonsProps {
