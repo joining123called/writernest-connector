@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -610,7 +611,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
                     </div>
                   )}
                   
-                  {form.watch('sources') && form.watch('sources') !== "0" && (
+                  {settings.showSources && form.watch('sources') && form.watch('sources') !== "0" && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sources:</span>
                       <span className="font-medium">{form.watch('sources')}</span>

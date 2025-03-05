@@ -14,8 +14,8 @@ export interface OrderFormSettingsType {
   showDeadlineOptions: boolean;
   showCitationStyles: boolean;
   showInstructions: boolean;
-  showPaperType: boolean;  // New setting for Paper Type field
-  showSources: boolean;    // New setting for Number of Sources field
+  showPaperType: boolean;  // Setting for Paper Type field
+  showSources: boolean;    // Setting for Number of Sources field
   
   // Pricing settings
   basePricePerPage: number;
@@ -71,12 +71,40 @@ export function useOrderFormSettings() {
       try {
         // Parse the saved settings - handle type casting safely
         const rawValue = data[0].value;
-        // Cast to unknown first to avoid TypeScript error
+        
+        // Ensure boolean values are properly cast - important for toggle settings
         const savedSettings = rawValue as unknown as Partial<OrderFormSettingsType>;
         
-        // Ensure all numeric values are actually numbers
-        const parsedSettings = {
+        // Convert all boolean strings to actual booleans (this fixes the toggling issue)
+        const parsedSettings: Partial<OrderFormSettingsType> = {
           ...savedSettings,
+          // Convert all possible string booleans to actual booleans
+          showSubjectFields: typeof savedSettings.showSubjectFields === 'string' 
+            ? savedSettings.showSubjectFields === 'true' 
+            : Boolean(savedSettings.showSubjectFields),
+          showPageCount: typeof savedSettings.showPageCount === 'string' 
+            ? savedSettings.showPageCount === 'true' 
+            : Boolean(savedSettings.showPageCount),
+          showWordCount: typeof savedSettings.showWordCount === 'string' 
+            ? savedSettings.showWordCount === 'true' 
+            : Boolean(savedSettings.showWordCount),
+          showDeadlineOptions: typeof savedSettings.showDeadlineOptions === 'string' 
+            ? savedSettings.showDeadlineOptions === 'true' 
+            : Boolean(savedSettings.showDeadlineOptions),
+          showCitationStyles: typeof savedSettings.showCitationStyles === 'string' 
+            ? savedSettings.showCitationStyles === 'true' 
+            : Boolean(savedSettings.showCitationStyles),
+          showInstructions: typeof savedSettings.showInstructions === 'string' 
+            ? savedSettings.showInstructions === 'true' 
+            : Boolean(savedSettings.showInstructions),
+          showPaperType: typeof savedSettings.showPaperType === 'string' 
+            ? savedSettings.showPaperType === 'true' 
+            : Boolean(savedSettings.showPaperType),
+          showSources: typeof savedSettings.showSources === 'string' 
+            ? savedSettings.showSources === 'true' 
+            : Boolean(savedSettings.showSources),
+          
+          // Ensure all numeric values are actually numbers
           basePricePerPage: typeof savedSettings.basePricePerPage === 'string' 
             ? parseFloat(savedSettings.basePricePerPage) 
             : savedSettings.basePricePerPage || defaultSettings.basePricePerPage,
@@ -92,6 +120,7 @@ export function useOrderFormSettings() {
         };
         
         // Merge with defaults to ensure all fields exist
+        console.log("Processed settings:", {...defaultSettings, ...parsedSettings});
         return { ...defaultSettings, ...parsedSettings };
       } catch (e) {
         console.error("Error parsing order form settings:", e);
