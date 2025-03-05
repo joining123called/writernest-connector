@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -80,10 +81,14 @@ export const WalletDashboard = () => {
           .eq('key', 'wallet_settings')
           .maybeSingle();
           
-        if (settingsError) throw settingsError;
-        
-        if (settingsData && settingsData.value) {
-          setWalletSettings(settingsData.value as unknown as WalletSettings);
+        if (settingsError) {
+          console.error('Error fetching wallet settings:', settingsError);
+          // Continue without settings - we'll show a default disabled state
+        } else if (settingsData && settingsData.value) {
+          console.log('Retrieved wallet settings:', settingsData.value);
+          setWalletSettings(settingsData.value as WalletSettings);
+        } else {
+          console.log('No wallet settings found');
         }
       } catch (error) {
         console.error('Error fetching wallet data:', error);
@@ -287,7 +292,10 @@ export const WalletDashboard = () => {
     );
   }
 
-  if (!walletSettings?.enable_wallet_system) {
+  // Check if wallet system is enabled in settings
+  const isWalletSystemEnabled = walletSettings?.enable_wallet_system ?? false;
+
+  if (!isWalletSystemEnabled) {
     return (
       <div className="space-y-6">
         <Card>

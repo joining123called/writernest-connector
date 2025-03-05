@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
@@ -67,17 +66,10 @@ export const WalletSettings = () => {
 
         if (!configError && paypalConfig) {
           // Map the database fields to our interface
-          const config = {
-            ...paypalConfig,
-            is_active: paypalConfig.is_enabled,
-            is_sandbox: paypalConfig.is_test_mode,
-            name: paypalConfig.gateway_name
-          } as unknown as PayPalGatewayConfig;
-          
-          setClientId(config.config.client_id || '');
-          setClientSecret(config.config.client_secret || '');
-          setWebhookId(config.config.webhook_id || '');
-          setIsSandbox(config.is_sandbox || config.is_test_mode || true);
+          setClientId(paypalConfig.config.client_id || '');
+          setClientSecret(paypalConfig.config.client_secret || '');
+          setWebhookId(paypalConfig.config.webhook_id || '');
+          setIsSandbox(paypalConfig.is_test_mode || true);
         }
       } catch (error) {
         console.error('Error fetching wallet settings:', error);
