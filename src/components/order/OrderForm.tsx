@@ -12,9 +12,13 @@ import { OrderSummary } from './OrderSummary';
 import { OrderFormProps } from './schema';
 import { useOrderFormSettings } from '@/hooks/use-order-form-settings';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth';
+import { useNavigate } from 'react-router-dom';
 
 export function OrderForm({ onOrderSubmit }: OrderFormProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { settings, isLoading: isLoadingSettings } = useOrderFormSettings();
   
   const {
@@ -28,7 +32,19 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
     handleSubmit
   } = useOrderForm(onOrderSubmit);
   
-  if (isLoading || isLoadingSettings) {
+  // Check if user is logged in
+  React.useEffect(() => {
+    if (!isAuthLoading && !user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to submit an order",
+        variant: "destructive",
+      });
+      navigate('/login');
+    }
+  }, [user, isAuthLoading, navigate, toast]);
+  
+  if (isLoading || isLoadingSettings || isAuthLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <Clock className="h-8 w-8 animate-spin text-primary" />
@@ -94,6 +110,7 @@ export function OrderForm({ onOrderSubmit }: OrderFormProps) {
               orderSummary={orderSummary}
               uploadedFiles={uploadedFiles}
               isFormComplete={isFormComplete}
+              isSubmitting={isLoading}
               onSubmit={handleCompleteOrder}
               settings={settings}
             />

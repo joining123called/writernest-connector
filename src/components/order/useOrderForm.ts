@@ -195,9 +195,6 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
       const values = form.getValues();
       console.log("Order submitted:", values, orderSummary, uploadedFiles);
       
-      // Generate a unique order ID
-      const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
       // Get current user information
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -210,19 +207,66 @@ export function useOrderForm(onOrderSubmit?: (data: OrderFormValues & { files: F
         return;
       }
       
-      // Upload files if any
-      let fileUrls: string[] = [];
-      if (uploadedFiles.length > 0) {
-        // Upload files to storage (this would be implemented in a real app)
-        fileUrls = uploadedFiles.map(file => URL.createObjectURL(file));
+      // Insert the assignment details into Supabase
+      const { data: assignmentData, error: assignmentError } = await supabase
+        .from('assignment_details')
+        .insert({
+          user_id: user.id,
+          paper_type: values.paperType,
+          subject: values.subject,
+          pages: parseInt(values.pages),
+          deadline: values.deadline.toISOString(),
+          topic: values.topic || null,
+          instructions: values.instructions || null,
+          citation_style: values.citationStyle || null,
+          sources: parseInt(values.sources || "0"),
+          price_per_page: orderSummary.pricePerPage,
+          total_price: orderSummary.totalPrice,
+          discount: orderSummary.discount,
+          final_price: orderSummary.finalPrice
+        })
+        .select()
+        .single();
+      
+      if (assignmentError) {
+        console.error("Error saving assignment:", assignmentError);
+        toast({
+          title: "Error saving assignment",
+          description: assignmentError.message,
+          variant: "destructive",
+        });
+        return;
       }
       
-      // Create the order in the database (this would be implemented in a real app)
-      // const { data, error } = await supabase.from('orders').insert({...})
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          // Upload to storage bucket with user ID as folder name
+          const filePath = `${user.id}/${assignmentData.id}/${file.name}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('assignment_files')
+            .upload(filePath, file);
+            
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            continue;
+          }
+          
+          // Record file metadata in the database
+          await supabase.from('assignment_files').insert({
+            assignment_id: assignmentData.id,
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            file_type: file.type
+          });
+        }
+      }
       
       toast({
         title: "Order submitted successfully",
-        description: "Your order has been received and is being processed.",
+        description: `Your order has been received with assignment code: ${assignmentData.assignment_code}`,
       });
       
       if (onOrderSubmit) {

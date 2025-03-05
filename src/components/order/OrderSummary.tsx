@@ -25,6 +25,7 @@ interface OrderSummaryProps {
   uploadedFiles: File[];
   isFormComplete: boolean;
   onSubmit: () => void;
+  isSubmitting?: boolean;
   settings: {
     showSubjectFields: boolean;
     showPageCount: boolean;
@@ -42,6 +43,7 @@ export function OrderSummary({
   uploadedFiles, 
   isFormComplete, 
   onSubmit,
+  isSubmitting = false,
   settings
 }: OrderSummaryProps) {
   const { formatPrice, convertPrice } = useCurrency();
@@ -168,10 +170,10 @@ export function OrderSummary({
           type="button" 
           className="w-full" 
           size="lg"
-          disabled={!isFormComplete}
+          disabled={!isFormComplete || isSubmitting}
           onClick={handleSubmit}
         >
-          Submit Order
+          {isSubmitting ? "Submitting..." : "Submit Order"}
         </Button>
         <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1">
           <Lock className="h-3 w-3" />

@@ -9,6 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assignment_details: {
+        Row: {
+          assignment_code: string
+          citation_style: string | null
+          created_at: string
+          deadline: string
+          discount: number | null
+          final_price: number
+          id: string
+          instructions: string | null
+          pages: number
+          paper_type: string
+          price_per_page: number
+          sources: number | null
+          status: string
+          subject: string
+          topic: string | null
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_code?: string
+          citation_style?: string | null
+          created_at?: string
+          deadline: string
+          discount?: number | null
+          final_price: number
+          id?: string
+          instructions?: string | null
+          pages: number
+          paper_type: string
+          price_per_page: number
+          sources?: number | null
+          status?: string
+          subject: string
+          topic?: string | null
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_code?: string
+          citation_style?: string | null
+          created_at?: string
+          deadline?: string
+          discount?: number | null
+          final_price?: number
+          id?: string
+          instructions?: string | null
+          pages?: number
+          paper_type?: string
+          price_per_page?: number
+          sources?: number | null
+          status?: string
+          subject?: string
+          topic?: string | null
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assignment_files: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_files_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           id: string
@@ -68,6 +169,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_unique_assignment_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_unique_reference_number: {
         Args: {
           role_prefix: string

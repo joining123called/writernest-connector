@@ -38,10 +38,15 @@ const ClientOrderPage = () => {
       );
     }
     
+    // The actual submission is handled in useOrderForm.ts
+    // This is just for any additional handling after submission
     toast({
       title: "Order Submitted",
       description: `Your order has been successfully submitted with ${data.files?.length || 0} attached files.`,
     });
+    
+    // Redirect to dashboard or orders page
+    navigate('/client/dashboard');
   };
 
   return (
