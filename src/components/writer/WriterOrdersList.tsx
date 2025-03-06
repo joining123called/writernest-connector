@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -71,7 +70,6 @@ export const WriterOrdersList = () => {
     try {
       setReleasingOrderId(orderId);
       
-      // Update the order to remove writer and set status back to AVAILABLE
       const { error } = await supabase
         .from('assignment_details')
         .update({ 
@@ -84,7 +82,6 @@ export const WriterOrdersList = () => {
         throw error;
       }
       
-      // Remove the released order from the list
       setOrders(orders.filter(order => order.id !== orderId));
       
       toast({
@@ -117,7 +114,6 @@ export const WriterOrdersList = () => {
         throw error;
       }
       
-      // Update the status in the local state
       setOrders(orders.map(order => 
         order.id === orderId 
           ? { ...order, status: newStatus } 
@@ -141,7 +137,6 @@ export const WriterOrdersList = () => {
     }
   };
   
-  // Define statuses that a writer can set
   const writerStatuses = [
     OrderStatus.NOT_STARTED,
     OrderStatus.IN_PROGRESS,

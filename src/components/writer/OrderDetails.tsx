@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +22,7 @@ import {
   Download, 
   FileText, 
   Loader2,
-  PaperClip
+  Paperclip
 } from 'lucide-react';
 import { OrderItem, OrderFile, OrderStatus, getStatusBadgeVariant, getStatusLabel } from '@/types/order';
 import { DeadlineCountdown } from '@/components/shared/DeadlineCountdown';
@@ -291,7 +290,7 @@ export const OrderDetails = ({ viewMode = 'available' }: { viewMode?: 'available
                 {orderFiles.map(file => (
                   <li key={file.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
                     <div className="flex items-center">
-                      <PaperClip className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <Paperclip className="h-4 w-4 mr-2 text-muted-foreground" />
                       <span>{file.file_name}</span>
                       <span className="ml-2 text-xs text-muted-foreground">
                         ({(file.file_size / 1024).toFixed(2)} KB)
