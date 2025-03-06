@@ -1,6 +1,3 @@
-
-import { Json } from '@/types/supabase';
-
 export interface PlatformSetting {
   key: string;
   value: any;
@@ -13,7 +10,26 @@ export interface PlatformSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   metaDescription: string;
-  [key: string]: string | boolean | null | undefined;
+  serviceName: string;
+  serviceDescription: string;
+  showSubjectFields: boolean;
+  showPageCount: boolean;
+  showWordCount: boolean;
+  showDeadlineOptions: boolean;
+  showCitationStyles: boolean;
+  showInstructions: boolean;
+  showPaperType: boolean;
+  showSources: boolean;
+  basePricePerPage: number;
+  urgentDeliveryMultiplier: number;
+  urgent12HoursMultiplier: number;
+  urgent24HoursMultiplier: number;
+  urgent48HoursMultiplier: number;
+  minimumHours: number;
+  standardDeliveryDays: number;
+  priceDisplayMode: "perPage" | "total";
+  orderSummaryPosition: "right" | "bottom";
+  [key: string]: string | boolean | null | undefined | number;
 }
 
 export const defaultSettings: PlatformSettings = {
@@ -22,57 +38,24 @@ export const defaultSettings: PlatformSettings = {
   timezone: "UTC",
   logoUrl: null,
   faviconUrl: null,
-  metaDescription: "Lovable Generated Project"
+  metaDescription: "Professional academic writing assistance",
+  serviceName: "Essay Writing Service",
+  serviceDescription: "Professional academic writing assistance for students of all levels",
+  showSubjectFields: true,
+  showPageCount: true,
+  showWordCount: true,
+  showDeadlineOptions: true,
+  showCitationStyles: true,
+  showInstructions: true,
+  showPaperType: true,
+  showSources: true,
+  basePricePerPage: 15.99,
+  urgentDeliveryMultiplier: 1.5,
+  urgent12HoursMultiplier: 2.0,
+  urgent24HoursMultiplier: 1.8,
+  urgent48HoursMultiplier: 1.5,
+  minimumHours: 6,
+  standardDeliveryDays: 7,
+  priceDisplayMode: "total",
+  orderSummaryPosition: "right"
 };
-
-// Fixed the recursive type issue by explicitly listing allowed keys
-export interface WalletSettings {
-  id: string;
-  min_deposit_amount: number;
-  max_deposit_amount: number;
-  allow_withdrawals: boolean;
-  withdrawal_fee_percentage: number;
-  enable_wallet_system: boolean;
-  payment_methods: {
-    paypal: {
-      enabled: boolean;
-      client_id?: string;
-      client_secret?: string;
-      webhook_id?: string;
-    };
-  };
-  // Instead of recursive index signature, define specific known fields
-  [key: string]: string | number | boolean | object;
-}
-
-export const defaultWalletSettings: WalletSettings = {
-  id: 'wallet_settings',
-  min_deposit_amount: 5,
-  max_deposit_amount: 1000,
-  allow_withdrawals: true,
-  withdrawal_fee_percentage: 2.5,
-  enable_wallet_system: true,
-  payment_methods: {
-    paypal: {
-      enabled: true,
-      client_id: '',
-      client_secret: '',
-      webhook_id: ''
-    }
-  }
-};
-
-export interface PaymentGateway {
-  id: string;
-  name: string;
-  is_active: boolean;
-  is_sandbox: boolean;
-  config: {
-    client_id: string;
-    client_secret: string;
-    webhook_id?: string;
-    [key: string]: any;
-  };
-  created_at: string;
-  updated_at: string;
-}

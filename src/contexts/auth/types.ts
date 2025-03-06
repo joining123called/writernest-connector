@@ -1,4 +1,3 @@
-
 import { User } from '@/types';
 
 export interface AuthState {
@@ -18,4 +17,5 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (password: string) => Promise<{ error: any }>;
+  deleteUser: (userId: string) => Promise<{ error: any }>;
 }

@@ -1,10 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SettingsSidebar } from '@/components/settings/SettingsSidebar';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { OrderFormSettings } from '@/components/settings/OrderFormSettings';
-import { WalletSettings } from '@/components/settings/WalletSettings';
 import { useAuth } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,8 +14,7 @@ const AdminSettings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('general');
 
-  // Redirect if not authenticated
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isLoading && !user) {
       navigate('/admin-login', { replace: true });
     }
@@ -31,7 +28,6 @@ const AdminSettings = () => {
     );
   }
 
-  // If user is authenticated but not an admin
   if (user && !isAdmin) {
     return (
       <DashboardLayout>
@@ -68,8 +64,6 @@ const AdminSettings = () => {
         return <GeneralSettings />;
       case 'order-form':
         return <OrderFormSettings />;
-      case 'wallet':
-        return <WalletSettings />;
       default:
         return <GeneralSettings />;
     }

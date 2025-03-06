@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -119,7 +118,9 @@ export const ProfileInfo = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex flex-col items-center md:items-start gap-2">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">{profile.full_name}'s Profile</h1>
+                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">
+                  {profile.full_name}'s Profile
+                </h1>
                 <p className="text-muted-foreground">
                   {isOwnProfile ? 'Manage your account settings and preferences' : 'View user profile information'}
                 </p>
@@ -128,7 +129,7 @@ export const ProfileInfo = () => {
             {isOwnProfile && (
               <Button 
                 onClick={() => setIsEditing(true)} 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/90 transition-all duration-300 shadow-md hover:shadow-lg"
               >
                 <Edit className="h-4 w-4" />
                 Edit Profile
@@ -157,7 +158,7 @@ export const ProfileInfo = () => {
                   
                   {/* Right column - Profile information */}
                   <div className="flex-grow space-y-6 w-full md:w-2/3">
-                    <div>
+                    <div className="bg-white/50 dark:bg-black/20 rounded-xl p-6 shadow-sm">
                       <h3 className="text-lg font-medium mb-4">Profile Information</h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -169,7 +170,7 @@ export const ProfileInfo = () => {
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Email</p>
                           <div className="flex items-center">
-                            <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <Mail className="h-4 w-4 mr-2 text-primary/70" />
                             <p>{profile.email}</p>
                           </div>
                         </div>
@@ -177,7 +178,7 @@ export const ProfileInfo = () => {
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Phone</p>
                           <div className="flex items-center">
-                            <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <Phone className="h-4 w-4 mr-2 text-primary/70" />
                             <p>{profile.phone}</p>
                           </div>
                         </div>
@@ -194,16 +195,14 @@ export const ProfileInfo = () => {
                       </div>
                     </div>
                     
-                    <Separator />
-                    
-                    <div>
+                    <div className="bg-white/50 dark:bg-black/20 rounded-xl p-6 shadow-sm">
                       <h3 className="text-lg font-medium mb-4">Account Information</h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Member Since</p>
                           <div className="flex items-center">
-                            <CalendarClock className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <CalendarClock className="h-4 w-4 mr-2 text-primary/70" />
                             <p>{format(new Date(profile.created_at), 'PPP')}</p>
                           </div>
                         </div>
@@ -212,7 +211,7 @@ export const ProfileInfo = () => {
                           <div className="space-y-1">
                             <p className="text-sm font-medium text-muted-foreground">Reference Number</p>
                             <div className="flex items-center">
-                              <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <Hash className="h-4 w-4 mr-2 text-primary/70" />
                               <p className="font-mono">{profile.reference_number}</p>
                             </div>
                           </div>
@@ -231,18 +230,20 @@ export const ProfileInfo = () => {
             <div className="flex flex-col md:flex-row gap-6">
               {/* Left column - Avatar */}
               <div className="flex-shrink-0 flex flex-col items-center w-full md:w-1/3">
-                <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                   {profile.avatar_url ? (
                     <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
                   ) : (
-                    <AvatarFallback className="text-3xl bg-primary/10">
+                    <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                       {getInitials(profile.full_name)}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 
                 <div className="mt-4 text-center">
-                  <p className="text-xl font-semibold">{profile.full_name}</p>
+                  <p className="text-xl font-semibold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">
+                    {profile.full_name}
+                  </p>
                   <Badge 
                     variant="outline" 
                     className={`mt-2 ${getRoleBadgeColor(profile.role as UserRole)}`}
@@ -254,20 +255,23 @@ export const ProfileInfo = () => {
               
               {/* Right column - Profile information */}
               <div className="flex-grow space-y-6 w-full md:w-2/3">
-                <Accordion type="single" collapsible defaultValue="item-1">
+                <Accordion type="single" collapsible defaultValue="item-1" className="bg-white/50 dark:bg-black/20 rounded-xl shadow-sm">
                   <AccordionItem value="item-1" className="border-none">
-                    <AccordionTrigger className="py-2 hover:no-underline">
-                      <h3 className="text-lg font-medium">Contact Information</h3>
+                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                      <h3 className="text-lg font-medium flex items-center">
+                        <Mail className="h-5 w-5 mr-2 text-primary/70" />
+                        Contact Information
+                      </h3>
                     </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-                        <div className="flex items-center space-x-3">
-                          <Mail className="h-5 w-5 text-muted-foreground" />
+                    <AccordionContent className="px-6 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-3 bg-white/30 dark:bg-black/10 p-3 rounded-lg">
+                          <Mail className="h-5 w-5 text-primary/70" />
                           <span>{profile.email}</span>
                         </div>
                         
-                        <div className="flex items-center space-x-3">
-                          <Phone className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex items-center space-x-3 bg-white/30 dark:bg-black/10 p-3 rounded-lg">
+                          <Phone className="h-5 w-5 text-primary/70" />
                           <span>{profile.phone}</span>
                         </div>
                       </div>
@@ -275,19 +279,22 @@ export const ProfileInfo = () => {
                   </AccordionItem>
                   
                   <AccordionItem value="item-2" className="border-none">
-                    <AccordionTrigger className="py-2 hover:no-underline">
-                      <h3 className="text-lg font-medium">Account Details</h3>
+                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                      <h3 className="text-lg font-medium flex items-center">
+                        <CalendarClock className="h-5 w-5 mr-2 text-primary/70" />
+                        Account Details
+                      </h3>
                     </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-                        <div className="flex items-center space-x-3">
-                          <CalendarClock className="h-5 w-5 text-muted-foreground" />
+                    <AccordionContent className="px-6 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-3 bg-white/30 dark:bg-black/10 p-3 rounded-lg">
+                          <CalendarClock className="h-5 w-5 text-primary/70" />
                           <span>Joined on {format(new Date(profile.created_at), 'PPP')}</span>
                         </div>
                         
                         {profile.reference_number && (
-                          <div className="flex items-center space-x-3">
-                            <Hash className="h-5 w-5 text-muted-foreground" />
+                          <div className="flex items-center space-x-3 bg-white/30 dark:bg-black/10 p-3 rounded-lg">
+                            <Hash className="h-5 w-5 text-primary/70" />
                             <span>Reference: <span className="font-mono">{profile.reference_number}</span></span>
                           </div>
                         )}
