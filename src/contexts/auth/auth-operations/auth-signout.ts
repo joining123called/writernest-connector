@@ -39,8 +39,11 @@ export const signOut = async (
       return;
     }
     
-    // Reset application state
+    // Reset application state before navigation
     setState(initialState);
+    
+    // Navigate to login page immediately after state reset
+    navigate('/login', { replace: true });
     
     // Log completion of signout
     if (userId) {
@@ -49,9 +52,6 @@ export const signOut = async (
         additionalInfo: { previousUserId: userId }
       });
     }
-    
-    // Navigate to login page
-    navigate('/login');
     
     toast({
       title: "Logged out successfully",
@@ -64,5 +64,7 @@ export const signOut = async (
       description: error.message || "An unexpected error occurred during logout",
       variant: "destructive",
     });
+    // Ensure we still navigate to login even if there's an error
+    navigate('/login', { replace: true });
   }
 };

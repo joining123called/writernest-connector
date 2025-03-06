@@ -90,6 +90,7 @@ export const signIn = async (
       avatarUrl: profile.avatar_url || undefined
     };
 
+    // Update state before navigation
     setState({
       user,
       session: data.session,
@@ -102,14 +103,17 @@ export const signIn = async (
       description: `Welcome back, ${profile.full_name || 'User'}!`,
     });
 
-    // Redirect based on user role
-    if (user.role === UserRole.ADMIN) {
-      navigate('/admin-dashboard');
-    } else if (user.role === UserRole.WRITER) {
-      navigate('/writer-dashboard');
-    } else {
-      navigate('/client-dashboard');
-    }
+    // Use a slight delay before navigation to ensure state is updated
+    setTimeout(() => {
+      // Redirect based on user role
+      if (user.role === UserRole.ADMIN) {
+        navigate('/admin-dashboard', { replace: true });
+      } else if (user.role === UserRole.WRITER) {
+        navigate('/writer-dashboard', { replace: true });
+      } else {
+        navigate('/client-dashboard', { replace: true });
+      }
+    }, 100);
 
     return { error: null };
   } catch (err: any) {
