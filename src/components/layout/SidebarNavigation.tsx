@@ -14,7 +14,8 @@ import {
   Settings, 
   Gavel, 
   ShoppingBag,
-  UserCircle
+  UserCircle,
+  BookOpen
 } from 'lucide-react';
 import { SidebarMenuItem } from './SidebarMenuItem';
 
@@ -50,6 +51,7 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
   const writerMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/writer-dashboard', icon: LayoutDashboard },
     { label: 'Current Orders', path: '/writer-dashboard/orders', icon: FileText },
+    { label: 'Available Orders', path: '/writer-dashboard/available-orders', icon: BookOpen },
     { label: 'Bids', path: '/writer-dashboard/bids', icon: Gavel },
     { label: 'Revisions', path: '/writer-dashboard/revisions', icon: RefreshCw },
     { label: 'Disputes', path: '/writer-dashboard/disputes', icon: AlertTriangle },

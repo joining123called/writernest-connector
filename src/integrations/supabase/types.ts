@@ -29,6 +29,7 @@ export type Database = {
           total_price: number
           updated_at: string
           user_id: string
+          writer_id: string | null
         }
         Insert: {
           assignment_code?: string
@@ -49,6 +50,7 @@ export type Database = {
           total_price: number
           updated_at?: string
           user_id: string
+          writer_id?: string | null
         }
         Update: {
           assignment_code?: string
@@ -69,6 +71,7 @@ export type Database = {
           total_price?: number
           updated_at?: string
           user_id?: string
+          writer_id?: string | null
         }
         Relationships: []
       }
