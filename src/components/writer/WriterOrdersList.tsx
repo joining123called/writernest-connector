@@ -1,16 +1,25 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { DeadlineCountdown } from '@/components/shared/DeadlineCountdown';
+import { 
+  OrderItem, 
+  OrderStatus, 
+  getStatusBadgeVariant, 
+  getStatusLabel 
+} from '@/types/order';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { OrderItem, OrderStatus, getStatusBadgeVariant, getStatusLabel } from '@/types/order';
+import { OrdersTable } from '@/components/client/OrdersTable';
 import { Loader2 } from 'lucide-react';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
+// Define specific props for the component
 interface WriterOrdersListProps {
   type: 'available' | 'current';
 }
@@ -18,40 +27,30 @@ interface WriterOrdersListProps {
 export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Function to fetch orders
+  // Function to fetch orders based on type
   const fetchOrders = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoading(true);
       
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
       let query = supabase
         .from('assignment_details')
-        .select('*')
-        .order('deadline', { ascending: true });
+        .select('*');
       
       if (type === 'available') {
-        // Get orders that don't have a writer assigned and are in PAYMENT_CONFIRMED status
-        query = query
-          .is('writer_id', null)
-          .eq('status', OrderStatus.PAYMENT_CONFIRMED);
-      } else {
-        // Get orders assigned to the current writer
-        query = query.eq('writer_id', user.id);
+        // Available orders should have status 'available' or similar and no writer assigned
+        query = query.is('writer_id', null);
+      } else if (type === 'current') {
+        // Current orders should be assigned to the current writer
+        query = query.eq('writer_id', supabase.auth.getUser().then(({data}) => data.user?.id));
       }
       
       const { data, error } = await query;
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       setOrders(data || []);
     } catch (error) {
@@ -66,38 +65,37 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     }
   };
 
+  const handleViewDetails = (orderId: string) => {
+    navigate(`/writer-dashboard/orders/${orderId}`);
+  };
+
   const handleTakeOrder = async (orderId: string) => {
     try {
-      setIsProcessing(orderId);
+      const user = await supabase.auth.getUser();
+      const writerId = user.data.user?.id;
       
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (!writerId) {
         toast({
-          title: 'Authentication Error',
+          title: 'Error',
           description: 'You must be logged in to take orders.',
           variant: 'destructive',
         });
         return;
       }
       
-      // Update the order to assign it to this writer and change status
       const { error } = await supabase
         .from('assignment_details')
         .update({
-          writer_id: user.id,
-          status: OrderStatus.WRITER_ASSIGNED
+          writer_id: writerId,
+          status: OrderStatus.CLAIMED
         })
-        .eq('id', orderId)
-        .is('writer_id', null); // Only if no writer is assigned
+        .eq('id', orderId);
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
-        title: 'Order Assigned',
-        description: 'You have successfully taken this order.',
+        title: 'Success',
+        description: 'You have successfully claimed this order.',
       });
       
       // Refresh the list
@@ -106,33 +104,26 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
       console.error('Error taking order:', error);
       toast({
         title: 'Error',
-        description: 'Failed to take order. It may have been assigned to another writer.',
+        description: 'Failed to claim order. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(null);
     }
   };
 
   const handleReleaseOrder = async (orderId: string) => {
     try {
-      setIsProcessing(orderId);
-      
-      // Update the order to release it
       const { error } = await supabase
         .from('assignment_details')
         .update({
           writer_id: null,
-          status: OrderStatus.PAYMENT_CONFIRMED
+          status: OrderStatus.AVAILABLE
         })
         .eq('id', orderId);
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
-        title: 'Order Released',
+        title: 'Success',
         description: 'You have successfully released this order.',
       });
       
@@ -145,16 +136,11 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
         description: 'Failed to release order. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(null);
     }
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      setIsProcessing(orderId);
-      
-      // Update the order status
       const { error } = await supabase
         .from('assignment_details')
         .update({
@@ -162,9 +148,7 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
         })
         .eq('id', orderId);
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
         title: 'Status Updated',
@@ -180,21 +164,20 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
         description: 'Failed to update order status. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(null);
     }
   };
 
-  const handleViewDetails = (orderId: string) => {
-    navigate(`/writer-dashboard/orders/${orderId}`);
-  };
+  // Filter orders based on status filter
+  const filteredOrders = orders.filter(order => {
+    return statusFilter === '' || order.status === statusFilter;
+  });
 
   useEffect(() => {
     fetchOrders();
 
     // Set up realtime subscription
     const channel = supabase
-      .channel('writer_assignment_changes')
+      .channel('writer_order_changes')
       .on(
         'postgres_changes',
         {
@@ -207,17 +190,6 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
           
           // Refresh the orders list on any change
           fetchOrders();
-          
-          // Show toast notifications for various events
-          if (payload.eventType === 'UPDATE') {
-            // Only show notifications for status changes
-            if (payload.old.status !== payload.new.status) {
-              toast({
-                title: 'Order Update',
-                description: `Order #${(payload.new as OrderItem).assignment_code} status changed to ${getStatusLabel(payload.new.status)}.`,
-              });
-            }
-          }
         }
       )
       .subscribe();
@@ -225,7 +197,7 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast, type]);
+  }, [type, toast]);
 
   if (isLoading) {
     return (
@@ -235,104 +207,39 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     );
   }
 
-  if (orders.length === 0) {
-    return (
-      <div className="text-center py-8 border rounded-lg bg-muted/50">
-        <h3 className="text-lg font-medium mb-2">No orders available</h3>
-        <p className="text-muted-foreground">
-          {type === 'available' 
-            ? 'There are currently no available orders to take.' 
-            : 'You have not taken any orders yet.'}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Order ID</TableHead>
-            <TableHead>Paper Type</TableHead>
-            <TableHead className="hidden md:table-cell">Subject</TableHead>
-            <TableHead className="hidden md:table-cell">Deadline</TableHead>
-            <TableHead className="text-right hidden sm:table-cell">Pages</TableHead>
-            <TableHead className="text-right hidden lg:table-cell">Price</TableHead>
-            <TableHead className="text-right">Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id}>
-              <TableCell className="font-medium">#{order.assignment_code}</TableCell>
-              <TableCell>{order.paper_type.replace('_', ' ')}</TableCell>
-              <TableCell className="hidden md:table-cell">{order.subject}</TableCell>
-              <TableCell className="hidden md:table-cell">
-                <div className="flex flex-col space-y-1">
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(order.deadline), 'MMM d, yyyy')}
-                  </span>
-                  <DeadlineCountdown deadline={order.deadline} />
-                </div>
-              </TableCell>
-              <TableCell className="text-right hidden sm:table-cell">{order.pages}</TableCell>
-              <TableCell className="text-right hidden lg:table-cell">${order.final_price.toFixed(2)}</TableCell>
-              <TableCell className="text-right">
-                <Badge variant={getStatusBadgeVariant(order.status) as any}>
-                  {getStatusLabel(order.status)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleViewDetails(order.id)}
-                  >
-                    View
-                  </Button>
-                  
-                  {type === 'available' && (
-                    <Button 
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleTakeOrder(order.id)}
-                      disabled={isProcessing === order.id}
-                    >
-                      {isProcessing === order.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Taking...
-                        </>
-                      ) : 'Take Order'}
-                    </Button>
-                  )}
-                  
-                  {type === 'current' && (
-                    <>
-                      <Button 
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleReleaseOrder(order.id)}
-                        disabled={isProcessing === order.id}
-                      >
-                        {isProcessing === order.id ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Releasing...
-                          </>
-                        ) : 'Release'}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Statuses</SelectItem>
+            {Object.values(OrderStatus).map(status => (
+              <SelectItem key={status} value={status}>
+                {getStatusLabel(status)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-8 border rounded-lg bg-muted/50">
+          <h3 className="text-lg font-medium mb-2">No orders found</h3>
+          <p className="text-muted-foreground">
+            {type === 'available' 
+              ? 'There are currently no available orders to claim.' 
+              : 'You have no current orders at this time.'}
+          </p>
+        </div>
+      ) : (
+        <OrdersTable orders={filteredOrders} />
+      )}
     </div>
   );
 };

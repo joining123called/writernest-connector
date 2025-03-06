@@ -200,7 +200,7 @@ export const AdminOrdersList: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast]);
+  }, []);
 
   if (isLoading) {
     return (
