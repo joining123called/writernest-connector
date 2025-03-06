@@ -1,0 +1,18 @@
+
+project_id = "ylnywzlvcreanyhancke"
+
+[database]
+# Add database-specific settings here
+
+[auth]
+# Add auth-specific settings here
+
+[api]
+# Add API-specific settings here
+
+[functions]
+[functions.process-payment]
+verify_jwt = true
+
+[functions.get-transactions]
+verify_jwt = true
