@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -38,6 +37,27 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, fullName 
     }
 
     const selectedFile = e.target.files[0];
+    
+    // Validate file type
+    if (!selectedFile.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (2MB limit)
+    if (selectedFile.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image size should be less than 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setFile(selectedFile);
 
     // Create a preview URL
@@ -59,32 +79,24 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, fullName 
     setIsUploading(true);
     
     try {
-      // Create a unique file path
+      // Create a unique file path within user's folder
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const fileName = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      // First, check if storage bucket exists, if not create it
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const avatarBucket = buckets?.find(bucket => bucket.name === 'avatars');
-      
-      if (!avatarBucket) {
-        await supabase.storage.createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 2, // 2MB
-        });
-      }
-      
       // Upload the file
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       // Update the user's avatar URL in the profiles table
       const { error: updateError } = await supabase
@@ -102,6 +114,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, fullName 
         description: "Your profile picture has been successfully updated",
       });
     } catch (error: any) {
+      console.error('Error uploading avatar:', error);
       toast({
         title: "Error uploading profile picture",
         description: error.message || "An error occurred while uploading your profile picture",

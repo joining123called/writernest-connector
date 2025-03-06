@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UserRole } from '@/types';
 import { 
@@ -9,7 +8,6 @@ import {
   AlertTriangle, 
   MessageSquare, 
   BarChart3, 
-  DollarSign, 
   Users, 
   Settings, 
   Gavel, 
@@ -44,7 +42,6 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
     { label: 'Revisions', path: '/client-dashboard/revisions', icon: RefreshCw },
     { label: 'Disputes', path: '/client-dashboard/disputes', icon: AlertTriangle },
     { label: 'Messages', path: '/client-dashboard/messages', icon: MessageSquare },
-    { label: 'Finance', path: '/client-dashboard/finance', icon: DollarSign },
     ...commonMenuItems,
   ];
 
@@ -57,7 +54,6 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
     { label: 'Disputes', path: '/writer-dashboard/disputes', icon: AlertTriangle },
     { label: 'Messages', path: '/writer-dashboard/messages', icon: MessageSquare },
     { label: 'Statistics', path: '/writer-dashboard/statistics', icon: BarChart3 },
-    { label: 'Finance', path: '/writer-dashboard/finance', icon: DollarSign },
     ...commonMenuItems,
   ];
 
@@ -67,7 +63,6 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
     { label: 'Order Management', path: '/admin-dashboard/orders', icon: FileText },
     { label: 'Bid Management', path: '/admin-dashboard/bids', icon: Gavel },
     { label: 'Dispute Resolution', path: '/admin-dashboard/disputes', icon: AlertTriangle },
-    { label: 'Finance & Payments', path: '/admin-dashboard/finance', icon: DollarSign },
     { label: 'Messages', path: '/admin-dashboard/messages', icon: MessageSquare },
     { label: 'Statistics & Reports', path: '/admin-dashboard/statistics', icon: BarChart3 },
     { label: 'Settings', path: '/admin-dashboard/settings', icon: Settings },

@@ -12,6 +12,7 @@ import {
   signOut as authSignOut,
   resetPassword as authResetPassword,
   updatePassword as authUpdatePassword,
+  deleteUser as authDeleteUser,
   fetchCurrentUser
 } from './auth-operations';
 
@@ -25,16 +26,13 @@ export const useAuthProvider = () => {
     refreshSession 
   } = useSession();
   
-  // Use a ref to avoid unnecessary re-renders
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Memoized fetchUser function
   const fetchUser = useCallback(async () => {
     console.log('Fetching current user...');
     await fetchCurrentUser(setState);
   }, []);
 
-  // Clean up function for interval
   const clearRefreshInterval = useCallback(() => {
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
@@ -42,7 +40,6 @@ export const useAuthProvider = () => {
     }
   }, []);
 
-  // Fetch user on mount and auth state change
   useEffect(() => {
     console.log('Auth provider mounted, initializing auth...');
     
@@ -57,7 +54,6 @@ export const useAuthProvider = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log(`Auth state changed: ${_event}`, session ? 'Session exists' : 'No session');
       
-      // The session validation is now handled by useSession hook
       if (session && isValid) {
         console.log('Valid session detected, fetching user data');
         initAuth();
@@ -74,9 +70,7 @@ export const useAuthProvider = () => {
     };
   }, [isValid, fetchUser, clearRefreshInterval]);
 
-  // Refresh session periodically
   useEffect(() => {
-    // Clean up any existing interval first
     clearRefreshInterval();
     
     if (!state.session) {
@@ -85,7 +79,6 @@ export const useAuthProvider = () => {
     }
     
     console.log('Setting up session refresh interval');
-    // Refresh the session token every 10 minutes
     refreshIntervalRef.current = setInterval(() => {
       console.log('Refreshing session token');
       refreshSession();
@@ -94,7 +87,6 @@ export const useAuthProvider = () => {
     return clearRefreshInterval;
   }, [state.session, refreshSession, clearRefreshInterval]);
 
-  // Authentication methods wrapper functions
   const signUp = useCallback(async (email: string, password: string, userData: Partial<User>) => {
     return authSignUp(email, password, userData, toast);
   }, [toast]);
@@ -115,7 +107,10 @@ export const useAuthProvider = () => {
     return authUpdatePassword(password, toast);
   }, [toast]);
 
-  // Return the state and methods
+  const deleteUser = useCallback(async (userId: string) => {
+    return authDeleteUser(userId, toast);
+  }, [toast]);
+
   return {
     ...state,
     signUp,
@@ -123,5 +118,6 @@ export const useAuthProvider = () => {
     signOut,
     resetPassword,
     updatePassword,
+    deleteUser,
   };
 };
