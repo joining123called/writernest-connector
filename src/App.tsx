@@ -14,6 +14,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import AdminLogin from "./pages/AdminLogin";
 import AdminForgotPassword from "./pages/AdminForgotPassword";
 import WriterDashboard from "./pages/WriterDashboard";
+import WriterAvailableOrders from "./pages/WriterAvailableOrders";
+import WriterAvailableOrderDetails from "./pages/WriterAvailableOrderDetails";
+import WriterCurrentOrders from "./pages/WriterCurrentOrders";
+import WriterOrderDetails from "./pages/WriterOrderDetails";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientOrderPage from "./pages/ClientOrderPage";
 import ClientOrders from "./pages/ClientOrders";
@@ -65,6 +69,10 @@ const AnimatedRoutes = () => {
         {/* Writer Dashboard Routes */}
         <Route path="/writer-dashboard" element={<WriterDashboard />} />
         <Route path="/writer-dashboard/:page" element={<WriterDashboard />} />
+        <Route path="/writer-dashboard/available-orders" element={<WriterAvailableOrders />} />
+        <Route path="/writer-dashboard/available-orders/:orderId" element={<WriterAvailableOrderDetails />} />
+        <Route path="/writer-dashboard/orders" element={<WriterCurrentOrders />} />
+        <Route path="/writer-dashboard/orders/:orderId" element={<WriterOrderDetails />} />
         
         {/* Admin Dashboard Routes */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />

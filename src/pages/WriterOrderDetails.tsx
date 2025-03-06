@@ -1,12 +1,12 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AvailableOrdersList } from '@/components/writer/AvailableOrdersList';
+import { OrderDetails } from '@/components/writer/OrderDetails';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 
-const WriterAvailableOrders = () => {
+const WriterOrderDetails = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -29,17 +29,17 @@ const WriterAvailableOrders = () => {
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Available Orders</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Order Details</h1>
             <p className="text-muted-foreground">
-              Browse available assignments and select ones you'd like to work on.
+              Manage your assignment and view its details.
             </p>
           </div>
         </div>
         
-        <AvailableOrdersList />
+        <OrderDetails viewMode="current" />
       </div>
     </DashboardLayout>
   );
 };
 
-export default WriterAvailableOrders;
+export default WriterOrderDetails;
