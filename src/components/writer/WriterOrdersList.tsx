@@ -36,8 +36,8 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     try {
       setIsLoading(true);
       
-      const { data: user } = await supabase.auth.getUser();
-      const userId = user?.user?.id;
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
       
       let query = supabase
         .from('assignment_details')
