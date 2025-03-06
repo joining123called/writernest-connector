@@ -5,18 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { OrdersLoadingSkeleton } from './OrdersLoadingSkeleton';
 import { EmptyOrdersState } from './EmptyOrdersState';
 import { OrdersTable } from './OrdersTable';
-
-interface OrderItem {
-  id: string;
-  assignment_code: string;
-  topic: string | null;
-  paper_type: string;
-  subject: string;
-  deadline: string;
-  pages: number;
-  final_price: number;
-  status: string;
-}
+import { OrderItem } from '@/types';
 
 export const ClientOrdersList: React.FC = () => {
   const [orders, setOrders] = React.useState<OrderItem[]>([]);

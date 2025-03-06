@@ -24,3 +24,18 @@ export interface FormData {
   role: UserRole;
   confirmPassword?: string;
 }
+
+// OrderItem interface for use in components
+export interface OrderItem {
+  id: string;
+  assignment_code: string;
+  topic: string | null;
+  paper_type: string;
+  subject: string;
+  deadline: string;
+  pages: number;
+  final_price: number;
+  status: string;
+  writer_id?: string;  // Added writer_id as optional
+  user_id?: string;    // Added user_id as optional
+}

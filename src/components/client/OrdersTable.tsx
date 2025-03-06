@@ -4,18 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-
-interface OrderItem {
-  id: string;
-  assignment_code: string;
-  topic: string | null;
-  paper_type: string;
-  subject: string;
-  deadline: string;
-  pages: number;
-  final_price: number;
-  status: string;
-}
+import { OrderItem } from '@/types';
 
 interface OrdersTableProps {
   orders: OrderItem[];
