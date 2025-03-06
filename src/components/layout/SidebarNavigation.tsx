@@ -14,7 +14,9 @@ import {
   Settings, 
   Gavel, 
   ShoppingBag,
-  UserCircle
+  UserCircle,
+  ClipboardList,
+  BookOpen
 } from 'lucide-react';
 import { SidebarMenuItem } from './SidebarMenuItem';
 
@@ -49,6 +51,7 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
 
   const writerMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/writer-dashboard', icon: LayoutDashboard },
+    { label: 'Available Orders', path: '/writer-dashboard/available-orders', icon: ClipboardList },
     { label: 'Current Orders', path: '/writer-dashboard/orders', icon: FileText },
     { label: 'Bids', path: '/writer-dashboard/bids', icon: Gavel },
     { label: 'Revisions', path: '/writer-dashboard/revisions', icon: RefreshCw },
@@ -62,7 +65,7 @@ export const SidebarNavigation = ({ userRole, collapsed }: SidebarNavigationProp
   const adminMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/admin-dashboard', icon: LayoutDashboard },
     { label: 'User Management', path: '/admin-dashboard/users', icon: Users },
-    { label: 'Order Management', path: '/admin-dashboard/orders', icon: FileText },
+    { label: 'Order Management', path: '/admin-dashboard/orders', icon: ClipboardList },
     { label: 'Bid Management', path: '/admin-dashboard/bids', icon: Gavel },
     { label: 'Dispute Resolution', path: '/admin-dashboard/disputes', icon: AlertTriangle },
     { label: 'Finance & Payments', path: '/admin-dashboard/finance', icon: DollarSign },
