@@ -36,6 +36,9 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     try {
       setIsLoading(true);
       
+      const { data: user } = await supabase.auth.getUser();
+      const userId = user?.user?.id;
+      
       let query = supabase
         .from('assignment_details')
         .select('*');
@@ -43,9 +46,9 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
       if (type === 'available') {
         // Available orders should have status 'available' or similar and no writer assigned
         query = query.is('writer_id', null);
-      } else if (type === 'current') {
+      } else if (type === 'current' && userId) {
         // Current orders should be assigned to the current writer
-        query = query.eq('writer_id', supabase.auth.getUser().then(({data}) => data.user?.id));
+        query = query.eq('writer_id', userId);
       }
       
       const { data, error } = await query;
@@ -71,8 +74,8 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
 
   const handleTakeOrder = async (orderId: string) => {
     try {
-      const user = await supabase.auth.getUser();
-      const writerId = user.data.user?.id;
+      const { data: user } = await supabase.auth.getUser();
+      const writerId = user?.user?.id;
       
       if (!writerId) {
         toast({
@@ -185,10 +188,8 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
           schema: 'public',
           table: 'assignment_details'
         },
-        (payload) => {
-          console.log('Realtime update for writer:', payload);
-          
-          // Refresh the orders list on any change
+        () => {
+          console.log('Realtime update for writer - fetching orders');
           fetchOrders();
         }
       )
@@ -197,7 +198,7 @@ export const WriterOrdersList: React.FC<WriterOrdersListProps> = ({ type }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [type, toast]);
+  }, [type]);
 
   if (isLoading) {
     return (
