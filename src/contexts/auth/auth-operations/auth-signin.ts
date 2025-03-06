@@ -107,11 +107,11 @@ export const signIn = async (
     setTimeout(() => {
       // Redirect based on user role
       if (user.role === UserRole.ADMIN) {
-        navigate('/admin-dashboard', { replace: true });
+        navigate('/admin-dashboard');
       } else if (user.role === UserRole.WRITER) {
-        navigate('/writer-dashboard', { replace: true });
+        navigate('/writer-dashboard');
       } else {
-        navigate('/client-dashboard', { replace: true });
+        navigate('/client-dashboard');
       }
     }, 100);
 

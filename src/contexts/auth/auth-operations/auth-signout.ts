@@ -43,7 +43,7 @@ export const signOut = async (
     setState(initialState);
     
     // Navigate to login page immediately after state reset
-    navigate('/login', { replace: true });
+    navigate('/login');
     
     // Log completion of signout
     if (userId) {
@@ -65,6 +65,6 @@ export const signOut = async (
       variant: "destructive",
     });
     // Ensure we still navigate to login even if there's an error
-    navigate('/login', { replace: true });
+    navigate('/login');
   }
 };

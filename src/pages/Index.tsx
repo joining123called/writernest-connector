@@ -22,16 +22,16 @@ const Index = () => {
             // Small delay to ensure state is properly updated
             setTimeout(() => {
               if (user.role === 'admin') {
-                navigate('/admin-dashboard', { replace: true });
+                navigate('/admin-dashboard');
               } else if (user.role === 'writer') {
-                navigate('/writer-dashboard', { replace: true });
+                navigate('/writer-dashboard');
               } else {
-                navigate('/client-dashboard', { replace: true });
+                navigate('/client-dashboard');
               }
             }, 100);
           } else {
             console.log('No user found, redirecting to login');
-            navigate('/login', { replace: true });
+            navigate('/login');
           }
         } catch (error) {
           console.error('Navigation error:', error);
@@ -40,7 +40,7 @@ const Index = () => {
             description: "There was a problem redirecting you. Taking you to login.",
             variant: "destructive",
           });
-          navigate('/login', { replace: true });
+          navigate('/login');
         }
       };
 
