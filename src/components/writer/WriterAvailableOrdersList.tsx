@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { OrdersLoadingSkeleton } from '../client/OrdersLoadingSkeleton';
 import { OrderItem } from '@/types';
-import { WriterOrdersTable } from './WriterOrdersTable';
+import WriterOrdersTable from './WriterOrdersTable';
 
 export const WriterAvailableOrdersList: React.FC = () => {
   const [orders, setOrders] = React.useState<OrderItem[]>([]);

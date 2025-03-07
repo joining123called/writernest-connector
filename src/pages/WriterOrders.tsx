@@ -29,9 +29,9 @@ const WriterOrders = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Current Orders</h1>
+            <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
             <p className="text-muted-foreground">
-              Manage your assigned writing tasks
+              View and manage your writing assignments
             </p>
           </div>
         </div>

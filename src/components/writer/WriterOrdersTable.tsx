@@ -16,9 +16,11 @@ import { OrderItem } from '@/types';
 
 export interface WriterOrdersTableProps {
   orders: OrderItem[];
+  onTakeOrder?: (orderId: string) => void;
+  showTakeButton?: boolean;
 }
 
-const WriterOrdersTable = ({ orders }: WriterOrdersTableProps) => {
+const WriterOrdersTable = ({ orders, onTakeOrder, showTakeButton = false }: WriterOrdersTableProps) => {
   const navigate = useNavigate();
 
   if (orders.length === 0) {
@@ -54,6 +56,13 @@ const WriterOrdersTable = ({ orders }: WriterOrdersTableProps) => {
     navigate(`/writer-dashboard/orders/${orderId}`);
   };
 
+  const handleTakeOrderClick = (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation(); // Prevent row click
+    if (onTakeOrder) {
+      onTakeOrder(orderId);
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -70,7 +79,7 @@ const WriterOrdersTable = ({ orders }: WriterOrdersTableProps) => {
         </TableHeader>
         <TableBody>
           {orders.map((order) => (
-            <TableRow key={order.id}>
+            <TableRow key={order.id} className="cursor-pointer hover:bg-accent/50" onClick={() => handleViewOrder(order.id)}>
               <TableCell className="font-medium">{order.assignment_code}</TableCell>
               <TableCell>{order.topic || "No topic specified"}</TableCell>
               <TableCell>{order.paper_type}</TableCell>
@@ -84,13 +93,23 @@ const WriterOrdersTable = ({ orders }: WriterOrdersTableProps) => {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleViewOrder(order.id)}
-                >
-                  View Details
-                </Button>
+                {showTakeButton && onTakeOrder ? (
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={(e) => handleTakeOrderClick(e, order.id)}
+                  >
+                    Take Order
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewOrder(order.id)}
+                  >
+                    View Details
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}

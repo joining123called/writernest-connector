@@ -5,42 +5,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WriterOrdersTable from "./WriterOrdersTable";
 import { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react'; // Using lucide-react instead of radix icons
+import { RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 const WriterOrdersList = () => {
   const [activeTab, setActiveTab] = useState("active");
 
-  // Fetch writer orders - Fixed type instantiation issue by using explicit type casting
-  const { data: orders, isLoading, error, refetch } = useQuery({
-    queryKey: ['writer-orders'],
-    queryFn: async () => {
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('assignment_details')
-        .select('*')
-        .eq('writer_id', userId);
-      
-      if (error) throw error;
-      return data as OrderItem[];
+  // Fetch writer orders with a simplified type approach
+  const fetchWriterOrders = async () => {
+    const user = await supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    
+    if (!userId) {
+      throw new Error("User not authenticated");
     }
+    
+    const { data, error } = await supabase
+      .from('assignment_details')
+      .select('*')
+      .eq('writer_id', userId);
+    
+    if (error) throw error;
+    return data as OrderItem[];
+  };
+
+  const { data: orders = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['writer-orders'],
+    queryFn: fetchWriterOrders
   });
 
   // Filter orders based on active tab
-  const activeOrders = orders?.filter(order => 
+  const activeOrders = orders.filter(order => 
     ['assigned', 'in_progress', 'under_review'].includes(order.status)
-  ) || [];
+  );
   
-  const completedOrders = orders?.filter(order => 
+  const completedOrders = orders.filter(order => 
     order.status === 'completed'
-  ) || [];
+  );
 
   const handleRefresh = () => {
     refetch();
