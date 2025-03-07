@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ProfileInfo } from '@/components/profile/ProfileInfo';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -8,18 +8,78 @@ import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { User } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // If not admin and trying to view someone else's profile, redirect to dashboard
-  React.useEffect(() => {
-    if (userId && userId !== user?.id && !isAdmin) {
-      navigate(`/${user?.role.toLowerCase()}-dashboard`);
-    }
-  }, [userId, user, isAdmin, navigate]);
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!userId) return;
+      
+      if (userId === user?.id) {
+        setProfileUser(user);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!isAdmin) {
+        // Redirect non-admins trying to view other profiles
+        navigate(`/${user?.role.toLowerCase()}-dashboard`);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          const profileData: User = {
+            id: data.id,
+            email: data.email,
+            fullName: data.full_name,
+            phone: data.phone,
+            role: data.role as UserRole,
+            createdAt: data.created_at,
+            referenceNumber: data.reference_number,
+            avatarUrl: data.avatar_url
+          };
+          
+          setProfileUser(profileData);
+        } else {
+          toast({
+            title: "User not found",
+            description: "The requested user profile could not be found.",
+            variant: "destructive"
+          });
+          navigate(`/${user?.role.toLowerCase()}-dashboard`);
+        }
+      } catch (error: any) {
+        console.error('Error fetching user profile:', error);
+        toast({
+          title: "Error",
+          description: error.message || "An error occurred while fetching the user profile.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [userId, user, isAdmin, navigate, toast]);
 
   const goBack = () => {
     if (isAdmin) {
@@ -56,7 +116,13 @@ const UserProfilePage = () => {
           </p>
         </div>
 
-        <ProfileInfo />
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          profileUser && <ProfileInfo user={profileUser} />
+        )}
       </motion.div>
     </DashboardLayout>
   );

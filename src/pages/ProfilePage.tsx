@@ -3,8 +3,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ProfileInfo } from '@/components/profile/ProfileInfo';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useAuth } from '@/contexts/auth';
 
 const ProfilePage = () => {
+  const { user } = useAuth();
+
   return (
     <DashboardLayout>
       <motion.div
@@ -20,7 +23,7 @@ const ProfilePage = () => {
           </p>
         </div>
 
-        <ProfileInfo />
+        {user && <ProfileInfo user={user} />}
       </motion.div>
     </DashboardLayout>
   );

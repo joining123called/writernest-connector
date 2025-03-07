@@ -25,13 +25,26 @@ export const signUp = async (
       additionalInfo: { email } 
     });
     
+    // Validate phone number format
+    const phoneNumber = userData.phone || '';
+    
+    // Ensure the phone is in E.164 format or at least contains a country code
+    if (phoneNumber && !phoneNumber.startsWith('+')) {
+      toast({
+        title: "Invalid phone format",
+        description: "Phone number must be in international format starting with '+'",
+        variant: "destructive",
+      });
+      return { error: new Error("Invalid phone format") };
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           fullName: userData.fullName,
-          phone: userData.phone,
+          phone: phoneNumber,
           role: userData.role || UserRole.CLIENT, // Default to CLIENT if no role provided
         },
       },

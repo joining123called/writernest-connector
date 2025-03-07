@@ -1,14 +1,17 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { FormData, UserRole } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { isPossiblePhoneNumber } from 'react-phone-number-input';
 
 const Register = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -31,10 +34,13 @@ const Register = () => {
     if (error) setError(null);
   };
 
+  const handlePhoneChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, phone: value || '' }));
+    if (error) setError(null);
+  };
+
   const validatePhone = (phone: string) => {
-    // Basic phone validation - at least 10 digits
-    const digits = phone.replace(/\D/g, '');
-    return digits.length >= 10;
+    return phone && isPossiblePhoneNumber(phone);
   };
 
   const validatePassword = (password: string) => {
@@ -52,7 +58,7 @@ const Register = () => {
     if (!validatePassword(formData.password)) return;
     
     if (!validatePhone(formData.phone)) {
-      setError('Please enter a valid phone number (at least 10 digits).');
+      setError('Please enter a valid phone number.');
       return;
     }
     
@@ -174,22 +180,15 @@ const Register = () => {
                   </div>
 
                   <div>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">📱</span>
-                      <Input
-                        name="phone"
-                        type="tel"
-                        placeholder="Phone Number"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="pl-10 h-11 bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-300"
-                        pattern="[0-9+\-\s()]+"
-                        title="Please enter a valid phone number"
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Format: +1234567890 or (123) 456-7890</p>
+                    <PhoneInput
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      placeholder="Phone Number"
+                      required
+                      disabled={isSubmitting}
+                      className="h-11 bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-300"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Enter phone number with country code</p>
                   </div>
                   
                   <div>
