@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { WriterOrdersList } from '@/components/writer/WriterOrdersList';
+import WriterOrdersList from '@/components/writer/WriterOrdersList';
 import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 
