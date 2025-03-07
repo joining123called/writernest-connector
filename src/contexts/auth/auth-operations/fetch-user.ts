@@ -1,3 +1,4 @@
+
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { AuthState } from '../types';
@@ -12,7 +13,7 @@ export const fetchUserProfile = async (userId: string) => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Changed from single() to maybeSingle()
 
     if (profileError) {
       console.error('Error fetching user profile:', profileError);

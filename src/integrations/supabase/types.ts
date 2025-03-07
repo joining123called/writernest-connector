@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      _migrations: {
+        Row: {
+          applied_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          applied_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       assignment_details: {
         Row: {
           assignment_code: string
@@ -164,71 +182,6 @@ export type Database = {
           phone?: string
           reference_number?: string | null
           role?: string
-        }
-        Relationships: []
-      }
-      wallet_transactions: {
-        Row: {
-          amount: number
-          created_at: string
-          description: string
-          id: string
-          reference_id: string | null
-          status: string
-          type: string
-          wallet_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          description: string
-          id?: string
-          reference_id?: string | null
-          status: string
-          type: string
-          wallet_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          description?: string
-          id?: string
-          reference_id?: string | null
-          status?: string
-          type?: string
-          wallet_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wallet_transactions_wallet_id_fkey"
-            columns: ["wallet_id"]
-            isOneToOne: false
-            referencedRelation: "wallets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      wallets: {
-        Row: {
-          balance: number
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          balance?: number
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          balance?: number
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

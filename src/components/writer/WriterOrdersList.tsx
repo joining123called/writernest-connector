@@ -32,7 +32,22 @@ export const WriterOrdersList: React.FC = () => {
           throw error;
         }
         
-        setOrders(data || []);
+        // Map the response to OrderItem objects
+        const orderItems: OrderItem[] = data ? data.map((item: any) => ({
+          id: item.id,
+          assignment_code: item.assignment_code,
+          topic: item.topic,
+          paper_type: item.paper_type,
+          subject: item.subject,
+          deadline: item.deadline,
+          pages: item.pages,
+          final_price: item.final_price,
+          status: item.status,
+          writer_id: item.writer_id,
+          user_id: item.user_id
+        })) : [];
+        
+        setOrders(orderItems);
       } catch (error) {
         console.error('Error fetching writer orders:', error);
         toast({

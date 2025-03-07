@@ -28,7 +28,6 @@ export const ProfileInfo = () => {
   const { user: currentUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Use the userId from params, or if not provided, use the current user's ID
   const profileId = userId || currentUser?.id;
   
   const { data: profile, isLoading, error, refetch } = useQuery({
@@ -40,15 +39,15 @@ export const ProfileInfo = () => {
         .from('profiles')
         .select('*')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('Profile not found');
       return data;
     },
     enabled: !!profileId,
   });
 
-  // Check if the profile being viewed is the current user's profile
   const isOwnProfile = currentUser?.id === profileId;
 
   if (isLoading) {
@@ -89,7 +88,6 @@ export const ProfileInfo = () => {
     }
   };
 
-  // If editing, show the edit form
   if (isEditing) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
@@ -148,7 +146,6 @@ export const ProfileInfo = () => {
               
               <TabsContent value="general" className="space-y-6 animate-fade-in">
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Left column - Avatar */}
                   <div className="flex-shrink-0 flex flex-col items-center w-full md:w-1/3">
                     <AvatarUpload 
                       avatarUrl={profile.avatar_url} 
@@ -156,7 +153,6 @@ export const ProfileInfo = () => {
                     />
                   </div>
                   
-                  {/* Right column - Profile information */}
                   <div className="flex-grow space-y-6 w-full md:w-2/3">
                     <div className="bg-white/50 dark:bg-black/20 rounded-xl p-6 shadow-sm">
                       <h3 className="text-lg font-medium mb-4">Profile Information</h3>
@@ -228,7 +224,6 @@ export const ProfileInfo = () => {
             </Tabs>
           ) : (
             <div className="flex flex-col md:flex-row gap-6">
-              {/* Left column - Avatar */}
               <div className="flex-shrink-0 flex flex-col items-center w-full md:w-1/3">
                 <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                   {profile.avatar_url ? (
@@ -253,7 +248,6 @@ export const ProfileInfo = () => {
                 </div>
               </div>
               
-              {/* Right column - Profile information */}
               <div className="flex-grow space-y-6 w-full md:w-2/3">
                 <Accordion type="single" collapsible defaultValue="item-1" className="bg-white/50 dark:bg-black/20 rounded-xl shadow-sm">
                   <AccordionItem value="item-1" className="border-none">
@@ -325,14 +319,12 @@ const ProfileSkeleton = () => (
     
     <CardContent className="p-6">
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Left column - Avatar skeleton */}
         <div className="flex-shrink-0 flex flex-col items-center w-full md:w-1/3">
           <Skeleton className="h-32 w-32 rounded-full" />
           <Skeleton className="h-6 w-32 mt-4" />
           <Skeleton className="h-4 w-24 mt-2" />
         </div>
         
-        {/* Right column - Profile information skeleton */}
         <div className="flex-grow space-y-6 w-full md:w-2/3">
           <div>
             <Skeleton className="h-6 w-48 mb-4" />

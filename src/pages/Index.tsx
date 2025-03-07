@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Loader2 } from 'lucide-react';
@@ -14,37 +14,35 @@ const Index = () => {
   useEffect(() => {
     // Only attempt navigation when auth state is confirmed
     if (!isLoading) {
-      const navigateBasedOnUser = async () => {
-        try {
-          if (user) {
-            console.log('User authenticated, redirecting based on role:', user.role);
-            
-            // Small delay to ensure state is properly updated
-            setTimeout(() => {
-              if (user.role === 'admin') {
-                navigate('/admin-dashboard');
-              } else if (user.role === 'writer') {
-                navigate('/writer-dashboard');
-              } else {
-                navigate('/client-dashboard');
-              }
-            }, 100);
-          } else {
-            console.log('No user found, redirecting to login');
+      console.log('Auth state confirmed, user:', user ? 'exists' : 'null');
+      
+      if (user) {
+        console.log('User authenticated, redirecting based on role:', user.role);
+        
+        // Delay slightly to ensure state is properly updated
+        setTimeout(() => {
+          try {
+            if (user.role === 'admin') {
+              navigate('/admin-dashboard');
+            } else if (user.role === 'writer') {
+              navigate('/writer-dashboard');
+            } else {
+              navigate('/client-dashboard');
+            }
+          } catch (e) {
+            console.error('Navigation error:', e);
+            toast({
+              title: "Navigation Issue",
+              description: "There was a problem redirecting you. Taking you to login.",
+              variant: "destructive",
+            });
             navigate('/login');
           }
-        } catch (error) {
-          console.error('Navigation error:', error);
-          toast({
-            title: "Navigation Issue",
-            description: "There was a problem redirecting you. Taking you to login.",
-            variant: "destructive",
-          });
-          navigate('/login');
-        }
-      };
-
-      navigateBasedOnUser();
+        }, 100);
+      } else {
+        console.log('No user found, redirecting to login');
+        navigate('/login');
+      }
     }
   }, [user, isLoading, navigate, toast]);
 
