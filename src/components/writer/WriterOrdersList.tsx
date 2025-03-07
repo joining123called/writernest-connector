@@ -3,7 +3,7 @@ import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { OrdersLoadingSkeleton } from '../client/OrdersLoadingSkeleton';
-import { OrderItem } from '@/types';
+import { OrderItem, UserRole } from '@/types';
 import { WriterOrdersTable } from './WriterOrdersTable';
 
 export const WriterOrdersList: React.FC = () => {

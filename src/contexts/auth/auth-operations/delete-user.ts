@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import type { Toast } from '@/hooks/use-toast';
 import { logSessionEvent } from '../session-management/session-utils';
@@ -30,11 +31,7 @@ export const deleteUser = async (
     const { error: walletTransactionError } = await supabase
       .from('wallet_transactions')
       .delete()
-      .eq('wallet_id', (subquery) => 
-        subquery.from('wallets')
-          .select('id')
-          .eq('user_id', userId)
-      );
+      .eq('wallet_id', userId);
 
     if (walletTransactionError) {
       console.error('Error deleting wallet transactions:', walletTransactionError);
@@ -54,11 +51,7 @@ export const deleteUser = async (
     const { error: filesError } = await supabase
       .from('assignment_files')
       .delete()
-      .eq('assignment_id', (subquery) => 
-        subquery.from('assignment_details')
-          .select('id')
-          .eq('user_id', userId)
-      );
+      .eq('assignment_id', userId);
 
     if (filesError) {
       console.error('Error deleting assignment files:', filesError);
