@@ -12,19 +12,18 @@ import { supabase } from '@/lib/supabase';
 const WriterOrdersList = () => {
   const [activeTab, setActiveTab] = useState("active");
 
-  // Fetch writer orders with a simplified type approach
+  // Simplify the typing to avoid deep type instantiation
   const fetchWriterOrders = async () => {
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!userId) {
+    if (!user) {
       throw new Error("User not authenticated");
     }
     
     const { data, error } = await supabase
       .from('assignment_details')
       .select('*')
-      .eq('writer_id', userId);
+      .eq('writer_id', user.id);
     
     if (error) throw error;
     return data as OrderItem[];
