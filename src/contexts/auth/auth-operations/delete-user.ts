@@ -18,56 +18,36 @@ export const deleteUser = async (
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       throw new Error('User profile not found');
     }
 
-    // Delete all related records first
-    // This is important to prevent foreign key constraint violations
+    // Delete all related records first to avoid foreign key constraints
+    // Order matters here - delete child records before parent records
 
-    // 1. Delete wallet transactions
-    const { error: walletTransactionError } = await supabase
-      .from('wallet_transactions')
-      .delete()
-      .eq('wallet_id', userId);
-
-    if (walletTransactionError) {
-      console.error('Error deleting wallet transactions:', walletTransactionError);
-    }
-
-    // 2. Delete wallet
-    const { error: walletError } = await supabase
-      .from('wallets')
-      .delete()
-      .eq('user_id', userId);
-
-    if (walletError) {
-      console.error('Error deleting wallet:', walletError);
-    }
-
-    // 3. Delete assignment files
+    // 1. Delete assignment files
     const { error: filesError } = await supabase
       .from('assignment_files')
       .delete()
-      .eq('assignment_id', userId);
+      .eq('user_id', userId);
 
-    if (filesError) {
+    if (filesError && filesError.code !== 'PGRST116') {
       console.error('Error deleting assignment files:', filesError);
     }
 
-    // 4. Delete assignments
+    // 2. Delete assignments
     const { error: assignmentsError } = await supabase
       .from('assignment_details')
       .delete()
       .eq('user_id', userId);
 
-    if (assignmentsError) {
+    if (assignmentsError && assignmentsError.code !== 'PGRST116') {
       console.error('Error deleting assignments:', assignmentsError);
     }
 
-    // 5. Delete profile (this should cascade to auth.users due to foreign key)
+    // 3. Delete profile
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
