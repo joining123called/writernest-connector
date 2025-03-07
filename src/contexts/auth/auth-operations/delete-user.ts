@@ -24,30 +24,10 @@ export const deleteUser = async (
       throw new Error('User profile not found');
     }
 
-    // Delete all related records first to avoid foreign key constraints
-    // Order matters here - delete child records before parent records
+    // Due to RLS and cascading deletes set up in our migration,
+    // we can now directly delete the profile and the auth user
 
-    // 1. Delete assignment files
-    const { error: filesError } = await supabase
-      .from('assignment_files')
-      .delete()
-      .eq('user_id', userId);
-
-    if (filesError && filesError.code !== 'PGRST116') {
-      console.error('Error deleting assignment files:', filesError);
-    }
-
-    // 2. Delete assignments
-    const { error: assignmentsError } = await supabase
-      .from('assignment_details')
-      .delete()
-      .eq('user_id', userId);
-
-    if (assignmentsError && assignmentsError.code !== 'PGRST116') {
-      console.error('Error deleting assignments:', assignmentsError);
-    }
-
-    // 3. Delete profile
+    // Delete profile
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
