@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Loader2 } from 'lucide-react';
@@ -10,24 +10,26 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
-    // Only attempt navigation when auth state is confirmed
-    if (!isLoading) {
+    // Only attempt navigation when auth state is confirmed and we haven't navigated yet
+    if (!isLoading && !hasNavigated.current) {
       console.log('Auth state confirmed, user:', user ? 'exists' : 'null');
       
       if (user) {
         console.log('User authenticated, redirecting based on role:', user.role);
+        hasNavigated.current = true;
         
         // Delay slightly to ensure state is properly updated
         setTimeout(() => {
           try {
             if (user.role === 'admin') {
-              navigate('/admin-dashboard');
+              navigate('/admin-dashboard', { replace: true });
             } else if (user.role === 'writer') {
-              navigate('/writer-dashboard');
+              navigate('/writer-dashboard', { replace: true });
             } else {
-              navigate('/client-dashboard');
+              navigate('/client-dashboard', { replace: true });
             }
           } catch (e) {
             console.error('Navigation error:', e);
@@ -36,15 +38,23 @@ const Index = () => {
               description: "There was a problem redirecting you. Taking you to login.",
               variant: "destructive",
             });
-            navigate('/login');
+            navigate('/login', { replace: true });
           }
         }, 100);
       } else {
         console.log('No user found, redirecting to login');
-        navigate('/login');
+        hasNavigated.current = true;
+        navigate('/login', { replace: true });
       }
     }
   }, [user, isLoading, navigate, toast]);
+  
+  // Reset navigation flag if component is unmounted and remounted
+  useEffect(() => {
+    return () => {
+      hasNavigated.current = false;
+    };
+  }, []);
 
   return (
     <motion.div 

@@ -28,9 +28,21 @@ export const useAuthProvider = () => {
   } = useSession();
   
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchTime = useRef<number>(0);
+  const minimumFetchInterval = 60000; // 1 minute minimum between user fetches
   
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (force = false) => {
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime.current;
+    
+    // Prevent fetching too frequently unless forced
+    if (!force && timeSinceLastFetch < minimumFetchInterval) {
+      console.log('Skipping user fetch - too soon since last fetch');
+      return;
+    }
+    
     console.log('Fetching current user...');
+    lastFetchTime.current = now;
     await fetchCurrentUser(setState);
   }, []);
 
@@ -46,11 +58,30 @@ export const useAuthProvider = () => {
     
     const initAuth = async () => {
       console.log('Initializing auth...');
-      await fetchUser();
+      await fetchUser(true); // Force initial fetch
       console.log('Auth initialized, user state updated');
     };
 
     initAuth();
+
+    // Modified visibility change handler to prevent unnecessary reloads
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && state.user) {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchTime.current;
+        
+        // Only update if it's been a while since last fetch
+        if (timeSinceLastFetch > minimumFetchInterval) {
+          console.log('Tab visible after significant time, checking session validity');
+          // Just check session validity, don't force a full reload
+          if (isValid) {
+            console.log('Session still valid, no need to reload user data');
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log(`Auth state changed: ${_event}`, session ? 'Session exists' : 'No session');
@@ -67,6 +98,7 @@ export const useAuthProvider = () => {
     return () => {
       console.log('Auth provider unmounting, cleaning up');
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearRefreshInterval();
     };
   }, [isValid, fetchUser, clearRefreshInterval]);
@@ -83,7 +115,7 @@ export const useAuthProvider = () => {
     refreshIntervalRef.current = setInterval(() => {
       console.log('Refreshing session token');
       refreshSession();
-    }, 10 * 60 * 1000);
+    }, 10 * 60 * 1000); // Keep the 10-minute interval for security
     
     return clearRefreshInterval;
   }, [state.session, refreshSession, clearRefreshInterval]);

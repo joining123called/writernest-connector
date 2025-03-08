@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +22,8 @@ export const useSession = () => {
   
   const isMounted = useRef(true);
   const activityListeners = useRef<Array<() => void>>([]);
+  const lastFocusTime = useRef<number>(0);
+  const minimumRefreshInterval = 30000; // 30 seconds minimum between refresh operations
 
   const loadSession = useCallback(async () => {
     console.log('Loading session...');
@@ -117,9 +120,31 @@ export const useSession = () => {
     activityListeners.current = [];
   }, []);
 
+  // Modified visibility change handler to prevent unnecessary reloads
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === 'visible') {
+      const now = Date.now();
+      const timeSinceLastFocus = now - lastFocusTime.current;
+      
+      // Only refresh if it's been longer than our minimum interval
+      if (timeSinceLastFocus > minimumRefreshInterval && session?.user?.id) {
+        console.log('Tab visible after significant time, updating activity only');
+        updateSessionActivity(session.user.id);
+        lastFocusTime.current = now;
+        
+        // Don't trigger a full session refresh, just update activity timestamp
+        // This prevents unnecessary re-renders
+      }
+    }
+  }, [session]);
+
   useEffect(() => {
     console.log('useSession hook mounted');
     loadSession();
+    lastFocusTime.current = Date.now();
+
+    // Set up visibility change listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`Auth state change in useSession: ${event}`, session ? `for user: ${session.user.id}` : 'no session');
@@ -183,9 +208,10 @@ export const useSession = () => {
       console.log('useSession hook unmounting');
       isMounted.current = false;
       cleanupActivityListeners();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       authListener.subscription.unsubscribe();
     };
-  }, [loadSession, setupActivityListeners, cleanupActivityListeners]);
+  }, [loadSession, setupActivityListeners, cleanupActivityListeners, handleVisibilityChange]);
 
   const invalidateSession = useCallback(async () => {
     if (session?.user?.id) {
@@ -204,6 +230,17 @@ export const useSession = () => {
   }, [session, toast, cleanupActivityListeners]);
 
   const refreshSession = useCallback(async () => {
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastFocusTime.current;
+    
+    // Prevent refreshing too frequently
+    if (timeSinceLastRefresh < minimumRefreshInterval) {
+      console.log('Skipping refresh - too soon since last refresh');
+      return;
+    }
+    
+    lastFocusTime.current = now;
+    
     try {
       const { data, error } = await supabase.auth.refreshSession();
       
