@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ProfileInfo } from '@/components/profile/ProfileInfo';
@@ -15,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { ProfileEdit } from '@/components/profile/ProfileEdit';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { PasswordChange } from '@/components/profile/PasswordChange';
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
