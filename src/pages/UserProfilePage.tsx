@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ProfileInfo } from '@/components/profile/ProfileInfo';
@@ -6,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, UserCircle2, Settings, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -108,14 +109,18 @@ const UserProfilePage = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="mb-4"
+            className="mb-4 hover:bg-background/80 group"
             onClick={goBack}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
             Back
           </Button>
           
-          <h1 className="text-3xl font-bold">User Profile</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 text-transparent bg-clip-text">
+            {isAdmin && userId && userId !== user?.id 
+              ? "User Profile"
+              : "Your Profile"}
+          </h1>
           <p className="text-muted-foreground">
             {isAdmin && userId && userId !== user?.id 
               ? "View user profile information"
@@ -129,46 +134,68 @@ const UserProfilePage = () => {
           </div>
         ) : (
           profileUser && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className={`grid ${isOwnProfile ? 'md:w-[400px] grid-cols-3' : 'w-[150px] grid-cols-1'} mb-4`}>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+            <div className="grid grid-cols-1 gap-8">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <div className="bg-muted/30 backdrop-blur-sm p-1 rounded-xl border border-border/40 w-fit mx-auto md:mx-0">
+                  <TabsList className={`grid ${isOwnProfile ? 'md:w-[400px] grid-cols-3' : 'w-[150px] grid-cols-1'} bg-transparent`}>
+                    <TabsTrigger 
+                      value="overview" 
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-md flex gap-2 transition-all"
+                    >
+                      <UserCircle2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Overview</span>
+                    </TabsTrigger>
+                    {isOwnProfile && (
+                      <>
+                        <TabsTrigger 
+                          value="edit" 
+                          className="data-[state=active]:bg-background data-[state=active]:shadow-md flex gap-2 transition-all"
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span className="hidden sm:inline">Edit Profile</span>
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="security" 
+                          className="data-[state=active]:bg-background data-[state=active]:shadow-md flex gap-2 transition-all"
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span className="hidden sm:inline">Security</span>
+                        </TabsTrigger>
+                      </>
+                    )}
+                  </TabsList>
+                </div>
+                
+                <TabsContent value="overview" className="space-y-6 mt-6">
+                  <Card className="shadow-md border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
+                    <ProfileInfo user={profileUser} />
+                  </Card>
+                </TabsContent>
+                
                 {isOwnProfile && (
                   <>
-                    <TabsTrigger value="edit">Edit Profile</TabsTrigger>
-                    <TabsTrigger value="security">Security</TabsTrigger>
+                    <TabsContent value="edit" className="space-y-6 mt-6">
+                      <Card className="shadow-md border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
+                        <ProfileEdit 
+                          user={profileUser} 
+                          onSuccess={() => setActiveTab('overview')} 
+                        />
+                      </Card>
+                      
+                      <Card className="shadow-md border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
+                        <AvatarUpload user={profileUser} />
+                      </Card>
+                    </TabsContent>
+                    
+                    <TabsContent value="security" className="space-y-6 mt-6">
+                      <Card className="shadow-md border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
+                        <PasswordChange />
+                      </Card>
+                    </TabsContent>
                   </>
                 )}
-              </TabsList>
-              
-              <TabsContent value="overview" className="space-y-6">
-                <Card className="p-6">
-                  <ProfileInfo user={profileUser} />
-                </Card>
-              </TabsContent>
-              
-              {isOwnProfile && (
-                <>
-                  <TabsContent value="edit" className="space-y-6">
-                    <Card className="p-6">
-                      <ProfileEdit 
-                        user={profileUser} 
-                        onSuccess={() => setActiveTab('overview')} 
-                      />
-                    </Card>
-                    
-                    <Card className="p-6">
-                      <AvatarUpload user={profileUser} />
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="security" className="space-y-6">
-                    <Card className="p-6">
-                      <PasswordChange />
-                    </Card>
-                  </TabsContent>
-                </>
-              )}
-            </Tabs>
+              </Tabs>
+            </div>
           )
         )}
       </motion.div>

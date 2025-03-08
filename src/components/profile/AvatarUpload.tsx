@@ -5,8 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Upload, Trash2 } from 'lucide-react';
+import { Loader2, Upload, Trash2, Camera, Image } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
+import { CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 interface AvatarUploadProps {
   user: User;
@@ -142,66 +143,95 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ user }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Profile Picture</h3>
-        <p className="text-sm text-muted-foreground">
+    <>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-semibold">Profile Picture</CardTitle>
+        <CardDescription>
           Update your profile picture
-        </p>
-      </div>
-
-      <div className="flex flex-col items-center space-y-6 sm:flex-row sm:space-y-0 sm:space-x-8">
-        <Avatar className="h-24 w-24 border border-border/40 bg-background/50">
-          {user.avatarUrl ? (
-            <AvatarImage src={user.avatarUrl} alt={user.fullName} />
-          ) : null}
-          <AvatarFallback className="text-2xl">
-            {getInitials(user.fullName)}
-          </AvatarFallback>
-        </Avatar>
-
-        <div className="flex flex-col space-y-3">
-          <div className="relative">
-            <input
-              type="file"
-              id="avatar-upload"
-              accept="image/*"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={uploadAvatar}
-              disabled={isUploading || isDeleting}
-            />
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              disabled={isUploading || isDeleting}
-            >
-              {isUploading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {isUploading ? 'Uploading...' : 'Upload new picture'}
-            </Button>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
+          <div className="flex-shrink-0 relative group">
+            <Avatar className="h-32 w-32 border-4 border-background shadow-xl transition-all duration-300 group-hover:shadow-2xl">
+              {user.avatarUrl ? (
+                <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+              ) : null}
+              <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                {getInitials(user.fullName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <label htmlFor="avatar-upload" className="cursor-pointer p-2 rounded-full bg-background/80 hover:bg-background transition-colors">
+                <Camera className="h-6 w-6 text-primary" />
+                <input
+                  type="file"
+                  id="avatar-upload"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={uploadAvatar}
+                  disabled={isUploading || isDeleting}
+                />
+              </label>
+            </div>
           </div>
 
-          {user.avatarUrl && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={deleteAvatar}
-              disabled={isUploading || isDeleting}
-              className="w-full justify-start"
-            >
-              {isDeleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
+          <div className="flex flex-col space-y-4 w-full max-w-md">
+            <div className="bg-muted/40 rounded-xl p-4">
+              <h3 className="text-sm font-medium flex items-center mb-2">
+                <Image className="h-4 w-4 mr-2 text-primary" />
+                Avatar Guidelines
+              </h3>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Recommended size: 400x400 pixels</li>
+                <li>Maximum file size: 2MB</li>
+                <li>Accepted formats: JPEG, PNG, GIF, WEBP</li>
+              </ul>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="file"
+                  id="avatar-upload-btn"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={uploadAvatar}
+                  disabled={isUploading || isDeleting}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  disabled={isUploading || isDeleting}
+                >
+                  {isUploading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  {isUploading ? 'Uploading...' : 'Upload new picture'}
+                </Button>
+              </div>
+
+              {user.avatarUrl && (
+                <Button
+                  variant="destructive"
+                  onClick={deleteAvatar}
+                  disabled={isUploading || isDeleting}
+                  className="justify-center"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  )}
+                  {isDeleting ? 'Removing...' : 'Remove picture'}
+                </Button>
               )}
-              {isDeleting ? 'Removing...' : 'Remove picture'}
-            </Button>
-          )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </>
   );
 };

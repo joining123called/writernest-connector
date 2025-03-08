@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Shield } from 'lucide-react';
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -45,17 +45,20 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   }
 
   return (
-    <div className="space-y-2 mt-1 mb-3">
-      <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+    <div className="bg-muted/40 rounded-xl p-4 space-y-3 mt-1 mb-3">
+      <div className="flex items-center justify-between text-sm mb-1">
+        <div className="flex items-center">
+          <Shield className="h-4 w-4 mr-2 text-primary" />
+          <span>Password strength: <span className="font-medium">{strengthLabel}</span></span>
+        </div>
+        <span className="text-xs text-muted-foreground">{metCount}/{requirements.length} requirements met</span>
+      </div>
+      
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
         <div 
           className={`h-full ${strengthClass} transition-all duration-300`} 
           style={{ width: `${strength * 100}%` }}
         />
-      </div>
-      
-      <div className="text-xs text-muted-foreground flex justify-between">
-        <span>Password strength: {strengthLabel}</span>
-        <span>{metCount}/{requirements.length} requirements met</span>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">

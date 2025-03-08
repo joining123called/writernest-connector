@@ -18,6 +18,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Save, Loader2, UserCircle2, Phone as PhoneIcon } from 'lucide-react';
 
 const profileSchema = z.object({
   fullName: z.string().min(3, 'Full name must be at least 3 characters'),
@@ -83,55 +85,74 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({ user, onSuccess }) => 
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Profile Information</h3>
-        <p className="text-sm text-muted-foreground">
+    <>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-semibold">Profile Information</CardTitle>
+        <CardDescription>
           Update your account profile information
-        </p>
-      </div>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center text-foreground">
+                      <UserCircle2 className="mr-2 h-4 w-4 text-primary" />
+                      Full Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Your full name" 
+                        className="bg-muted/40 border-muted focus:border-primary transition-colors"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Your full name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center text-foreground">
+                      <PhoneIcon className="mr-2 h-4 w-4 text-primary" />
+                      Phone Number
+                    </FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        placeholder="Phone number"
+                        className="bg-muted/40 border-muted focus:border-primary transition-colors"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <PhoneInput
-                    value={field.value || ''}
-                    onChange={field.onChange}
-                    placeholder="Phone number"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save changes'}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                {isSubmitting ? 'Saving...' : 'Save changes'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </>
   );
 };
