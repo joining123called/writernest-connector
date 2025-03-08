@@ -11,6 +11,7 @@ const Index = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const hasNavigated = useRef(false);
+  const pageLoadTime = useRef(Date.now());
 
   useEffect(() => {
     // Only attempt navigation when auth state is confirmed and we haven't navigated yet
@@ -49,10 +50,42 @@ const Index = () => {
     }
   }, [user, isLoading, navigate, toast]);
   
-  // Reset navigation flag if component is unmounted and remounted
+  // Add visibility change handler to maintain navigation state
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // We specifically don't want to reset hasNavigated when the tab becomes visible again
+        // This prevents navigation loops when switching tabs
+        console.log('Tab visible - maintaining navigation state');
+        
+        // Only reset navigation flag if it's been a very long time (session likely expired)
+        const now = Date.now();
+        const elapsedTime = now - pageLoadTime.current;
+        if (elapsedTime > 60 * 60 * 1000) { // 1 hour
+          console.log('Long time since page load, allowing new navigation');
+          hasNavigated.current = false;
+          pageLoadTime.current = now;
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+  
+  // Reset navigation flag if component is explicitly unmounted and remounted
   useEffect(() => {
     return () => {
-      hasNavigated.current = false;
+      // We only want to reset the navigation flag on true component unmount,
+      // not on visibility changes
+      setTimeout(() => {
+        if (document.visibilityState !== 'hidden') {
+          hasNavigated.current = false;
+        }
+      }, 100);
     };
   }, []);
 

@@ -24,6 +24,7 @@ export const useSession = () => {
   const activityListeners = useRef<Array<() => void>>([]);
   const lastFocusTime = useRef<number>(0);
   const minimumRefreshInterval = 30000; // 30 seconds minimum between refresh operations
+  const preventTabSwitchReload = useRef(true); // Prevent reloads on simple tab switches
 
   const loadSession = useCallback(async () => {
     console.log('Loading session...');
@@ -120,20 +121,14 @@ export const useSession = () => {
     activityListeners.current = [];
   }, []);
 
-  // Modified visibility change handler to prevent unnecessary reloads
+  // Completely revised visibility change handler to prevent unnecessary operations
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === 'visible') {
-      const now = Date.now();
-      const timeSinceLastFocus = now - lastFocusTime.current;
-      
-      // Only refresh if it's been longer than our minimum interval
-      if (timeSinceLastFocus > minimumRefreshInterval && session?.user?.id) {
-        console.log('Tab visible after significant time, updating activity only');
+      // Only perform minimal session activity update without triggering re-renders
+      if (session?.user?.id) {
+        // Just update activity timestamp in storage, no state changes
         updateSessionActivity(session.user.id);
-        lastFocusTime.current = now;
-        
-        // Don't trigger a full session refresh, just update activity timestamp
-        // This prevents unnecessary re-renders
+        console.log('Tab focus returned - silently updating activity timestamp only');
       }
     }
   }, [session]);
@@ -143,7 +138,7 @@ export const useSession = () => {
     loadSession();
     lastFocusTime.current = Date.now();
 
-    // Set up visibility change listener
+    // Set up visibility change listener with modified behavior
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {

@@ -64,20 +64,12 @@ export const useAuthProvider = () => {
 
     initAuth();
 
-    // Modified visibility change handler to prevent unnecessary reloads
+    // Completely revised visibility change handler to eliminate reloads
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && state.user) {
-        const now = Date.now();
-        const timeSinceLastFetch = now - lastFetchTime.current;
-        
-        // Only update if it's been a while since last fetch
-        if (timeSinceLastFetch > minimumFetchInterval) {
-          console.log('Tab visible after significant time, checking session validity');
-          // Just check session validity, don't force a full reload
-          if (isValid) {
-            console.log('Session still valid, no need to reload user data');
-          }
-        }
+        // Simply update the last activity timestamp without fetching or reloading
+        console.log('Tab returned to visible state, maintaining current app state');
+        // No fetch or state change operations that would trigger re-renders
       }
     };
 
@@ -112,10 +104,11 @@ export const useAuthProvider = () => {
     }
     
     console.log('Setting up session refresh interval');
+    // Extending the refresh interval to reduce unnecessary refreshes
     refreshIntervalRef.current = setInterval(() => {
       console.log('Refreshing session token');
       refreshSession();
-    }, 10 * 60 * 1000); // Keep the 10-minute interval for security
+    }, 30 * 60 * 1000); // Changed to 30 minutes from 10 minutes
     
     return clearRefreshInterval;
   }, [state.session, refreshSession, clearRefreshInterval]);

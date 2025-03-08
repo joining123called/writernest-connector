@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,38 @@ const Login = () => {
   const { signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const formStateRef = useRef({ email, password, rememberMe, error });
+
+  // Update ref whenever state changes to preserve values during tab switches
+  useEffect(() => {
+    formStateRef.current = { email, password, rememberMe, error };
+  }, [email, password, rememberMe, error]);
+
+  // Preserve form state on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // No need to update state if it's the same, this prevents unnecessary re-renders
+        if (email !== formStateRef.current.email) {
+          setEmail(formStateRef.current.email);
+        }
+        if (password !== formStateRef.current.password) {
+          setPassword(formStateRef.current.password);
+        }
+        if (rememberMe !== formStateRef.current.rememberMe) {
+          setRememberMe(formStateRef.current.rememberMe);
+        }
+        if (error !== formStateRef.current.error) {
+          setError(formStateRef.current.error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [email, password, rememberMe, error]);
 
   // Load remembered credentials if exists
   useEffect(() => {
