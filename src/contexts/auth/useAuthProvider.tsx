@@ -6,7 +6,7 @@ import { AuthState } from './types';
 import { User, UserRole } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { initialState } from './AuthContext';
-import { useSession } from '@/hooks/use-session';
+import { useSession } from '@/hooks/session';
 import {
   signUp as authSignUp,
   signIn as authSignIn,
