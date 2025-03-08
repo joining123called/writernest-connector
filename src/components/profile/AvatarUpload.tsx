@@ -1,28 +1,25 @@
-import React, { useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+import React, { useState } from 'react';
+import { User } from '@/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Upload, X, User, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { Loader2, Upload, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 
 interface AvatarUploadProps {
-  avatarUrl: string | null;
-  fullName: string;
+  user: User;
 }
 
-export const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, fullName }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
+export const AvatarUpload: React.FC<AvatarUploadProps> = ({ user }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(avatarUrl);
-  const [file, setFile] = useState<File | null>(null);
-  
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
+  const { fetchCurrentUser } = useAuth();
+
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name
       .split(' ')
       .map(part => part[0])
@@ -30,177 +27,181 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ avatarUrl, fullName 
       .toUpperCase();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      setFile(null);
-      return;
-    }
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const selectedFile = e.target.files[0];
-    
     // Validate file type
-    if (!selectedFile.type.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file (JPEG, PNG, etc.)",
-        variant: "destructive"
+        title: 'Invalid file type',
+        description: 'Please upload a JPEG, PNG, GIF, or WebP image',
+        variant: 'destructive',
       });
       return;
     }
 
-    // Validate file size (2MB limit)
-    if (selectedFile.size > 2 * 1024 * 1024) {
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
       toast({
-        title: "File too large",
-        description: "Image size should be less than 2MB",
-        variant: "destructive"
+        title: 'File too large',
+        description: 'Please upload an image smaller than 2MB',
+        variant: 'destructive',
       });
       return;
     }
-
-    setFile(selectedFile);
-
-    // Create a preview URL
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreview(objectUrl);
-  };
-
-  const handleRemovePreview = () => {
-    setFile(null);
-    setPreview(avatarUrl);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const uploadAvatar = async () => {
-    if (!user || !file) return;
 
     setIsUploading(true);
-    
+
     try {
-      // Create a unique file path within user's folder
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Create a unique file path for the user's avatar
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
-      // Upload the file
-      const { error: uploadError, data } = await supabase.storage
+      // Upload the file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
-      // Get the public URL
-      const { data: publicUrlData } = supabase.storage
+      // Get the public URL for the uploaded file
+      const { data: urlData } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       // Update the user's avatar URL in the profiles table
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrlData.publicUrl })
+        .update({
+          avatar_url: urlData.publicUrl,
+        })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        throw updateError;
+      }
 
-      // Invalidate the profile query to refetch the updated data
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      // Refetch user to update context with new avatar
+      await fetchCurrentUser();
 
       toast({
-        title: "Profile picture updated",
-        description: "Your profile picture has been successfully updated",
+        title: 'Avatar updated',
+        description: 'Your profile picture has been updated successfully',
       });
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
       toast({
-        title: "Error uploading profile picture",
-        description: error.message || "An error occurred while uploading your profile picture",
-        variant: "destructive",
+        title: 'Upload failed',
+        description: error.message || 'An error occurred while uploading your avatar',
+        variant: 'destructive',
       });
     } finally {
       setIsUploading(false);
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    }
+  };
+
+  const deleteAvatar = async () => {
+    if (!user.avatarUrl) return;
+
+    setIsDeleting(true);
+
+    try {
+      // Delete the avatar from profiles
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: null,
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
       }
+
+      // Refetch user to update context
+      await fetchCurrentUser();
+
+      toast({
+        title: 'Avatar removed',
+        description: 'Your profile picture has been removed',
+      });
+    } catch (error: any) {
+      console.error('Error removing avatar:', error);
+      toast({
+        title: 'Remove failed',
+        description: error.message || 'An error occurred while removing your avatar',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="relative">
-        <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-          {preview ? (
-            <div className="h-full w-full overflow-hidden rounded-full">
-              <img 
-                src={preview} 
-                alt={fullName} 
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ) : (
-            <AvatarFallback className="text-3xl bg-primary/10">
-              {getInitials(fullName)}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        
-        {file && (
-          <button
-            onClick={handleRemovePreview}
-            className="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-white shadow-md hover:bg-destructive/90 transition-colors"
-            title="Remove selected image"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Profile Picture</h3>
+        <p className="text-sm text-muted-foreground">
+          Update your profile picture
+        </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Select Image
-        </Button>
-        
-        {file && (
-          <Button 
-            type="button" 
-            size="sm"
-            onClick={uploadAvatar}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <>
+      <div className="flex flex-col items-center space-y-6 sm:flex-row sm:space-y-0 sm:space-x-8">
+        <Avatar className="h-24 w-24 border border-border/40 bg-background/50">
+          {user.avatarUrl ? (
+            <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+          ) : null}
+          <AvatarFallback className="text-2xl">
+            {getInitials(user.fullName)}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex flex-col space-y-3">
+          <div className="relative">
+            <input
+              type="file"
+              id="avatar-upload"
+              accept="image/*"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={uploadAvatar}
+              disabled={isUploading || isDeleting}
+            />
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              disabled={isUploading || isDeleting}
+            >
+              {isUploading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              'Upload'
-            )}
-          </Button>
-        )}
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {isUploading ? 'Uploading...' : 'Upload new picture'}
+            </Button>
+          </div>
+
+          {user.avatarUrl && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={deleteAvatar}
+              disabled={isUploading || isDeleting}
+              className="w-full justify-start"
+            >
+              {isDeleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {isDeleting ? 'Removing...' : 'Remove picture'}
+            </Button>
+          )}
+        </div>
       </div>
-      
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/png, image/jpeg, image/jpg"
-        className="hidden"
-      />
-      
-      <p className="text-xs text-muted-foreground">
-        Supported formats: JPEG, PNG. Max size: 2MB
-      </p>
     </div>
   );
 };

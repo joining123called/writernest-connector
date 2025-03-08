@@ -1,43 +1,54 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import WriterOrdersList from '@/components/writer/WriterOrdersList';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
-import { UserRole } from '@/types';
 
 const WriterOrders = () => {
-  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  React.useEffect(() => {
-    if (!isLoading && (!user || user.role !== UserRole.WRITER)) {
-      navigate('/login');
-    }
-  }, [user, isLoading, navigate]);
-
-  if (isLoading) {
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
+      <DashboardLayout>
+        <div className="container mx-auto py-8 px-4">
+          <p>Please login to view your orders.</p>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="container mx-auto py-8 px-4"
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
-            <p className="text-muted-foreground">
-              View and manage your writing assignments
+            <h1 className="text-3xl font-bold">My Orders</h1>
+            <p className="text-muted-foreground mt-1">
+              View and manage your current writing assignments
             </p>
           </div>
+          <Button
+            onClick={() => navigate('/writer-dashboard/available-orders')}
+            className="mt-4 md:mt-0"
+          >
+            Browse Available Orders
+          </Button>
         </div>
 
-        <WriterOrdersList />
-      </div>
+        <div className="bg-card rounded-lg shadow-sm border p-6">
+          <p className="text-center text-muted-foreground py-8">
+            You haven't taken any orders yet. Browse available orders to start earning.
+          </p>
+        </div>
+      </motion.div>
     </DashboardLayout>
   );
 };

@@ -7,10 +7,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { UserRole } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { ProfileEdit } from '@/components/profile/ProfileEdit';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
@@ -19,6 +23,7 @@ const UserProfilePage = () => {
   const { toast } = useToast();
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -89,6 +94,8 @@ const UserProfilePage = () => {
     }
   };
 
+  const isOwnProfile = userId === user?.id;
+
   return (
     <DashboardLayout>
       <motion.div
@@ -118,10 +125,51 @@ const UserProfilePage = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <Loader2 className="animate-spin h-8 w-8 text-primary" />
           </div>
         ) : (
-          profileUser && <ProfileInfo user={profileUser} />
+          profileUser && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className={`grid ${isOwnProfile ? 'md:w-[400px] grid-cols-3' : 'w-[150px] grid-cols-1'} mb-4`}>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                {isOwnProfile && (
+                  <>
+                    <TabsTrigger value="edit">Edit Profile</TabsTrigger>
+                    <TabsTrigger value="security">Security</TabsTrigger>
+                  </>
+                )}
+              </TabsList>
+              
+              <TabsContent value="overview" className="space-y-6">
+                <Card className="p-6">
+                  <ProfileInfo user={profileUser} />
+                </Card>
+              </TabsContent>
+              
+              {isOwnProfile && (
+                <>
+                  <TabsContent value="edit" className="space-y-6">
+                    <Card className="p-6">
+                      <ProfileEdit 
+                        user={profileUser} 
+                        onSuccess={() => setActiveTab('overview')} 
+                      />
+                    </Card>
+                    
+                    <Card className="p-6">
+                      <AvatarUpload user={profileUser} />
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="security" className="space-y-6">
+                    <Card className="p-6">
+                      <PasswordChange />
+                    </Card>
+                  </TabsContent>
+                </>
+              )}
+            </Tabs>
+          )
         )}
       </motion.div>
     </DashboardLayout>

@@ -120,5 +120,6 @@ export const useAuthProvider = () => {
     resetPassword,
     updatePassword,
     deleteUser,
+    fetchCurrentUser: fetchUser,
   };
 };

@@ -1,101 +1,81 @@
 
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import { PhoneInput } from '@/components/ui/phone-input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useQueryClient } from '@tanstack/react-query';
-import { Check, Loader2 } from 'lucide-react';
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 
-// Define the form schema
-const profileFormSchema = z.object({
-  full_name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  phone: z.string().min(5, { message: 'Please enter a valid phone number' }),
+const profileSchema = z.object({
+  fullName: z.string().min(3, 'Full name must be at least 3 characters'),
+  phone: z.string().optional(),
 });
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileEditProps {
-  profile: any;
+  user: User;
   onSuccess?: () => void;
-  onCancel?: () => void;
 }
 
-export const ProfileEdit: React.FC<ProfileEditProps> = ({ 
-  profile, 
-  onSuccess, 
-  onCancel 
-}) => {
+export const ProfileEdit: React.FC<ProfileEditProps> = ({ user, onSuccess }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fetchCurrentUser } = useAuth();
 
-  // Initialize the form with profile data
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+    resolver: zodResolver(profileSchema),
     defaultValues: {
-      full_name: profile.full_name || '',
-      email: profile.email || '',
-      phone: profile.phone || '',
+      fullName: user.fullName || '',
+      phone: user.phone || '',
     },
   });
 
   const onSubmit = async (data: ProfileFormValues) => {
-    if (!user) {
-      toast({
-        title: "Authentication error",
-        description: "You must be logged in to update your profile",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
-
     try {
-      // Update the profile in Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: data.full_name,
-          email: data.email,
-          phone: data.phone,
+          full_name: data.fullName,
+          phone: data.phone || '',
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      // Invalidate the profile query to refetch the updated data
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      // Refetch user to update context
+      await fetchCurrentUser();
 
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been successfully updated.",
+        title: 'Profile updated',
+        description: 'Your profile information has been updated successfully.',
       });
 
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
-        title: "Error updating profile",
-        description: error.message || "An error occurred while updating your profile",
-        variant: "destructive",
+        title: 'Update failed',
+        description: error.message || 'Failed to update profile information',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -103,88 +83,55 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="full_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your full name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Profile Information</h3>
+        <p className="text-sm text-muted-foreground">
+          Update your account profile information
+        </p>
+      </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your email" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="phone"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl>
-                <PhoneInput
-                  international
-                  countryCallingCodeEditable={false}
-                  defaultCountry="US"
-                  value={field.value}
-                  onChange={field.onChange}
-                  className="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary"
-                />
-              </FormControl>
-              {fieldState.error && (
-                <FormMessage>{fieldState.error.message}</FormMessage>
-              )}
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-2">
-          {onCancel && (
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Your full name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          />
+
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <PhoneInput
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder="Phone number"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save changes'}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
